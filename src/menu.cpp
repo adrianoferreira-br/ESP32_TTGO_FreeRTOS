@@ -1,11 +1,13 @@
 /*
 
 */
-#include "display.h"
+
+#include "menu.h"
+#include "main.h"
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
-#include "menu.h"
-
+#include "display.h"
+#include <TFT_eSPI.h>
 
 /*
 */
@@ -16,8 +18,8 @@ void vTask_Menu(void *pvParameters)
   while (1)
   { 
     vTaskDelay(pdMS_TO_TICKS(500));     
-    displayPrint(p_str,sizeof(str)/sizeof(char),50,50);          
-    CreateMenu();
+    //displayPrint(p_str,sizeof(str)/sizeof(char),50,50);          
+    //CreateMenu();
     vTaskDelay(pdMS_TO_TICKS(500));
   }
     
@@ -26,5 +28,6 @@ void vTask_Menu(void *pvParameters)
 /*
 */
 void CreateMenu(){
-    displayPrint("Escolha uma opção:",4,50,50);
+   // displayPrint("Escolha uma opção:",4,50,50);
 }
+

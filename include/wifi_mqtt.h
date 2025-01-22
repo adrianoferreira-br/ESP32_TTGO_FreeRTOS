@@ -7,6 +7,7 @@
 #include "main.h"
 
 
+void setup_mqtt(void);
 void reconnect(void);
 void callback(char*, byte*, unsigned int);
 void setup_wifi(void);

@@ -44,3 +44,9 @@ https://kreier.github.io/t-display/
 https://jensd.dk/edu/doc/esp32/ttgo-t.html
 
 
+IMPORTANTE:
+    -  No arquivo user_Setup_Select.h descomentar a seguinte linha de código, caso contrario não liga o display.
+
+        #include <User_Setups/Setup25_TTGO_T_Display.h>    // Setup file for ESP32 and TTGO T-Display ST7789V SPI bus TFT
+
+
