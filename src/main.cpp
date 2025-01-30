@@ -19,7 +19,7 @@ void setup() {
   setup_wifi(); 
 
   // MQTT
-  setup_mqtt();
+  //setup_mqtt();
 
   // FreeRTOS
   //xTaskCreate(vTask_Menu, "TaskMenu", 2048, NULL, 1, &task_handle_Menu);
@@ -51,7 +51,7 @@ void vTask2(void *pvParameters)
   while (1)
   {    
     //displayPrint("123",3, 50, 1);      
-    vTaskDelay(pdMS_TO_TICKS(1000));
+    //vTaskDelay(pdMS_TO_TICKS(1000));
   }
 
 }

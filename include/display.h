@@ -7,6 +7,9 @@
 
 void init_display();
 void displayPrint(char*,int,int,int);
+void graficoBarra(int, int, int, int, int, int, int);
+void drawGauge(int);
 
+extern TFT_eSPI tft;
 
 #endif

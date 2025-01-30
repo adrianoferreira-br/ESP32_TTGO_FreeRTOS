@@ -20,7 +20,7 @@ Especificações
 - Marca: LilyGO;
 - Modelo: TTGO T-Display V1.1;
 - Microcontrolador: ESP32 com dois núcleos, clock de 240MHz e 520KB de RAM;
-- Memória Flash: 16MB;
+- Memória Flash: 16MB; (4MB)
 - Display: IPS ST7789V de 1,14 polegadas Colorido;
 - Resolução Display: 135 x 240 pixels;
 - Interfaces: UART, SPI, SDIO, I2C, LED PWM, TV PWM, I2S, IRGPIO, ADC, sensor de toque capacitivo, pré-amplificador DACLNA;
@@ -42,6 +42,7 @@ https://github.com/Xinyuan-LilyGO/TTGO-T-Display
 https://github.com/Xinyuan-LilyGO/TTGO-T-Display/blob/master/schematic/ESP32-TFT(6-26).pdf
 https://kreier.github.io/t-display/
 https://jensd.dk/edu/doc/esp32/ttgo-t.html
+http://archive.communica.co.za/Content/Catalog/Documents/D3809607724.pdf   (Sensor de Corrente)
 
 
 IMPORTANTE:

@@ -9,10 +9,11 @@
 WiFiClient espClient;
 PubSubClient client(espClient);
 
-const char* ssid = SSID;//"STARLINK";//"PhoneAdr"; // Substitua pelo seu SSID 
-const char* password = PASSWORD;//"11121314";//"UDJ1-ddsp";// "SUA_SENHA"; // Substitua pela sua senha 
-const char* mqtt_server = MQTT_SERVER; //"192.168.100.4";//"broker.hivemq.com";
-const int port_mqtt = PORT_MQTT; //1883
+const char* ssid = SSID;                //"STARLINK";//"PhoneAdr"; // Substitua pelo seu SSID 
+const char* password = PASSWORD;        //"11121314";//"UDJ1-ddsp";// "SUA_SENHA"; // Substitua pela sua senha 
+const char* mqtt_server = MQTT_SERVER;  //"192.168.100.4";//"broker.hivemq.com";
+const int port_mqtt = PORT_MQTT;        //1883
+
 //String ip;
 
 /*
@@ -43,7 +44,7 @@ void setup_wifi()
     Serial.println(""); 
     Serial.println("WiFi conectado"); 
     Serial.print("Endereço IP: "); 
-    Serial.println(WiFi.localIP());    
+    Serial.println(WiFi.localIP());                
    }  
 }
 
@@ -65,8 +66,10 @@ void loop_mqqt() {
     reconnect(); 
   } 
   client.loop(); 
-  client.publish("test/topic", "Hello MQTT from ESP32"); 
+  client.publish("AdrPresto", "Hello MQTT from ESP32 adr"); //"test/topic"  )
   delay(2000);   
+
+ 
 }
 
 

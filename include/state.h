@@ -1,8 +1,8 @@
 /*
 
 */
-#ifndef STATE_H
-#define STATE_H
+#ifndef STATE_H_
+#define STATE_H_
 
 
 
@@ -13,7 +13,8 @@ void show_time();
 void show_ip ();
 void calcula_corrente();
 void calcula_fluxo();
+void pulseCounter();
 
 
 
-#endif // STATE_H
+#endif // STATE_H_

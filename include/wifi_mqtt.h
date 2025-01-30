@@ -1,9 +1,10 @@
-#ifndef WIFI_MQTT_H
-#define WIFI_MQTT_H
+#ifndef WIFI_MQTT_H_
+#define WIFI_MQTT_H_
 
 // Hardware-specific library
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include "constants.h"
 #include "main.h"
 
 
@@ -14,4 +15,4 @@ void setup_wifi(void);
 void loop_mqqt(void);
 
 
-#endif // WIFI_MQTT_H
+#endif // WIFI_MQTT_H_
