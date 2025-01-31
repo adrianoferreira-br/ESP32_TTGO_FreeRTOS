@@ -5,8 +5,7 @@
 #define EXTERN_DATA_H_
 
 void firebase_setup(void);
-void firebase_loop(void);
-
+void firebase_updateValues(void);
 
 
 

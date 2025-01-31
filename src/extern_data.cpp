@@ -1,47 +1,66 @@
 /*
  *
  */
-
-
-//#include "firebase.h"
+#include <WiFi.h>
 #include "extern_data.h"
 #include "constants.h"
-//#include <FirebaseClient.h>
+#include "wifi_mqtt.h"
+#include <FirebaseESP32.h>
 
 
-
-// Configurações do Firebase 
-//#define FIREBASE_HOST "SEU_FIREBASE_HOST" // exemplo: your-project-id.firebaseio.com 
-//#define FIREBASE_AUTH "SEU_FIREBASE_AUTH_KEY"
-
-//const char* firebaseHost = FIREBASE_HOST; //"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
-//const char* firebaseAuth = FIREBASE_AUTH; //"XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX";
+const char* firebaseHost = "https://presto-pr-default-rtdb.firebaseio.com/";
+const char* firebaseAuth = "RSDCg4zrJcYBVcn8i9ewxRhOTzbDMYzoju0SdIuJ";
 
 
+// Instancia do Firebase
+FirebaseData firebaseData;
+FirebaseAuth auth;
+FirebaseConfig fbConfig;
 
-
-
-//instacia do firebase
-//FirebaseClient firebaseClient;
-
-//FirebaseData data;
-//FirebaseOject object;
-//FirestoreBase firestore;
-
-
-
-
+/*
+ *
+ */
 void firebase_setup()
 {
-  //Firebase.begin(FIREBASE_HOST, FIREBASE_AUTH);
-  // firebaseClient.initializeApp(FIREBASE_HOST, FIREBASE_AUTH); 
-//  firebaseClient.reconnectWiFi(true);
+    
+    fbConfig.database_url = firebaseHost;
+    fbConfig.signer.tokens.legacy_token = firebaseAuth;
+
+    Firebase.begin(&fbConfig, &auth);
+    Firebase.reconnectWiFi(true);
+
+    Serial.println("Firebase configurado!"); 
+
 }
 
 
-
-void firebase_loop()
+/*
+ *
+ */
+void firebase_updateValues()
 {
-  // put your main code here, to run repeatedly:
-  //Firebase.loop();
+  // put your main code here, to run repeatedly:  
+    Serial.println("Lendo valor do Firebase...");
+
+     if (Firebase.RTDB.getString(&firebaseData, "/B100TI/Nome")) {
+        if (firebaseData.dataType() == "string") {
+            String value = firebaseData.stringData();
+            Serial.print("String value: ");
+            Serial.println(value);
+        }
+     } else {
+        Serial.println("Failed to read string value");
+        Serial.println("REASON: " + firebaseData.errorReason());
+     }
 }
+
+
+/*
+ *
+ */
+void showValues(){
+
+
+
+}
+

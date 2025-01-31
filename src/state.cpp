@@ -13,7 +13,7 @@
 #include "EmonLib.h"                   // Include Emon Library
 #include "time.h"
 #include "constants.h"
-//#include "extern_data.h"
+#include "extern_data.h"
 
 
 // Pino do sensor YF-201
@@ -62,12 +62,13 @@ void loop_state() {
   // Calcula a corrente e mostra no display
   calcula_corrente();
   
+  
  
   // Verifica fluxo com sensor YF-S201
   //calcula_fluxo();
   // envia informação via protocolo mqtt
   //loop_mqqt();
-
+    firebase_updateValues();
    
  
 }
@@ -87,6 +88,8 @@ void init_state() {
 
     // Inicializa o tempo
   lastTime = millis(); 
+
+  firebase_setup();
 
 }
 
