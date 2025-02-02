@@ -12,6 +12,7 @@ void sensor_corrente(void);
 void show_time();
 void show_ip ();
 void calcula_corrente();
+void calcula_tensao();
 void calcula_fluxo();
 void pulseCounter();
 

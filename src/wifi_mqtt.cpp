@@ -19,8 +19,8 @@ const int port_mqtt = PORT_MQTT;        //1883
 /*
  *
  */
-void setup_wifi() 
-{
+void setup_wifi(){
+
    int i = 0;
 
    delay(10); 
@@ -45,8 +45,26 @@ void setup_wifi()
     Serial.println("WiFi conectado"); 
     Serial.print("Endereço IP: "); 
     Serial.println(WiFi.localIP());                
-   }  
+   }     
 }
+
+
+/*
+ *
+ */
+void loop_wifi(){
+  // Preenche informações referente a rede
+  if (WiFi.status() == WL_CONNECTED) {      
+      show_ip();         
+  } else {
+      tft.setTextColor(TFT_RED, TFT_BLACK);    
+      tft.drawString("Disconnected     ", 0, 0, 2);  
+      tft.drawString("                 ", 130, 0, 2);  
+      
+  }  
+
+}
+
 
 /*
  *
@@ -109,4 +127,42 @@ void reconnect()
       delay(5000); 
     } 
   } 
+}
+
+
+
+
+/**********************************************************************************************
+ *     MOSTRA O IP DA REDE NO DISPLAY
+ */
+void show_ip () {
+  
+  // Mostra o IP
+  char ipStr[16];  
+  int NivelSinal = 0;
+  IPAddress ip = WiFi.localIP();
+
+
+  sprintf(ipStr, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);    
+  tft.drawString(ipStr, 0, 0, 2); 
+
+  // Mostra o nível do sinal
+   NivelSinal = WiFi.RSSI();
+      //Serial.print("Nível Sinal:" + (String)NivelSinal + "dBm");
+      if (NivelSinal >= -50) {
+        tft.setTextColor(TFT_GREEN, TFT_BLACK);    
+        tft.drawString("Otimo   ", 150,0 , 2);
+      } else if (NivelSinal >= -70) {
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);    
+        tft.drawString("Bom    ", 150, 0, 2);
+      } else if (NivelSinal >= -80) {
+        tft.setTextColor(TFT_ORANGE, TFT_BLACK);    
+        tft.drawString("Ruim   ", 150, 0, 2);
+      } else {
+        tft.setTextColor(TFT_RED, TFT_BLACK);    
+        tft.drawString("Pessimo", 150, 0, 2);
+      }
+      tft.drawString((String)NivelSinal, 205, 1, 4);
+      tft.setTextColor(TFT_WHITE, TFT_BLACK);    
 }

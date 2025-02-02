@@ -39,7 +39,7 @@ void init_display()
     tft.setTextColor(TFT_WHITE, TFT_BLACK);        
     int origemX = tft.width();    
     int origemY = tft.height();    
-    tft.drawString(((String)origemX) + "  " + ((String)origemY),90,50,2);     //string, x, y, font  : Fonte 2, 4, 6, 7
+    tft.drawString(((String)origemX) + " x " + ((String)origemY),90,50,2);     //string, x, y, font  : Fonte 2, 4, 6, 7
     delay(1500);  
     tft.fillScreen(TFT_RED);         
     delay(500);  
@@ -50,9 +50,12 @@ void init_display()
     tft.fillScreen(TFT_ORANGE);     
     delay(500);        
     tft.fillScreen(TFT_BLACK);    
-    graficoBarra(225, 5, 235, 127, 50, 100, TFT_BLUE);
-  //  tft.fillCircle(120, 120, 10, TFT_YELLOW);
-    drawGauge(35); // Exemplo com um valor de 50
+
+    //graficoBarra(1,105,180,132,50,132,TFT_BLUE);    // x, y, largura, altura, valor, valorMaximo, cor)
+   
+ 
+  // tft.fillCircle(120, 120, 10, TFT_YELLOW);
+  // drawGauge(35); // Exemplo com um valor de 50
 }
 
 
@@ -71,8 +74,8 @@ void displayPrint(char* str, int qnt, int x, int y)
 
 
 void graficoBarra(int x, int y, int largura, int altura, int valor, int valorMaximo, int cor){
-    tft.drawRect(x, y, largura, altura, TFT_YELLOW);
-    tft.fillRect(x, y, largura, altura, TFT_GREEN);
+    tft.drawRect(x, y, largura, altura, TFT_WHITE);
+    tft.fillRect(x, y, largura, altura, TFT_WHITE);
     tft.fillRect(x, y, (valor * largura) / valorMaximo, altura, cor);
 
 }

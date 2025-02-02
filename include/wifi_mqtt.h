@@ -13,6 +13,7 @@ void reconnect(void);
 void callback(char*, byte*, unsigned int);
 void setup_wifi(void);
 void loop_mqqt(void);
+void loop_wifi(void);
 
 
 #endif // WIFI_MQTT_H_

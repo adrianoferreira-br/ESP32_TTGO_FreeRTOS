@@ -19,7 +19,7 @@ void setup() {
   setup_wifi(); 
 
   // MQTT
-  //setup_mqtt();
+  setup_mqtt();
 
   // FreeRTOS
   //xTaskCreate(vTask_Menu, "TaskMenu", 2048, NULL, 1, &task_handle_Menu);
@@ -37,8 +37,12 @@ void setup() {
 
 void loop() 
 {
+  // verifica conexão e sinal do wifi
+  loop_wifi();
+
   // Monitoramento de msg do broker mqtt
   //loop_mqqt();
+
   // Execução principal da aplicação  
   loop_state();
 }

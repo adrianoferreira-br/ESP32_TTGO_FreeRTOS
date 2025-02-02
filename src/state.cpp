@@ -8,9 +8,8 @@
 #include "display.h"
 #include <TFT_eSPI.h>
 #include "Arduino.h"
-#include "wifi_mqtt.h"
 #include "main.h"
-#include "EmonLib.h"                   // Include Emon Library
+#include "EmonLib.h"                 
 #include "time.h"
 #include "constants.h"
 #include "extern_data.h"
@@ -31,105 +30,142 @@ const float calibrationfLOWFactor = 4.5; // Fator de calibração (varia de acor
 const int buttom = 35;
 
 //Medição de corrente
-EnergyMonitor emon1;         // Instancia do sensor de corrente
+//EnergyMonitor emonCurrent;         // Instancia do sensor de corrente
 int StateMachine = 0;
 typedef enum {INIT_ST, LOW_CURRENT_ST, HIGH_CURRENT_ST} Estado;
 Estado estadoAtual = INIT_ST;
-const float calibrationCurrentFactor = CALIBRATION_CURRENT_FACTOR; // Fator de calibração (varia de acordo com o sensor e meio)
 int Qnt = 0;  // Quantidade de vezes que a corrente passou de 1.5A
 int i = 0;    // Contador de leituras eliminadas na inicialização
-int NivelSinal = 0;
 
 
-
-
-/**********************************************************************************************
- *     FUNÇÃO DE LOOP DA APLICAÇÃO
- */
-void loop_state() {
-
-  // Preenche informações referente a rede
-  if (WiFi.status() == WL_CONNECTED) {      
-      show_ip();         
-  } else {
-      tft.setTextColor(TFT_RED, TFT_BLACK);    
-      tft.drawString("Disconnected     ", 0, 0, 2);  
-      tft.drawString("                 ", 130, 0, 2);  
-      
-  }
-  delay(1000);
-
-  // Calcula a corrente e mostra no display
-  calcula_corrente();
-  
-  
- 
-  // Verifica fluxo com sensor YF-S201
-  //calcula_fluxo();
-  // envia informação via protocolo mqtt
-  //loop_mqqt();
-    firebase_updateValues();
-   
- 
-}
+//Medição de tensão
+//EnergyMonitor emonVoltage;
+EnergyMonitor monitorEletricity;
 
 
 /**********************************************************************************************
  *     FUNÇÃO DE SETUP E CONFIGURAÇÃO INICIAL DA APLICAÇÃO
  */
 void init_state() {
+
+  //Defini GPIO
   pinMode(buttom, INPUT);    
+
   // Corrente
-  emon1.current(36, calibrationCurrentFactor);    //2.72         // Current: input pin, calibration.  
-  
+  monitorEletricity.current(36,8.0);//CALIBRATION_CURRENT_FACTOR);    //2.72         // Current: input pin, calibration.  
+
+  // Tensão  
+  monitorEletricity.voltage(39, CALIBRATION_VOLTAGE_FACTOR, 1); //PIN, 173, phase em relação a corrente(ex.1,7)
+    
   // fluxo
   pinMode(FLOW_SENSOR_PIN, INPUT_PULLUP);
   attachInterrupt(digitalPinToInterrupt(FLOW_SENSOR_PIN), pulseCounter, RISING);
 
-    // Inicializa o tempo
+  // Inicializa o tempo
   lastTime = millis(); 
 
+  // Firebase
   firebase_setup();
 
 }
 
-// Interrupção para contar pulsos
+
+
+/**********************************************************************************************
+ *     FUNÇÃO DE LOOP DA APLICAÇÃO
+ */
+void loop_state() {  
+
+  // Calcula a tensão e mostra no display
+  calcula_tensao();
+
+  // Verifica fluxo com sensor YF-S201
+  //calcula_fluxo();
+
+  //Firebase 
+  // firebase_updateValues();   
+  // Zera contador de leituras
+  if (digitalRead(buttom) == LOW) {    
+    Serial.println("Botão pressionado");   
+    firebase_updateValues();
+    Qnt = 0;
+  } 
+
+}
+
+
+
+
+/**********************************************************************************************
+ *     INTERRUPÇÃO PARA CONTAR PULSO DO FLUXO DE AR/AGUA
+ */
 void IRAM_ATTR pulseCounter() {
     pulseCount++;
 }
 
 
 
+
 /**********************************************************************************************
- *     CALCULA E MOSTRA O VALOR DE CARRENTE NO DISPLAY
+ *     VERIFICA O FLUXO DO SENSOR YF-S201
  */
-void calcula_corrente(){
+void calcula_tensao(){
 
- //Captura a corrente  
-  double Irms = emon1.calcIrms(1480);  // Calculate Irms only
+   int bar_color;
+  // Atualize a leitura 
+  monitorEletricity.calcVI(20, 2000);  //
 
-  // Maquina de estado da aplicação, implementa uma histerese
+  double Vrms = monitorEletricity.Vrms;  
+  double Irms = monitorEletricity.Irms;
+  double Wattss = monitorEletricity.realPower;
+  double Potencia = abs(Wattss);
+
+  // mostra a informação serial
+  Serial.print("Energia-> Tensão RMS: ");    Serial.print(Vrms);  Serial.print(" V;   "); 
+  Serial.print("Corrente RMS: ");            Serial.print(Irms);  Serial.print(" A;  ");
+  Serial.print("Potencia: ");                 Serial.print(Potencia);   Serial.println(" W;  ");
+
+
+  // mostra informação no Display
+  tft.setTextColor(TFT_WHITE, TFT_BLACK); 
+  tft.drawString("Tensao", 120, 18, 4);    
+  tft.drawString((String)Vrms + " V   ", 135, 45, 4);  
+
+  tft.drawString("Corrente", 5, 18, 4);
+  tft.drawString((String)Irms + " A   ", 5, 45, 4);
+
+  tft.drawString((String)Potencia + " w        ", 57, 77, 4);
+
+  if (Potencia < LIMIAR_INFERIOR) {
+    bar_color = TFT_RED;
+  } else if (Potencia >= LIMIAR_INFERIOR && Potencia < LIMIAR_SUPERIOR) {
+    bar_color = TFT_ORANGE;
+  } else if (Potencia >= LIMIAR_SUPERIOR) {
+    bar_color = TFT_BLUE;
+  } 
+  
+  if (Potencia >= LIMITE_MAX) {  //Evita ultrapassar barra grafica
+    Potencia = LIMITE_MAX;
+  }
+  
+  graficoBarra(1,105,180,132,Potencia,LIMITE_MAX,bar_color);    // x, y, largura, altura, valor, valorMaximo, cor)
+  
+
+// maquina de estado para detectar transição e realizar contagem
   switch (estadoAtual) {
 
     // inicia a leitura, porém elimita 7 primeiras leituras que geralmente são erradas
     case INIT_ST:
-
-      if (i < 7)        
-        i++;
-      else       
-        estadoAtual = LOW_CURRENT_ST;
-
+        estadoAtual = HIGH_CURRENT_ST;
     break;
-
 
     // Aguarda transição para alta corrente
     case LOW_CURRENT_ST:
 
-      if (Irms > 1.60) {        
+      if (Potencia > LIMIAR_SUPERIOR) {        
         Qnt++;
-        show_time(); 
-        tft.setTextColor(TFT_WHITE, TFT_BLACK);        
-        tft.drawString((String)Qnt,65, 85, 6);                
+        //show_time(); 
+        tft.drawString((String)Qnt,190, 110, 4);                
         estadoAtual = HIGH_CURRENT_ST;
       }      
     break;
@@ -137,32 +173,51 @@ void calcula_corrente(){
     //Aguarda transição para baixa corrente
     case HIGH_CURRENT_ST:
     
-      if (Irms < 1.10) {
+      if (Potencia < LIMIAR_INFERIOR) {
         estadoAtual = LOW_CURRENT_ST;        
       }
     break;
   }
+  tft.setTextColor(TFT_RED, TFT_BLACK);        
+  tft.drawString((String)LIMIAR_INFERIOR, 1, 87, 2);
+  tft.drawString((String)LIMIAR_SUPERIOR, 180, 87, 2);
+  tft.drawString("|", (LIMIAR_INFERIOR * 172) / LIMITE_MAX, 100, 2);
+  tft.drawString("|", (LIMIAR_SUPERIOR * 172) / LIMITE_MAX, 100, 2);
 
-  
-  // Mostra as corrente lida  
-  Serial.print(Irms*230.0);	     // Apparent power
-  Serial.print(" ");
-  Serial.println(Irms);		       // Irms
-  tft.drawString("Corrente", 0, 18, 4);  
-  tft.drawString((String)Irms + " A", 10, 45, 4);  
-  // emon1.serialprint();
-  // Zera contador de leituras
-  if (digitalRead(buttom) == LOW) {    
-    Serial.println("Botão pressionado");   
-    Qnt = 0;
-  }
+  tft.drawString((String)CALIBRATION_CURRENT_FACTOR, 1, 67, 2);
+  tft.drawString((String)CALIBRATION_VOLTAGE_FACTOR, 180, 67, 2);
 
-  tft.drawString("Tensao", 120, 18, 4);  
-  tft.drawString((String)Irms + " V", 135, 45, 4);  
- 
+
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);        
+
+
 
 }
 
+
+
+
+/**********************************************************************************************
+ *     MOSTRA INFORMAÇÃO DE TEMPO DIA/MES/ANO  HORA:MINUTO:SEGUNDO
+ */
+void show_time() {
+
+  char timeStr[20];  // Used to store time string
+  struct tm timeinfo;
+
+  configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+  
+  if (!getLocalTime(&timeinfo)) {
+    Serial.println("Erro ao obter tempo!");
+    return;
+  }
+  // Mostra o horário
+  Serial.println(&timeinfo, "%Y-%m-%d %H:%M:%S");   
+  strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
+
+  tft.drawString(timeStr, 125, 173, 2);
+ 
+}
 
 
 
@@ -172,44 +227,39 @@ void calcula_corrente(){
 void calcula_fluxo(){
 
 // Calcula a taxa de fluxo a cada segundo
-unsigned long currentTime = millis();
-    if (currentTime - lastTime >= 1000) { // A cada 1 segundo
-        noInterrupts(); // Pausa a interrupção para calcular
-        uint16_t currentPulseCount = pulseCount;
-        pulseCount = 0; // Reseta o contador para o próximo intervalo
-        interrupts(); // Retoma a interrupção
+  unsigned long currentTime = millis();
 
-        // Taxa de fluxo em L/min
-        flowRate = (currentPulseCount / calibrationfLOWFactor);
+  if (currentTime - lastTime >= 1000) { // A cada 1 segundo
+      noInterrupts(); // Pausa a interrupção para calcular
+      uint16_t currentPulseCount = pulseCount;
+      pulseCount = 0; // Reseta o contador para o próximo intervalo
+      interrupts(); // Retoma a interrupção
 
-        // Volume total processado (em litros)
-        totalLiters += (flowRate / 60.0);
+      // Taxa de fluxo em L/min
+      flowRate = (currentPulseCount / calibrationfLOWFactor);
 
-        // Exibe as informações no monitor serial
-        Serial.print("Taxa de fluxo: ");
-        Serial.print(flowRate);
-        Serial.println(" L/min");
+      // Volume total processado (em litros)
+      totalLiters += (flowRate / 60.0);
 
-        Serial.print("Volume total: ");
-        Serial.print(totalLiters);
-        Serial.println(" L");
+      // Exibe as informações no monitor serial
+      Serial.print("Taxa de fluxo: ");    Serial.print(flowRate);    Serial.println(" L/min");
+      Serial.print("Volume total: ");     Serial.print(totalLiters); Serial.println(" L");
 
-        // Exibe as informações no display        
-        tft.drawString("Fluxo(l/s):", 45, 75, 4);  
-        tft.drawString((String)flowRate, 65, 100, 4); 
+      // Exibe as informações no display        
+      tft.drawString("Fluxo(l/s):", 45, 75, 4);  
+      tft.drawString((String)flowRate, 65, 100, 4); 
 
-        // Atualiza o tempo
-        lastTime = currentTime;
-    }
+      // Atualiza o tempo
+      lastTime = currentTime;
+  }
 
 // maquina de estado para detectar transição e realizar contagem
-switch (estadoAtual) {
+  switch (estadoAtual) {
 
     // inicia a leitura, porém elimita 7 primeiras leituras que geralmente são erradas
     case INIT_ST:
         estadoAtual = LOW_CURRENT_ST;
     break;
-
 
     // Aguarda transição para alta corrente
     case LOW_CURRENT_ST:
@@ -230,65 +280,4 @@ switch (estadoAtual) {
       }
     break;
   }
-
-
-
 }
-
-
-/**********************************************************************************************
- *     MOSTRA INFORMAÇÃO DE TEMPO DIA/MES/ANO  HORA:MINUTO:SEGUNDO
- */
-void show_time() {
-
-  char timeStr[20];  // Used to store time string
-  struct tm timeinfo;
-
-  configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
-  
-  if (!getLocalTime(&timeinfo)) {
-    Serial.println("Erro ao obter tempo!");
-    return;
-  }
-
-  Serial.println(&timeinfo, "%Y-%m-%d %H:%M:%S");   
-//  strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
-  strftime(timeStr, sizeof(timeStr), "%H:%M:%S", &timeinfo);
-
-  tft.drawString(timeStr, 125, 173, 2);
- 
-}
-
-
-/**********************************************************************************************
- *     MOSTRA O IP DA REDE NO DISPLAY
- */
-void show_ip () {
-  
-  // Mostra o IP
-  char ipStr[16];  
-  IPAddress ip = WiFi.localIP();
-  sprintf(ipStr, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
-  tft.setTextColor(TFT_WHITE, TFT_BLACK);    
-  tft.drawString(ipStr, 0, 0, 2); 
-
-  // Mostra o nível do sinal
-   NivelSinal = WiFi.RSSI();
-      //Serial.print("Nível Sinal:" + (String)NivelSinal + "dBm");
-      if (NivelSinal >= -50) {
-        tft.setTextColor(TFT_GREEN, TFT_BLACK);    
-        tft.drawString("Otimo   ", 150,0 , 2);
-      } else if (NivelSinal >= -70) {
-        tft.setTextColor(TFT_WHITE, TFT_BLACK);    
-        tft.drawString("Bom    ", 150, 0, 2);
-      } else if (NivelSinal >= -80) {
-        tft.setTextColor(TFT_ORANGE, TFT_BLACK);    
-        tft.drawString("Ruim   ", 150, 0, 2);
-      } else {
-        tft.setTextColor(TFT_RED, TFT_BLACK);    
-        tft.drawString("Pessimo", 150, 0, 2);
-      }
-      tft.drawString((String)NivelSinal, 205, 1, 4);
-      tft.setTextColor(TFT_WHITE, TFT_BLACK);    
-}
-
