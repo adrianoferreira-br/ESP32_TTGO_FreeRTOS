@@ -52,7 +52,7 @@ void init_state() {
   pinMode(buttom, INPUT);    
 
   // Corrente
-  monitorEletricity.current(36,8.0);//CALIBRATION_CURRENT_FACTOR);    //2.72         // Current: input pin, calibration.  
+  monitorEletricity.current(36,CALIBRATION_CURRENT_FACTOR);    //2.72         // Current: input pin, calibration.  
 
   // Tensão  
   monitorEletricity.voltage(39, CALIBRATION_VOLTAGE_FACTOR, 1); //PIN, 173, phase em relação a corrente(ex.1,7)
@@ -117,14 +117,16 @@ void calcula_tensao(){
 
   double Vrms = monitorEletricity.Vrms;  
   double Irms = monitorEletricity.Irms;
-  double Wattss = monitorEletricity.realPower;
-  double Potencia = abs(Wattss);
+  double realPower = monitorEletricity.realPower;
+  double apparentPower = Vrms * Irms;
+  double powerFactor = realPower / apparentPower;
 
   // mostra a informação serial
   Serial.print("Energia-> Tensão RMS: ");    Serial.print(Vrms);  Serial.print(" V;   "); 
   Serial.print("Corrente RMS: ");            Serial.print(Irms);  Serial.print(" A;  ");
-  Serial.print("Potencia: ");                 Serial.print(Potencia);   Serial.println(" W;  ");
-
+  Serial.print("Potência Real: ");           Serial.print(realPower);   Serial.print(" W;  ");
+  Serial.print("Potência Aparente: ");       Serial.print(apparentPower);   Serial.print(" VA;  ");
+  Serial.print("Fator de Potência: ");       Serial.println(powerFactor);
 
   // mostra informação no Display
   tft.setTextColor(TFT_WHITE, TFT_BLACK); 
@@ -134,21 +136,28 @@ void calcula_tensao(){
   tft.drawString("Corrente", 5, 18, 4);
   tft.drawString((String)Irms + " A   ", 5, 45, 4);
 
-  tft.drawString((String)Potencia + " w        ", 57, 77, 4);
+  //tft.drawString("Pot. Real", 5, 70, 4);
+  //tft.drawString((String)realPower + " W   ", 5, 95, 4);
 
-  if (Potencia < LIMIAR_INFERIOR) {
+  //tft.drawString("Pot. Aparente", 5, 120, 4);
+  tft.drawString((String)apparentPower + " va   ", 60, 77, 4);
+
+  //tft.drawString("Fator Pot.", 5, 170, 4);
+  //tft.drawString((String)powerFactor, 5, 195, 4);
+
+  if (realPower < LIMIAR_INFERIOR) {
     bar_color = TFT_RED;
-  } else if (Potencia >= LIMIAR_INFERIOR && Potencia < LIMIAR_SUPERIOR) {
+  } else if (realPower >= LIMIAR_INFERIOR && realPower < LIMIAR_SUPERIOR) {
     bar_color = TFT_ORANGE;
-  } else if (Potencia >= LIMIAR_SUPERIOR) {
+  } else if (realPower >= LIMIAR_SUPERIOR) {
     bar_color = TFT_BLUE;
   } 
   
-  if (Potencia >= LIMITE_MAX) {  //Evita ultrapassar barra grafica
-    Potencia = LIMITE_MAX;
+  if (realPower >= LIMITE_MAX) {  //Evita ultrapassar barra grafica
+    realPower = LIMITE_MAX;
   }
   
-  graficoBarra(1,105,180,132,Potencia,LIMITE_MAX,bar_color);    // x, y, largura, altura, valor, valorMaximo, cor)
+  graficoBarra(1,105,180,132,realPower,LIMITE_MAX,bar_color);    // x, y, largura, altura, valor, valorMaximo, cor)
   
 
 // maquina de estado para detectar transição e realizar contagem
@@ -162,7 +171,7 @@ void calcula_tensao(){
     // Aguarda transição para alta corrente
     case LOW_CURRENT_ST:
 
-      if (Potencia > LIMIAR_SUPERIOR) {        
+      if (realPower > LIMIAR_SUPERIOR) {        
         Qnt++;
         //show_time(); 
         tft.drawString((String)Qnt,190, 110, 4);                
@@ -173,7 +182,7 @@ void calcula_tensao(){
     //Aguarda transição para baixa corrente
     case HIGH_CURRENT_ST:
     
-      if (Potencia < LIMIAR_INFERIOR) {
+      if (realPower < LIMIAR_INFERIOR) {
         estadoAtual = LOW_CURRENT_ST;        
       }
     break;

@@ -8,8 +8,8 @@
 #include <FirebaseESP32.h>
 
 
-const char* firebaseHost = "https://presto-prc-default-rtdb.firebaseio.com/";
-const char* firebaseAuth = "RSDCg4zrJcYBVcn8i9ewxRhOTzbDMYzoju0SdIuI";
+const char* firebaseHost = "https://presto-pr-default-rtdb.firebaseio.com/";
+const char* firebaseAuth = "RSDCg4zrJcYBVcn8i9ewxRhOTzbDMYzoju0SdIuJ";
 
 
 // Instancia do Firebase
@@ -156,7 +156,8 @@ void firebase_updateValues()
     // calibrationVoltage;
     LIMIAR_SUPERIOR = (int)limiteSup;
     LIMIAR_INFERIOR = (int)limiteInf;
-    LIMITE_MAX      = 2001;(int)limiteMax;
+    LIMITE_MAX = (limiteMax > 1) ? (int)limiteMax : 2000;
+
     //String ip;
     char Buffer[30];
     ethernetSSID.toCharArray(Buffer, sizeof(Buffer));
