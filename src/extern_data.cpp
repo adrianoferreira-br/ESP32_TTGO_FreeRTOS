@@ -28,7 +28,7 @@ void firebase_setup()
 
     Firebase.begin(&fbConfig, &auth);
     Firebase.reconnectWiFi(true);
-
+    
     Serial.println("Firebase configurado!"); 
 
 }
@@ -43,9 +43,9 @@ void firebase_updateValues()
     int sampleAvgBatida;
     float calibrationCurrent;
     float calibrationVoltage;
-    float limiteSup;
-    float limiteInf;
-    float limiteMax;
+    int limiteSup;
+    int limiteInf;
+    int limiteMax;
     String ip;
     String ethernetSSID;
     String ethernetPassword;
@@ -90,18 +90,18 @@ void firebase_updateValues()
         Serial.println("Failed to read string value. REASON: " + firebaseData.errorReason());
      }
      //limiteSup
-     if (Firebase.RTDB.getFloat(&firebaseData, "/B100TI/limiteSup")) {
-        if (firebaseData.dataType() == "float") {
-            limiteSup = firebaseData.floatData();
+     if (Firebase.RTDB.getInt(&firebaseData, "/B100TI/limiteSup")) {
+        if (firebaseData.dataType() == "int") {
+            limiteSup = firebaseData.intData();
             Serial.println("limiteSup: " +(String)limiteSup);
         }
      } else {        
         Serial.println("Failed to read string value. REASON: " + firebaseData.errorReason());
      }
      //limiteInf
-     if (Firebase.RTDB.getFloat(&firebaseData, "/B100TI/limiteInf")) {
-        if (firebaseData.dataType() == "float") {
-            limiteInf = firebaseData.floatData();            
+     if (Firebase.RTDB.getInt(&firebaseData, "/B100TI/limiteInf")) {
+        if (firebaseData.dataType() == "int") {
+            limiteInf = firebaseData.intData();            
             Serial.println("limiteInf: " + (String)limiteInf);
         }
      } else {        
@@ -146,26 +146,34 @@ void firebase_updateValues()
      }
 
      
-     // Reatribuição da variáveis
-    
-    CALIBRATION_CURRENT_FACTOR = calibrationCurrent;   
-    CALIBRATION_VOLTAGE_FACTOR = calibrationVoltage;
-    //String Nomee;
-    AMOSTRAS_COMPROVACAO_ESTADO = sampleAvgBatida;
+  
+  
+   // Reatribuição da variáveis
+
+   //String Nomee;
+   AMOSTRAS_COMPROVACAO_ESTADO = sampleAvgBatida;
+  
+   // calibrationVoltage;
+   CALIBRATION_CURRENT_FACTOR = calibrationCurrent;   
+   CALIBRATION_VOLTAGE_FACTOR = calibrationVoltage;
     
     // calibrationVoltage;
-    LIMIAR_SUPERIOR = (int)limiteSup;
-    LIMIAR_INFERIOR = (int)limiteInf;
-    LIMITE_MAX = (limiteMax > 1) ? (int)limiteMax : 2000;
+    LIMIAR_SUPERIOR = (limiteSup < limiteMax)? limiteSup :  2000 - 100;
+    LIMIAR_INFERIOR = (limiteInf < limiteMax)? limiteInf :  2000 - 200;
+    LIMITE_MAX = (limiteMax > 1) ? limiteMax : 2000;
 
-    //String ip;
+    //String SSID placa Ethernet;
+    
     char Buffer[30];
     ethernetSSID.toCharArray(Buffer, sizeof(Buffer));
     SSID = Buffer;
+    
+
     //ethernetPassword    
     ethernetPassword.toCharArray(Buffer, sizeof(Buffer));
     PASSWORD = Buffer;
     
+
 
 /*    
     //String servMqtt;
@@ -201,13 +209,3 @@ void showValues(){
 
 }
 
-
-/*
- // Escreva um inteiro no Firebase
-    if (Firebase.RTDB.setInt(&firebaseData, "/B100TI/sampleAvgBatida", 123)) {
-        Serial.println("Int value written successfully");
-    } else {
-        Serial.println("Failed to write int value. REASON: " + firebaseData.errorReason());
-    }
-
-*/

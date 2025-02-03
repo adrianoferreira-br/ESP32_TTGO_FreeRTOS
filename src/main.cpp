@@ -4,8 +4,15 @@
 #include "main.h"
 
 
+#define BOTAO_35 35
+
+
 TaskHandle_t task_handle_Menu = NULL;
 TaskHandle_t task_handle2 = NULL;
+
+
+
+
 
 
 
@@ -29,8 +36,8 @@ void setup() {
   init_state();
 
   // Interruptions
-  //pinMode(GPIO_BOTAO, INPUT);
-  //attachInterrupt(GPIO_BOTAO, funcao_ISR, RISING);  
+  pinMode(BOTAO_35, INPUT);
+  attachInterrupt(BOTAO_35, InterruptionPino35, RISING);  
 
 
 }
@@ -45,6 +52,9 @@ void loop()
 
   // Execução principal da aplicação  
   loop_state();
+
+
+
 }
 
 

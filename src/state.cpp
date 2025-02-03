@@ -26,8 +26,6 @@ float flowRate = 0.0;             // Vazão em L/min (ou outra unidade, depende 
 float totalLiters = 0.0;          // Total de litros ou volume acumulado
 const float calibrationfLOWFactor = 4.5; // Fator de calibração (varia de acordo com o sensor e meio)
 
-//botão extra
-const int buttom = 35;
 
 //Medição de corrente
 //EnergyMonitor emonCurrent;         // Instancia do sensor de corrente
@@ -37,11 +35,15 @@ Estado estadoAtual = INIT_ST;
 int Qnt = 0;  // Quantidade de vezes que a corrente passou de 1.5A
 int i = 0;    // Contador de leituras eliminadas na inicialização
 
+const int BOTAO_35 = 35;
+
 
 //Medição de tensão
 //EnergyMonitor emonVoltage;
 EnergyMonitor monitorEletricity;
 
+// Variável global volátil para sinalizar a interrupção
+volatile bool buttonPressed = false;
 
 /**********************************************************************************************
  *     FUNÇÃO DE SETUP E CONFIGURAÇÃO INICIAL DA APLICAÇÃO
@@ -49,10 +51,10 @@ EnergyMonitor monitorEletricity;
 void init_state() {
 
   //Defini GPIO
-  pinMode(buttom, INPUT);    
+  pinMode(BOTAO_35, INPUT);    
 
   // Corrente
-  monitorEletricity.current(36,CALIBRATION_CURRENT_FACTOR);    //2.72         // Current: input pin, calibration.  
+  monitorEletricity.current(36, CALIBRATION_CURRENT_FACTOR);    //2.72         // Current: input pin, calibration.  
 
   // Tensão  
   monitorEletricity.voltage(39, CALIBRATION_VOLTAGE_FACTOR, 1); //PIN, 173, phase em relação a corrente(ex.1,7)
@@ -67,6 +69,9 @@ void init_state() {
   // Firebase
   firebase_setup();
 
+  // Configura a interrupção para o botão
+  attachInterrupt(digitalPinToInterrupt(BOTAO_35), InterruptionPino35, FALLING);
+
 }
 
 
@@ -76,23 +81,29 @@ void init_state() {
  */
 void loop_state() {  
 
+  // Verifica se o botão foi pressionado
+  if (buttonPressed) {
+    buttonPressed = false;  // Reseta a variável de estado do botão
+    Serial.println("Botão pressionado");
+    firebase_updateValues();
+  }
+
   // Calcula a tensão e mostra no display
   calcula_tensao();
 
   // Verifica fluxo com sensor YF-S201
   //calcula_fluxo();
 
-  //Firebase 
-  // firebase_updateValues();   
-  // Zera contador de leituras
-  if (digitalRead(buttom) == LOW) {    
-    Serial.println("Botão pressionado");   
-    firebase_updateValues();
-    Qnt = 0;
-  } 
-
+ 
 }
 
+
+/**********************************************************************************************
+ *     INTERRUPÇÃO PARA ATUALIZAR PARAMETROS DO FIREBASE
+ */
+void IRAM_ATTR InterruptionPino35() {  
+  buttonPressed = true;  // Sinaliza que o botão foi pressionado
+}
 
 
 
