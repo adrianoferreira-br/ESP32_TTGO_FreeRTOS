@@ -15,7 +15,7 @@ char* MQTT_USERNAME = "Adriano";
 char* MQTT_PASSWORD = "Rafa1404";                 // TODO: criptografar a senha em outro momento. (Cuidado com o Git)
 
 // Análise de corrente e verificação de estado de operação do equipamento (Processando ou aguarndando insumo)
-float CALIBRATION_CURRENT_FACTOR = 3.12;         // Fator de calibração (varia de acordo com o sensor e meio)  
+float CALIBRATION_CURRENT_FACTOR = 2.8;         // Fator de calibração (varia de acordo com o sensor e meio)  
 float CALIBRATION_VOLTAGE_FACTOR = 171.8;
 int LIMIAR_SUPERIOR = 550;                      // Limiar superior para detecção de equipamento processando
 int LIMIAR_INFERIOR = 300;                      // Limiar inferior para detecção de equipamento aguardando insumo

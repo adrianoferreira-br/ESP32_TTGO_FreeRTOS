@@ -42,6 +42,9 @@ const int BOTAO_35 = 35;
 //EnergyMonitor emonVoltage;
 EnergyMonitor monitorEletricity;
 
+//Potência
+int tipoPotencia = 0;
+
 // Variável global volátil para sinalizar a interrupção
 volatile bool buttonPressed = false;
 
@@ -126,49 +129,83 @@ void calcula_tensao(){
   // Atualize a leitura 
   monitorEletricity.calcVI(20, 2000);  //
 
+  double realPower;
+  double apparentPower;  
+  double powerFactor;
+  double potencia;
+  
+  
   double Vrms = monitorEletricity.Vrms;  
   double Irms = monitorEletricity.Irms;
-  double realPower = monitorEletricity.realPower;
-  double apparentPower = Vrms * Irms;
-  double powerFactor = realPower / apparentPower;
 
-  // mostra a informação serial
-  Serial.print("Energia-> Tensão RMS: ");    Serial.print(Vrms);  Serial.print(" V;   "); 
-  Serial.print("Corrente RMS: ");            Serial.print(Irms);  Serial.print(" A;  ");
-  Serial.print("Potência Real: ");           Serial.print(realPower);   Serial.print(" W;  ");
+  
+  //Verifica se a corrente está dentro dos limites aceitáveis
+  if (Irms > 10/*MAX_CURRENT_LIMIT*/) {
+    Serial.println("Erro: Corrente muito elevada!");
+    return;
+  }
+
+  realPower = abs(monitorEletricity.realPower);
+  apparentPower = Vrms * Irms;
+  if (apparentPower != 0)
+    powerFactor = realPower / apparentPower;
+
+  
+  // mostra informação no Display e serial
+  tft.setTextColor(TFT_WHITE, TFT_BLACK); 
+
+  //Mostra Tensão
+  tft.drawString("Tensao", 120, 18, 4);    
+  tft.drawString((String)Vrms + " V   ", 135, 45, 4);  
+  Serial.print("Tensão RMS: ");       Serial.print(Vrms);  Serial.print(" V;   "); 
+  
+  //Mostra Corrente
+  tft.drawString("Corrente", 5, 18, 4);
+  tft.drawString((String)Irms + " A   ", 5, 45, 4);  
+  Serial.print("Corrente RMS: ");     Serial.print(Irms);  Serial.print(" A;  ");
+
+  //Mostra Potencia
+  switch (tipoPotencia) {
+    case 0:  //realPower
+      //tft.drawString("Pot. Real", 5, 70, 4);
+      tft.drawString((String)realPower + " w      ", 55, 80, 4);
+      potencia = realPower;
+    break;
+
+    case 1:  //apparentPower
+      //tft.drawString("Pot. Aparente", 5, 70, 4);
+      tft.drawString((String)apparentPower + " VA      ", 55, 80, 4);
+      potencia = apparentPower;
+    break;
+
+    case 2:  // powerFactor
+      //tft.drawString("Fator Pot.", 5, 70, 4);
+      tft.drawString((String)powerFactor + "       ", 55, 80, 4);
+      potencia = powerFactor;
+    break; 
+
+  }    
+
+// mostra na serial  
+  Serial.print("Potência Real: ");           Serial.print(realPower);       Serial.print(" W;  ");
   Serial.print("Potência Aparente: ");       Serial.print(apparentPower);   Serial.print(" VA;  ");
   Serial.print("Fator de Potência: ");       Serial.println(powerFactor);
 
-  // mostra informação no Display
-  tft.setTextColor(TFT_WHITE, TFT_BLACK); 
-  tft.drawString("Tensao", 120, 18, 4);    
-  tft.drawString((String)Vrms + " V   ", 135, 45, 4);  
-
-  tft.drawString("Corrente", 5, 18, 4);
-  tft.drawString((String)Irms + " A   ", 5, 45, 4);
-
-  //tft.drawString("Pot. Real", 5, 70, 4);
-  //tft.drawString((String)realPower + " W   ", 5, 95, 4);
-
-  //tft.drawString("Pot. Aparente", 5, 120, 4);
-  tft.drawString((String)apparentPower + " va   ", 60, 77, 4);
-
-  //tft.drawString("Fator Pot.", 5, 170, 4);
-  //tft.drawString((String)powerFactor, 5, 195, 4);
-
-  if (realPower < LIMIAR_INFERIOR) {
+// grafico de barra
+  if (potencia < LIMIAR_INFERIOR) {
     bar_color = TFT_RED;
-  } else if (realPower >= LIMIAR_INFERIOR && realPower < LIMIAR_SUPERIOR) {
+  } else if (potencia >= LIMIAR_INFERIOR && potencia < LIMIAR_SUPERIOR) {
     bar_color = TFT_ORANGE;
-  } else if (realPower >= LIMIAR_SUPERIOR) {
+  } else if (potencia >= LIMIAR_SUPERIOR) {
     bar_color = TFT_BLUE;
   } 
   
-  if (realPower >= LIMITE_MAX) {  //Evita ultrapassar barra grafica
-    realPower = LIMITE_MAX;
+  if (potencia >= LIMITE_MAX) {  //Evita ultrapassar barra grafica
+    potencia = LIMITE_MAX;
   }
   
-  graficoBarra(1,105,180,132,realPower,LIMITE_MAX,bar_color);    // x, y, largura, altura, valor, valorMaximo, cor)
+  graficoBarra(1,105,180,132,potencia,LIMITE_MAX,bar_color);    // x, y, largura, altura, valor, valorMaximo, cor)
+  
   
 
 // maquina de estado para detectar transição e realizar contagem
