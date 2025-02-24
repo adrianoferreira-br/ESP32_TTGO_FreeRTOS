@@ -47,11 +47,13 @@ void loop()
   // verifica conexão e sinal do wifi
   loop_wifi();
 
-  // Monitoramento de msg do broker mqtt
-  //loop_mqqt();
-
-  // Execução principal da aplicação  
+   // Execução principal da aplicação  
   loop_state();
+
+
+   // Monitoramento de msg do broker mqtt
+  loop_mqqt();
+
 
 
 

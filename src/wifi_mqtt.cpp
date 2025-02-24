@@ -5,6 +5,7 @@
 #include "wifi_mqtt.h"
 #include "constants.h"
 #include "main.h"
+#include <ArduinoJson.h>
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -71,6 +72,7 @@ void loop_wifi(){
  */
 void setup_mqtt()
 {
+   delay(2000);  
    client.setServer(mqtt_server, port_mqtt);
    client.setCallback(callback); 
 }
@@ -79,15 +81,14 @@ void setup_mqtt()
  *
  */
 void loop_mqqt() {
-  // put your main code here, to run repeatedly:
-  if (!client.connected()) { 
+  // put your main code here, to run repeatedly:  
+  if (!client.connected()) {             
     reconnect(); 
   } 
   client.loop(); 
-  client.publish("AdrPresto", "Hello MQTT from ESP32 adr"); //"test/topic"  )
-  delay(2000);   
-
- 
+  //client.publish("AdrPresto", "Hello MQTT from ESP32");
+  //delay(2000);   
+  
 }
 
 
@@ -111,25 +112,60 @@ void callback(char* topic, byte* payload, unsigned int length)
 
 void reconnect() 
 { 
-  while (!client.connected()) 
+  int qnt = 3;
+  while (!client.connected() && qnt > 1) 
   { 
+    qnt--;
     Serial.print("Tentando conectar ao MQTT..."); 
     if (client.connect("ESP32Client")) 
     { 
       Serial.println("Conectado"); 
-      client.subscribe("test/topic"); 
+      client.subscribe("AdrPresto"); 
     } 
     else 
     { 
       Serial.print("falhou, rc="); 
       Serial.print(client.state()); 
       Serial.println(" tentando novamente em 5 segundos"); 
-      delay(5000); 
+      delay(3000); 
     } 
   } 
 }
 
+/**********************************************************************************************
+ *     ENVIA AS INFORMAÇÕES PARA O PROTOCOLO MQTT
+ */
+void mqtt_send_data(float Vrms, float Irms, float realPower, float apparentPower, float powerFactor, int Qnt, float potencia){
+  if (!client.connected()) {
+    reconnect();
+  }
+client.loop();
 
+// Crie um objeto JSON
+StaticJsonDocument<256> doc;
+doc["V"] = String(Vrms);
+doc["I"] = String(Irms);
+doc["P"] = String(potencia);
+doc["Bat"] = String(Qnt);
+//doc["realPower"] = realPower;
+//doc["apparentPower"] = apparentPower;
+doc["FP"] = String(powerFactor);
+
+
+
+// Serialize o objeto JSON para uma string
+char jsonBuffer[256];
+serializeJson(doc, jsonBuffer);
+
+// Publique a mensagem JSON
+if (client.publish("AdrPresto", jsonBuffer)) {
+    Serial.println("Mensagem JSON enviada com sucesso");
+} else {
+    Serial.println("Falha ao enviar mensagem JSON");
+}
+
+delay(300);
+}
 
 
 /**********************************************************************************************

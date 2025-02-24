@@ -74,17 +74,12 @@ void displayPrint(char* str, int qnt, int x, int y)
 
 
 void graficoBarra(int x, int y, int largura, int altura, int valor, int valorMaximo, int cor) {
+  
     // Verificação de divisão por zero
-    if (valor < 0  ) {
-        Serial.println("Erro: Problema no grafico de barra");
-        valor = 1;        
-    }
-
-    // Verificação de limites da tela
-    /*if ( valor > valorMaximo) {//|| x + largura > tft.width() || y + altura > tft.height()) {
-        Serial.println("Erro: valores fora d grafico de barra.");
+    if (valorMaximo == 0) {
+        Serial.println("Erro: valorMaximo é zero.");
         return;
-    }*/
+    }    
 
     tft.drawRect(x, y, largura, altura, TFT_WHITE);
     tft.fillRect(x, y, largura, altura, TFT_WHITE);

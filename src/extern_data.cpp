@@ -8,8 +8,8 @@
 #include <FirebaseESP32.h>
 
 
-const char* firebaseHost = "https://presto-pr-default-rtdb.firebaseio.com/";
-const char* firebaseAuth = "RSDCg4zrJcYBVcn8i9ewxRhOTzbDMYzoju0SdIuJ";
+const char* firebaseHost = "https://presto-prc-default-rtdb.firebaseio.com/";
+const char* firebaseAuth = "RSDCg4zrJcYBVcn8i9ewxRhOTzbDMYzoju0SdIuI";
 
 
 // Instancia do Firebase
@@ -27,10 +27,37 @@ void firebase_setup()
     fbConfig.signer.tokens.legacy_token = firebaseAuth;
 
     Firebase.begin(&fbConfig, &auth);
-    Firebase.reconnectWiFi(true);
+    Firebase.reconnectWiFi(true);    
     
+    // Configuração do Firestore
+   // Firebase.Firestore.begin("YOUR_PROJECT_ID", "YOUR_API_KEY");   
+
     Serial.println("Firebase configurado!"); 
 
+    //send_data_firestore();
+
+}
+
+
+/*
+ * função para envio de dados para o Firestore
+ */
+void send_data_firestore() {
+    FirebaseJson json;
+    json.set("timestamp", "2025-02-10T14:13:00");
+    json.set("atividade", 1);
+    json.set("corrente", 10);
+    json.set("potencia", 100);
+    json.set("tensao", 220);
+    json.set("tipo_produto", 2);
+
+    if (Firebase.push(firebaseData, "/PRC", json)) {
+        Serial.println("Dados enviados com sucesso");
+    } else {
+        Serial.println("Erro ao enviar dados: " + firebaseData.errorReason());
+    }
+
+    // delay(60000); // Aguarda 1 minuto antes de enviar novamente
 }
 
 
@@ -163,7 +190,7 @@ void firebase_updateValues()
     LIMITE_MAX = (limiteMax > 1) ? limiteMax : 2000;
 
     //String SSID placa Ethernet;
-    
+    /*
     char Buffer[30];
     ethernetSSID.toCharArray(Buffer, sizeof(Buffer));
     SSID = Buffer;
@@ -172,7 +199,7 @@ void firebase_updateValues()
     //ethernetPassword    
     ethernetPassword.toCharArray(Buffer, sizeof(Buffer));
     PASSWORD = Buffer;
-    
+    */
 
 
 /*    
@@ -207,5 +234,7 @@ void showValues(){
 
 
 
+
 }
+
 

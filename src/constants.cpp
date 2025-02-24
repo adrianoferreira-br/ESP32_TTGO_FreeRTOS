@@ -5,12 +5,12 @@
 
 
 // Informações para acesso a Internet
-char* SSID = "PhoneAdr";      // "STARLINK";      // Substitua pelo seu SSID para acesso a Internet
-char* PASSWORD = "UDJ1-ddsp"; //"11121314";       // Substitua pela sua senha de acesso a Internet
+char* SSID = "STARLINK"; // "PhoneAdr";      //    // Substitua pelo seu SSID para acesso a Internet
+char* PASSWORD = "11121314"; //"UDJ1-ddsp"; //      // Substitua pela sua senha de acesso a Internet
 
 // Informações para acesso ao servidor MQTT
-char* MQTT_SERVER = "82d3aa30f5744315a2bdde52bafe1ec7.s1.eu.hivemq.cloud"; //"192.168.100.4";          // Substitua pelo endereço do servidor MQTT
-int PORT_MQTT = 8883;                             // Porta do servidor MQTT      padrão: 1883
+char* MQTT_SERVER = "192.168.100.4";//"82d3aa30f5744315a2bdde52bafe1ec7.s1.eu.hivemq.cloud"; //"192.168.100.4";          // Substitua pelo endereço do servidor MQTT
+int PORT_MQTT = 1883;                             // Porta do servidor MQTT      padrão: 1883
 char* MQTT_USERNAME = "Adriano";
 char* MQTT_PASSWORD = "Rafa1404";                 // TODO: criptografar a senha em outro momento. (Cuidado com o Git)
 

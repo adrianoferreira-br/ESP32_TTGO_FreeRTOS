@@ -13,11 +13,14 @@
 #include "time.h"
 #include "constants.h"
 #include "extern_data.h"
+#include "wifi_mqtt.h"
 
 
 // Pino do sensor YF-201
 #define FLOW_SENSOR_PIN 37 // Conecte o fio de saída do sensor no GPIO 4
 
+// Pino do sensor reflexivo
+#define REFLEX_SENSOR_PIN 38 
 
 // Flow - Variáveis para contagem de pulsos
 volatile uint16_t pulseCount = 0; // Contador de pulsos
@@ -35,12 +38,17 @@ Estado estadoAtual = INIT_ST;
 int Qnt = 0;  // Quantidade de vezes que a corrente passou de 1.5A
 int i = 0;    // Contador de leituras eliminadas na inicialização
 
+//Verificação de reflexo
+bool reflexSensorTriggered = false;
+
 const int BOTAO_35 = 35;
 
 
 //Medição de tensão
 //EnergyMonitor emonVoltage;
 EnergyMonitor monitorEletricity;
+
+time_t before = 0;
 
 //Potência
 int tipoPotencia = 0;
@@ -61,6 +69,10 @@ void init_state() {
 
   // Tensão  
   monitorEletricity.voltage(39, CALIBRATION_VOLTAGE_FACTOR, 1); //PIN, 173, phase em relação a corrente(ex.1,7)
+
+  // Sensor reflexivo
+  pinMode(REFLEX_SENSOR_PIN, INPUT_PULLUP);  
+  attachInterrupt(digitalPinToInterrupt(REFLEX_SENSOR_PIN), InterruptionPino38, FALLING);
     
   // fluxo
   pinMode(FLOW_SENSOR_PIN, INPUT_PULLUP);
@@ -89,6 +101,7 @@ void loop_state() {
     buttonPressed = false;  // Reseta a variável de estado do botão
     Serial.println("Botão pressionado");
     firebase_updateValues();
+    send_data_firestore();
   }
 
   // Calcula a tensão e mostra no display
@@ -96,6 +109,13 @@ void loop_state() {
 
   // Verifica fluxo com sensor YF-S201
   //calcula_fluxo();
+
+  //
+  if (reflexSensorTriggered){
+    reflexSensorTriggered = false;
+    Serial.println("Sensor reflexivo ativado!");
+    Qnt++;
+  }
 
  
 }
@@ -105,9 +125,16 @@ void loop_state() {
  *     INTERRUPÇÃO PARA ATUALIZAR PARAMETROS DO FIREBASE
  */
 void IRAM_ATTR InterruptionPino35() {  
-  buttonPressed = true;  // Sinaliza que o botão foi pressionado
+  buttonPressed = true;  // Sinaliza que o botão foi pressionado  
 }
 
+/**********************************************************************************************
+ *     INTERRUPÇÃO PARA ATUALIZAR PARAMETROS DO FIREBASE
+ */
+void IRAM_ATTR InterruptionPino38(){
+ // pulseCount++;  
+    reflexSensorTriggered = true;
+}
 
 
 /**********************************************************************************************
@@ -146,9 +173,10 @@ void calcula_tensao(){
   }
 
   realPower = abs(monitorEletricity.realPower);
-  apparentPower = Vrms * Irms;
-  if (apparentPower != 0)
-    powerFactor = realPower / apparentPower;
+  //apparentPower = Vrms * Irms;
+  apparentPower = monitorEletricity.apparentPower;
+  
+powerFactor = abs(monitorEletricity.powerFactor);
 
   
   // mostra informação no Display e serial
@@ -157,12 +185,12 @@ void calcula_tensao(){
   //Mostra Tensão
   tft.drawString("Tensao", 120, 18, 4);    
   tft.drawString((String)Vrms + " V   ", 135, 45, 4);  
-  Serial.print("Tensão RMS: ");       Serial.print(Vrms);  Serial.print(" V;   "); 
+  Serial.print("Vrms: ");       Serial.print(Vrms);  Serial.print(" v;   "); 
   
   //Mostra Corrente
   tft.drawString("Corrente", 5, 18, 4);
   tft.drawString((String)Irms + " A   ", 5, 45, 4);  
-  Serial.print("Corrente RMS: ");     Serial.print(Irms);  Serial.print(" A;  ");
+  Serial.print("Irms: ");     Serial.print(Irms);  Serial.print(" A;  ");
 
   //Mostra Potencia
   switch (tipoPotencia) {
@@ -187,9 +215,13 @@ void calcula_tensao(){
   }    
 
 // mostra na serial  
-  Serial.print("Potência Real: ");           Serial.print(realPower);       Serial.print(" W;  ");
-  Serial.print("Potência Aparente: ");       Serial.print(apparentPower);   Serial.print(" VA;  ");
-  Serial.print("Fator de Potência: ");       Serial.println(powerFactor);
+  Serial.print("P: ");      Serial.print(realPower);        Serial.print(" W;  ");    //Pot.Real
+  Serial.print("S: ");      Serial.print(apparentPower);    Serial.print(" VA;  ");   //Pot.Aparente
+  Serial.print("FP: ");     Serial.print(powerFactor);      Serial.print(";  ");      //Fator de Potência
+
+// envia via mqtt
+  mqtt_send_data(Vrms, Irms, realPower, apparentPower, powerFactor, Qnt, potencia);
+  
 
 // grafico de barra
   if (potencia < LIMIAR_INFERIOR) {
@@ -221,8 +253,13 @@ void calcula_tensao(){
 
       if (realPower > LIMIAR_SUPERIOR) {        
         Qnt++;
-        //show_time(); 
-        tft.drawString((String)Qnt,190, 110, 4);                
+
+        //show_diferença de tempo entre batida 
+        time_t now = time(nullptr);   
+        Serial.print("At(Batida): "); Serial.print(now - before);   
+        before = now;
+
+        
         estadoAtual = HIGH_CURRENT_ST;
       }      
     break;
@@ -235,6 +272,18 @@ void calcula_tensao(){
       }
     break;
   }
+
+
+//show_diferença de tempo entre batida 
+  time_t now = time(nullptr);   
+  Serial.print("At(sample): "); Serial.print(now - before);   
+  before = now;
+
+  Serial.print("Qnt: ");       Serial.print((String)Qnt);   Serial.println("; ");
+
+  // mostra quantidade de batida        
+  tft.drawString((String)Qnt,190, 110, 4);                
+
   tft.setTextColor(TFT_RED, TFT_BLACK);        
   tft.drawString((String)LIMIAR_INFERIOR, 1, 87, 2);
   tft.drawString((String)LIMIAR_SUPERIOR, 180, 87, 2);
@@ -243,6 +292,7 @@ void calcula_tensao(){
 
   tft.drawString((String)CALIBRATION_CURRENT_FACTOR, 1, 67, 2);
   tft.drawString((String)CALIBRATION_VOLTAGE_FACTOR, 180, 67, 2);
+
 
 
   tft.setTextColor(TFT_WHITE, TFT_BLACK);        
@@ -275,6 +325,7 @@ void show_time() {
   tft.drawString(timeStr, 125, 173, 2);
  
 }
+
 
 
 
