@@ -135,7 +135,8 @@ void reconnect()
 /**********************************************************************************************
  *     ENVIA AS INFORMAÇÕES PARA O PROTOCOLO MQTT
  */
-void mqtt_send_data(float Vrms, float Irms, float realPower, float apparentPower, float powerFactor, int Qnt, float potencia){
+//void mqtt_send_data(float Vrms, float Irms, float realPower, float apparentPower, float powerFactor, int Qnt, float potencia){
+  void mqtt_send_data(String nome_equipamento, String now){
   if (!client.connected()) {
     reconnect();
   }
@@ -143,13 +144,10 @@ client.loop();
 
 // Crie um objeto JSON
 StaticJsonDocument<256> doc;
-doc["V"] = String(Vrms);
-doc["I"] = String(Irms);
-doc["P"] = String(potencia);
-doc["Bat"] = String(Qnt);
-//doc["realPower"] = realPower;
+doc["equipamento"] = nome_equipamento;
+doc["hora"] = now;
 //doc["apparentPower"] = apparentPower;
-doc["FP"] = String(powerFactor);
+//doc["FP"] = String(powerFactor);
 
 
 

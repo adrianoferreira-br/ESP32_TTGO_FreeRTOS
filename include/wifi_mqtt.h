@@ -14,7 +14,8 @@ void callback(char*, byte*, unsigned int);
 void setup_wifi(void);
 void loop_mqqt(void);
 void loop_wifi(void);
-void mqtt_send_data(float, float, float, float, float, int, float);
+//void mqtt_send_data(float, float, float, float, float, int, float);
+void mqtt_send_data(String, String);
 
 
 #endif // WIFI_MQTT_H_

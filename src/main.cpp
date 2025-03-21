@@ -5,14 +5,12 @@
 
 
 #define BOTAO_35 35
+#define PINO_12 12
+#define WDT_TIMEOUT 5
 
 
 TaskHandle_t task_handle_Menu = NULL;
 TaskHandle_t task_handle2 = NULL;
-
-
-
-
 
 
 
@@ -35,9 +33,18 @@ void setup() {
   //state
   init_state();
 
+  // Batidas prensa
+  pinMode(PINO_12, INPUT);
+  attachInterrupt(PINO_12, InterruptionPino12, RISING);
+
   // Interruptions
   pinMode(BOTAO_35, INPUT);
   attachInterrupt(BOTAO_35, InterruptionPino35, RISING);  
+
+  //WDT  
+  //esp_task_wdt_init(WDT_TIMEOUT, true);
+  //esp_task_wdt_add(NULL);
+
 
 
 }
@@ -47,15 +54,17 @@ void loop()
   // verifica conexão e sinal do wifi
   loop_wifi();
 
-   // Execução principal da aplicação  
-  loop_state();
+  // Execução principal da aplicação  
+  //loop_state();
 
-
-   // Monitoramento de msg do broker mqtt
+  // Monitoramento de msg do broker mqtt
   loop_mqqt();
 
+  //WDT
+  //esp_task_wdt_reset();
 
-
+  //Processa os batimentos da prensa
+  verifica_batida_prensa();
 
 }
 

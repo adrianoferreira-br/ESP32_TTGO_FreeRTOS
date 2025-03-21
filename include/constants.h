@@ -30,3 +30,6 @@ extern char* FIREBASE_AUTH;                       // Chave de autenticação do 
 
 
 #endif // CONSTANTS_H_ 
+
+
+//PRETO!    #prestoalimentos

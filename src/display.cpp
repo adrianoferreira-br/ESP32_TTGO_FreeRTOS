@@ -93,8 +93,8 @@ void graficoBarra(int x, int y, int largura, int altura, int valor, int valorMax
  *  @param value: value to be displayed on the gauge
 */
 void drawGauge(int value) {
-  int centerX = 55;//tft.width() / 2;
-  int centerY = 105;//tft.height() / 2;
+  int centerX = 45;//tft.width() / 2;
+  int centerY = 60;//tft.height() / 2;
   int radius = 30; // Raio do mostrador
 
   // Desenhe o mostrador circular

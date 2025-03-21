@@ -11,6 +11,7 @@
 #include "freertos/FreeRTOS.h"
 #include "freertos/task.h"
 #include "state.h"
+#include "esp_task_wdt.h"
 
 
 void vTask1(void *pvParameters);  //

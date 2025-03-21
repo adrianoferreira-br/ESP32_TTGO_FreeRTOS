@@ -14,6 +14,7 @@
 #include "constants.h"
 #include "extern_data.h"
 #include "wifi_mqtt.h"
+//#include "sqldatabase.h"
 
 
 // Pino do sensor YF-201
@@ -21,6 +22,12 @@
 
 // Pino do sensor reflexivo
 #define REFLEX_SENSOR_PIN 38 
+
+// Pino do sensor reflexivo
+#define BATIDA_PIN 12 
+int qnt_batidas_prensa = 0;
+volatile bool batida_prensa = false;
+
 
 // Flow - Variáveis para contagem de pulsos
 volatile uint16_t pulseCount = 0; // Contador de pulsos
@@ -30,8 +37,8 @@ float totalLiters = 0.0;          // Total de litros ou volume acumulado
 const float calibrationfLOWFactor = 4.5; // Fator de calibração (varia de acordo com o sensor e meio)
 
 
-//Medição de corrente
-//EnergyMonitor emonCurrent;         // Instancia do sensor de corrente
+//Medição de corrente e tensão
+EnergyMonitor monitorEletricity;
 int StateMachine = 0;
 typedef enum {INIT_ST, LOW_CURRENT_ST, HIGH_CURRENT_ST} Estado;
 Estado estadoAtual = INIT_ST;
@@ -39,14 +46,11 @@ int Qnt = 0;  // Quantidade de vezes que a corrente passou de 1.5A
 int i = 0;    // Contador de leituras eliminadas na inicialização
 
 //Verificação de reflexo
-bool reflexSensorTriggered = false;
+volatile bool reflexSensorTriggered = false;
 
+// botão da placa
 const int BOTAO_35 = 35;
 
-
-//Medição de tensão
-//EnergyMonitor emonVoltage;
-EnergyMonitor monitorEletricity;
 
 time_t before = 0;
 
@@ -87,7 +91,23 @@ void init_state() {
   // Configura a interrupção para o botão
   attachInterrupt(digitalPinToInterrupt(BOTAO_35), InterruptionPino35, FALLING);
 
+   // Inicializa horario do ntp com fuso -3
+   configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
 }
+
+
+/**********************************************************************************************
+ *     FUNÇÃO DE SETUP E CONFIGURAÇÃO INICIAL DA APLICAÇÃO
+ */
+void init_batidas_prensa() {
+
+  //Defini GPIO
+  pinMode(BATIDA_PIN, INPUT_PULLUP);  
+ // pinMode(BATIDA_PIN, INPUT);   
+  
+
+}
+
 
 
 
@@ -107,10 +127,13 @@ void loop_state() {
   // Calcula a tensão e mostra no display
   calcula_tensao();
 
+  // Calcula a tensão e mostra no display
+  verifica_batida_prensa();
+
   // Verifica fluxo com sensor YF-S201
   //calcula_fluxo();
 
-  //
+  //Responsável por verificar o sensor reflexivo
   if (reflexSensorTriggered){
     reflexSensorTriggered = false;
     Serial.println("Sensor reflexivo ativado!");
@@ -122,29 +145,68 @@ void loop_state() {
 
 
 /**********************************************************************************************
- *     INTERRUPÇÃO PARA ATUALIZAR PARAMETROS DO FIREBASE
+ *     INTERRUPÇÃO PINO 35 PARA ATUALIZAR PARAMETROS DO FIREBASE
  */
 void IRAM_ATTR InterruptionPino35() {  
   buttonPressed = true;  // Sinaliza que o botão foi pressionado  
 }
 
 /**********************************************************************************************
- *     INTERRUPÇÃO PARA ATUALIZAR PARAMETROS DO FIREBASE
+ *     INTERRUPÇÃO PINO 38 PARA DO SENSOR REFLEXIVO
  */
 void IRAM_ATTR InterruptionPino38(){
- // pulseCount++;  
     reflexSensorTriggered = true;
 }
 
 
 /**********************************************************************************************
- *     INTERRUPÇÃO PARA CONTAR PULSO DO FLUXO DE AR/AGUA
+ *     INTERRUPÇÃO PINO 37 PARA CONTAR PULSO DO FLUXO DE AR/AGUA
  */
 void IRAM_ATTR pulseCounter() {
-    pulseCount++;
+    //pulseCount++;
 }
 
 
+/**********************************************************************************************
+ *     INTERRUPÇÃO PINO 12 PARA CONTAR BATIDAS DA PRENSA
+ */
+void IRAM_ATTR InterruptionPino12() {
+  batida_prensa = true;  // Sinaliza que o botão foi pressionado  
+}
+
+
+/**********************************************************************************************
+ *     VERIFICA AS BATIDAS DA PRENSA
+ */
+void verifica_batida_prensa(){
+    char timeStr[20];  // Used to store time string
+    struct tm timeinfo;
+    char nome_equipamento[10] = "prensa_1";
+  
+    
+    
+    delay(2000);
+    if (batida_prensa)  {
+      batida_prensa = false;  // Reseta a variável de estado do botão
+      Serial.print("Batida da prensa111111");      
+      qnt_batidas_prensa++;
+      //envia mqtt
+      mqtt_send_data(nome_equipamento, "99999999");
+
+      tft.setTextColor(TFT_WHITE, TFT_BLACK);
+      drawGauge(qnt_batidas_prensa);
+      tft.drawString((String)qnt_batidas_prensa,105, 50, 6);        
+      graficoBarra(1,105,230,132,qnt_batidas_prensa,20, TFT_BLUE );    // x, y, largura, altura, valor, valorMaximo, cor)          
+  
+    }
+    
+   
+    
+    
+
+
+
+}
 
 
 /**********************************************************************************************
@@ -220,7 +282,7 @@ powerFactor = abs(monitorEletricity.powerFactor);
   Serial.print("FP: ");     Serial.print(powerFactor);      Serial.print(";  ");      //Fator de Potência
 
 // envia via mqtt
-  mqtt_send_data(Vrms, Irms, realPower, apparentPower, powerFactor, Qnt, potencia);
+  //mqtt_send_data(Vrms, Irms, realPower, apparentPower, powerFactor, Qnt, potencia);
   
 
 // grafico de barra
@@ -252,7 +314,7 @@ powerFactor = abs(monitorEletricity.powerFactor);
     case LOW_CURRENT_ST:
 
       if (realPower > LIMIAR_SUPERIOR) {        
-        Qnt++;
+       // Qnt++;
 
         //show_diferença de tempo entre batida 
         time_t now = time(nullptr);   
