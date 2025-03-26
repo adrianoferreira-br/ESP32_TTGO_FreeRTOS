@@ -19,7 +19,7 @@ void calcula_tensao();
 void calcula_fluxo();
 void pulseCounter();
 void verifica_batida_prensa(void);
-void init_batidas_prensa();
+void setup_batidas_prensa();
 
 
 

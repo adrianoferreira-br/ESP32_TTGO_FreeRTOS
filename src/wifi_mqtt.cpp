@@ -2,10 +2,18 @@
  *  Description:  WIFI and MQTT
  *  date: 2025-01-14
  */
-#include "wifi_mqtt.h"
+
+
+ #include "wifi_mqtt.h"
 #include "constants.h"
 #include "main.h"
 #include <ArduinoJson.h>
+//partions
+#include "esp_partition.h"
+#include "esp_ota_ops.h"
+//Ota
+#include <ArduinoOTA.h>
+
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -17,8 +25,10 @@ const int port_mqtt = PORT_MQTT;        //1883
 
 //String ip;
 
-/*
- *
+//WebServer server(80);
+
+/**************************************************************
+ * INICIALIZAÇÃO DO WIFI
  */
 void setup_wifi(){
 
@@ -32,7 +42,7 @@ void setup_wifi(){
    WiFi.begin(ssid, password); 
    do 
    { 
-        delay(500); 
+        delay(15000); 
         Serial.print("."); 
         i++;
    } while (((WiFi.status() != WL_CONNECTED) && (i<10)));
@@ -46,12 +56,15 @@ void setup_wifi(){
     Serial.println("WiFi conectado"); 
     Serial.print("Endereço IP: "); 
     Serial.println(WiFi.localIP());                
-   }     
-}
+   }       
+
+  }
 
 
-/*
- *
+  
+
+/**************************************************************
+ * LOOP DO WIFI 
  */
 void loop_wifi(){
   // Preenche informações referente a rede
@@ -62,13 +75,120 @@ void loop_wifi(){
       tft.drawString("Disconnected     ", 0, 0, 2);  
       tft.drawString("                 ", 130, 0, 2);  
       
-  }  
+  }   
+}
+
+
+/**************************************************************
+ * MOSTRA INFO DAS PARTIÇÕES 
+ */
+void show_partitions() {
+
+    Serial.println("Lista de partições:");
+
+    // Percorre todas as partições e imprime detalhes
+    esp_partition_iterator_t it = esp_partition_find(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, NULL);
+    while (it != NULL) {
+        const esp_partition_t* part = esp_partition_get(it);
+        Serial.printf("Nome: %s | Tipo: %d | Subtipo: %d | Tamanho: %d bytes | Endereço: 0x%06X\n",
+                      part->label, part->type, part->subtype, part->size, part->address);
+        it = esp_partition_next(it);
+    }
+    esp_partition_iterator_release(it);
+
+    
+    // Verificar a partição ativa
+    const esp_partition_t *running = esp_ota_get_running_partition();
+    Serial.print("Running partition type: ");
+    Serial.println(running->type);
+    Serial.print("Running partition subtype: ");
+    Serial.println(running->subtype);
+    Serial.print("Running partition address: ");
+    Serial.println(running->address, HEX);
+
+    Serial.printf("Flash chip size: %u bytes\n", spi_flash_get_chip_size());
+
+    // Inicializar a partição OTA apenas se necessário
+    const esp_partition_t *next_update_partition = esp_ota_get_next_update_partition(NULL);
+    if (next_update_partition != NULL) {
+        esp_err_t err = esp_ota_set_boot_partition(next_update_partition);
+        if (err != ESP_OK) {
+          Serial.print("Failed to set boot partition: ");
+          Serial.println(esp_err_to_name(err));
+        } else {
+          Serial.println("Boot partition set successfully");
+        }
+    } else {
+        Serial.println("No OTA update partition found");
+    }
+
+    // Verificar novamente a partição ativa após a inicialização
+    running = esp_ota_get_running_partition();
+    Serial.print("Running partition type: ");
+    Serial.println(running->type);
+    Serial.print("Running partition subtype: ");
+    Serial.println(running->subtype);
+    Serial.print("Running partition address: ");
+    Serial.println(running->address, HEX);
+
+  }
+
+
+/**************************************************************
+ * INICIALIZAÇÃO DO OTA 
+ */
+void config_ota() {
+   
+    ArduinoOTA.setPort(3232);
+    ArduinoOTA.onStart([]() {
+      String type;
+      if (ArduinoOTA.getCommand() == U_FLASH) {
+          type = "sketch";
+      } else { // U_SPIFFS
+          type = "filesystem";
+      }
+      Serial.println("Start updating " + type);
+    });
+
+    ArduinoOTA.onEnd([]() {
+      Serial.println("\nEnd");
+    });
+
+    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+        Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
+    });
+
+    ArduinoOTA.onError([](ota_error_t error) {
+        Serial.printf("Error[%u]: ", error);
+        if (error == OTA_AUTH_ERROR) {
+          Serial.println("Auth Failed");
+        } else if (error == OTA_BEGIN_ERROR) {
+          Serial.println("Begin Failed");
+        } else if (error == OTA_CONNECT_ERROR) {
+          Serial.println("Connect Failed");
+        } else if (error == OTA_RECEIVE_ERROR) {
+          Serial.println("Receive Failed");
+        } else if (error == OTA_END_ERROR) {
+          Serial.println("End Failed");
+        }
+    });
+
+    ArduinoOTA.begin();
+    Serial.println("OTA ready");
 
 }
 
 
-/*
- *
+/**************************************************************
+ * LOOP DO OTA
+ */
+void loop_ota() {  
+  ArduinoOTA.handle();
+}
+
+
+/**************************************************************
+ * INICIALIZAÇÃO DO MQTT
  */
 void setup_mqtt()
 {
@@ -77,8 +197,9 @@ void setup_mqtt()
    client.setCallback(callback); 
 }
  
-/*
- *
+
+/**************************************************************
+ * LOOP DO MQTT
  */
 void loop_mqqt() {
   // put your main code here, to run repeatedly:  
@@ -89,6 +210,9 @@ void loop_mqqt() {
   //client.publish("AdrPresto", "Hello MQTT from ESP32");
   //delay(2000);   
   
+  //server.handleClient();
+ 
+
 }
 
 
@@ -135,35 +259,34 @@ void reconnect()
 /**********************************************************************************************
  *     ENVIA AS INFORMAÇÕES PARA O PROTOCOLO MQTT
  */
-//void mqtt_send_data(float Vrms, float Irms, float realPower, float apparentPower, float powerFactor, int Qnt, float potencia){
-  void mqtt_send_data(String nome_equipamento, String now){
+void mqtt_send_data(String nome_equipamento, String horario){
   if (!client.connected()) {
     reconnect();
   }
-client.loop();
+  client.loop();
 
-// Crie um objeto JSON
-StaticJsonDocument<256> doc;
-doc["equipamento"] = nome_equipamento;
-doc["hora"] = now;
-//doc["apparentPower"] = apparentPower;
-//doc["FP"] = String(powerFactor);
+  // Crie um objeto JSON
+  StaticJsonDocument<256> doc;
+  doc["equipamento"] = nome_equipamento;
+  doc["hora"] = horario;
+  //doc["apparentPower"] = apparentPower;
+  //doc["FP"] = String(powerFactor);
 
 
+  // Serialize o objeto JSON para uma string
+  char jsonBuffer[256];
+  serializeJson(doc, jsonBuffer);
 
-// Serialize o objeto JSON para uma string
-char jsonBuffer[256];
-serializeJson(doc, jsonBuffer);
-
-// Publique a mensagem JSON
-if (client.publish("AdrPresto", jsonBuffer)) {
+  // Publique a mensagem JSON
+  if (client.publish("AdrPresto", jsonBuffer)) {
     Serial.println("Mensagem JSON enviada com sucesso");
-} else {
+  } else {
     Serial.println("Falha ao enviar mensagem JSON");
-}
+  }
 
-delay(300);
-}
+} 
+
+
 
 
 /**********************************************************************************************

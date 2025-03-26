@@ -14,6 +14,9 @@ extern int PORT_MQTT;                             // Porta do servidor MQTT     
 extern char* MQTT_USERNAME;
 extern char* MQTT_PASSWORD;                       // TODO: criptografar a senha em outro momento. (Cuidado com o Git)
 
+// Informações referente a aplicação
+extern char* NOME_EQUIPAMENTO;                    // Nome do equipamento   ex. "prensa_1"
+
 // Análise de corrente e verificação de estado de operação do equipamento (Processando ou aguarndando insumo)
 extern float CALIBRATION_CURRENT_FACTOR;          // Fator de calibração (varia de acordo com o sensor e meio)  
 extern float CALIBRATION_VOLTAGE_FACTOR;            
@@ -25,6 +28,7 @@ extern int AMOSTRAS_COMPROVACAO_ESTADO;           // Tempo de comprovação de e
 // Informações para acesso ao Firebase
 extern char* FIREBASE_HOST;                       // Host do Firebase
 extern char* FIREBASE_AUTH;                       // Chave de autenticação do Firebase   TODO: Criptografar a chave de autenticação
+
 
 
 

@@ -65,9 +65,6 @@ volatile bool buttonPressed = false;
  */
 void init_state() {
 
-  //Defini GPIO
-  pinMode(BOTAO_35, INPUT);    
-
   // Corrente
   monitorEletricity.current(36, CALIBRATION_CURRENT_FACTOR);    //2.72         // Current: input pin, calibration.  
 
@@ -88,8 +85,6 @@ void init_state() {
   // Firebase
   firebase_setup();
 
-  // Configura a interrupção para o botão
-  attachInterrupt(digitalPinToInterrupt(BOTAO_35), InterruptionPino35, FALLING);
 
    // Inicializa horario do ntp com fuso -3
    configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
@@ -99,12 +94,19 @@ void init_state() {
 /**********************************************************************************************
  *     FUNÇÃO DE SETUP E CONFIGURAÇÃO INICIAL DA APLICAÇÃO
  */
-void init_batidas_prensa() {
+void setup_batidas_prensa() {
+
+  // Configura a interrupção para o botão
+  attachInterrupt(digitalPinToInterrupt(BATIDA_PIN), InterruptionPino12, FALLING);
+
 
   //Defini GPIO
   pinMode(BATIDA_PIN, INPUT_PULLUP);  
- // pinMode(BATIDA_PIN, INPUT);   
-  
+ 
+
+  //
+  // Inicializa horario do ntp com fuso -3
+  configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
 
 }
 
@@ -128,7 +130,7 @@ void loop_state() {
   calcula_tensao();
 
   // Calcula a tensão e mostra no display
-  verifica_batida_prensa();
+  //verifica_batida_prensa();
 
   // Verifica fluxo com sensor YF-S201
   //calcula_fluxo();
@@ -179,31 +181,58 @@ void IRAM_ATTR InterruptionPino12() {
  *     VERIFICA AS BATIDAS DA PRENSA
  */
 void verifica_batida_prensa(){
-    char timeStr[20];  // Used to store time string
+    char timeStr[20];  // armazena string do horário
     struct tm timeinfo;
-    char nome_equipamento[10] = "prensa_1";
-  
+    char nome_equipamento[10];
+    time_t now = time(nullptr);   
     
-    
-    delay(2000);
-    if (batida_prensa)  {
-      batida_prensa = false;  // Reseta a variável de estado do botão
-      Serial.print("Batida da prensa111111");      
-      qnt_batidas_prensa++;
-      //envia mqtt
-      mqtt_send_data(nome_equipamento, "99999999");
-
-      tft.setTextColor(TFT_WHITE, TFT_BLACK);
-      drawGauge(qnt_batidas_prensa);
-      tft.drawString((String)qnt_batidas_prensa,105, 50, 6);        
-      graficoBarra(1,105,230,132,qnt_batidas_prensa,20, TFT_BLUE );    // x, y, largura, altura, valor, valorMaximo, cor)          
-  
+    //atualiza horário
+    if (!getLocalTime(&timeinfo)) {
+      Serial.println("Erro ao obter tempo!");
+      return;
     }
-    
-   
-    
-    
+     
+    // tempo para debouce da prensa
+    delay(700); 
 
+    // Executa interrupção da prensa
+    if (batida_prensa)  {                  
+
+      // Reseta a variável de estado do botão
+      batida_prensa = false;  
+
+      // Verifica se interrupção é falsa, batida de retorno
+      if (digitalRead(BATIDA_PIN) == HIGH){ 
+        delay(700);        
+        Serial.println("Batida falsa, retorno!");
+        return;
+      }
+
+      //envia mqtt
+      strcpy(nome_equipamento, NOME_EQUIPAMENTO);      
+      strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
+      mqtt_send_data(nome_equipamento, timeStr);
+
+      // Mostra quantidade de batida no display
+      qnt_batidas_prensa++;      
+      tft.setTextColor(TFT_WHITE, TFT_BLACK);      
+      tft.drawString((String)qnt_batidas_prensa,70, 50, 6);         
+
+      // Mostra horário da ultima batida
+      strftime(timeStr, sizeof(timeStr), "%H:%M:%S", &timeinfo);      
+      tft.drawString("             ", 62, 105, 4);    
+      tft.drawString(timeStr, 65, 105, 4);  
+      
+    }
+
+  /*Serial.println(&timeinfo, "%Y-%m-%d %H:%M:%S");   
+  tft.drawString("             ", 62, 105, 4);    
+  tft.drawString((String)timeinfo.tm_hour, 65, 105, 4);  
+  tft.drawString(":", 94, 105, 4);
+  tft.drawString((String)timeinfo.tm_min, 100, 105, 4);
+  tft.drawString(":", 130, 105, 4);
+  tft.drawString((String)timeinfo.tm_sec, 137, 105, 4); 
+*/
 
 
 }

@@ -16,6 +16,7 @@
 
 void vTask1(void *pvParameters);  //
 void vTask2(void *pvParameters);  //
+void define_hardware();
 
 
 extern String ip;
