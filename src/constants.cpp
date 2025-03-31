@@ -5,11 +5,11 @@
 
 
 // Informações para acesso a Internet
-char* SSID = "STARLINK"; //"PRESTO!";//"PhoneAdr";      //     // Substitua pelo seu SSID para acesso a Internet
-char* PASSWORD = "11121314"; //"#prestoalimentos";//"UDJ1-ddsp"; //      // Substitua pela sua senha de acesso a Internet
+char* SSID = "PRESTO!";//"STARLINK"; //  "PhoneAdr";       //     // Substitua pelo seu SSID para acesso a Internet
+char* PASSWORD = "#prestoalimentos";//"11121314"; //"UDJ1-ddsp"; //      // Substitua pela sua senha de acesso a Internet
 
 // Informações para acesso ao servidor MQTT
-char* MQTT_SERVER = "192.168.100.4";          //"192.168.0.203";//"172.24.96.1";//"82d3aa30f5744315a2bdde52bafe1ec7.s1.eu.hivemq.cloud"; // Substitua pelo endereço do servidor MQTT
+char* MQTT_SERVER = "192.168.0.203";//"192.168.100.4";          //"172.24.96.1";//"82d3aa30f5744315a2bdde52bafe1ec7.s1.eu.hivemq.cloud"; // Substitua pelo endereço do servidor MQTT
 int PORT_MQTT = 1883;                             // Porta do servidor MQTT      padrão: 1883
 char* MQTT_USERNAME = "Adriano";
 char* MQTT_PASSWORD = "Rafa1404";                 // TODO: criptografar a senha em outro momento. (Cuidado com o Git)
@@ -28,6 +28,9 @@ int AMOSTRAS_COMPROVACAO_ESTADO = 3;             // Tempo de comprovação de es
 // Informações para acesso ao Firebase
 char* FIREBASE_HOST = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"; // Host do Firebase
 char* FIREBASE_AUTH = "<YOUR_GoogleAPIKey_HERE>";                         // Chave de autenticação do Firebase   TODO: Criptografar a chave de autenticação
+
+// Versão
+char* VERSION = "v0.1.0";  // Versão da prensa validada junto com o Saulo no dia 28/03/25
 
 
 

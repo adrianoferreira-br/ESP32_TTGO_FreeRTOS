@@ -97,14 +97,11 @@ void init_state() {
 void setup_batidas_prensa() {
 
   // Configura a interrupção para o botão
-  attachInterrupt(digitalPinToInterrupt(BATIDA_PIN), InterruptionPino12, FALLING);
-
+  attachInterrupt(digitalPinToInterrupt(BATIDA_PIN), InterruptionPino12, RISING);
 
   //Defini GPIO
-  pinMode(BATIDA_PIN, INPUT_PULLUP);  
- 
-
-  //
+  pinMode(BATIDA_PIN, INPUT_PULLUP); // Configura o pino como entrada com pull-up interno
+  
   // Inicializa horario do ntp com fuso -3
   configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
 
@@ -176,6 +173,14 @@ void IRAM_ATTR InterruptionPino12() {
   batida_prensa = true;  // Sinaliza que o botão foi pressionado  
 }
 
+void verifica_interrupcao(){
+  if (batida_prensa){
+    verifica_batida_prensa();
+    Serial.println(String(digitalRead(BATIDA_PIN)) + "- função verifica interrupção");
+  }
+  return;
+}
+
 
 /**********************************************************************************************
  *     VERIFICA AS BATIDAS DA PRENSA
@@ -183,30 +188,52 @@ void IRAM_ATTR InterruptionPino12() {
 void verifica_batida_prensa(){
     char timeStr[20];  // armazena string do horário
     struct tm timeinfo;
-    char nome_equipamento[10];
-    time_t now = time(nullptr);   
+    char nome_equipamento[10];    
     
-    //atualiza horário
+    //atualiza horário    
+    Serial.println(String(digitalRead(BATIDA_PIN)) + "- função verifica batida prensa");    
     if (!getLocalTime(&timeinfo)) {
       Serial.println("Erro ao obter tempo!");
       return;
     }
-     
-    // tempo para debouce da prensa
-    delay(700); 
+    
+    // Verifica se interrupção é falsa, batida de retorno
+    delay(200);
+    if (digitalRead(BATIDA_PIN) == HIGH){                 
+      Serial.println("Batida falsa, retorno!");
+      Serial.println(String(digitalRead(BATIDA_PIN)));        
+      return;
+    }
 
-    // Executa interrupção da prensa
-    if (batida_prensa)  {                  
-
-      // Reseta a variável de estado do botão
-      batida_prensa = false;  
-
-      // Verifica se interrupção é falsa, batida de retorno
-      if (digitalRead(BATIDA_PIN) == HIGH){ 
-        delay(700);        
-        Serial.println("Batida falsa, retorno!");
+    // Confirma se nível continua 0
+    if(digitalRead(BATIDA_PIN) == LOW){
+        delay(250);        
+        Serial.println(String(digitalRead(BATIDA_PIN)) + "atraso1");
+    }else {
+        Serial.println("falhou 1111");
+        Serial.println(String(digitalRead(BATIDA_PIN)));
         return;
-      }
+    }        
+
+    if(digitalRead(BATIDA_PIN) == LOW){
+        delay(250);        
+        Serial.println(String(digitalRead(BATIDA_PIN)) + "atraso2");
+    }else {
+        Serial.println("falhou 22222");
+        Serial.println(String(digitalRead(BATIDA_PIN)));
+        return;
+    }
+
+    if(digitalRead(BATIDA_PIN) == LOW){
+        delay(250);        
+        Serial.println(String(digitalRead(BATIDA_PIN)) + "atraso3");
+    }else {
+        Serial.println("falhou 33333");
+        Serial.println(String(digitalRead(BATIDA_PIN)));
+        return;
+    }
+      
+      Serial.println(String(digitalRead(BATIDA_PIN)) + "vai enviar dados");
 
       //envia mqtt
       strcpy(nome_equipamento, NOME_EQUIPAMENTO);      
@@ -214,6 +241,7 @@ void verifica_batida_prensa(){
       mqtt_send_data(nome_equipamento, timeStr);
 
       // Mostra quantidade de batida no display
+      Serial.println(String(digitalRead(BATIDA_PIN)) + "Incrementa e mostra no display");
       qnt_batidas_prensa++;      
       tft.setTextColor(TFT_WHITE, TFT_BLACK);      
       tft.drawString((String)qnt_batidas_prensa,70, 50, 6);         
@@ -223,7 +251,7 @@ void verifica_batida_prensa(){
       tft.drawString("             ", 62, 105, 4);    
       tft.drawString(timeStr, 65, 105, 4);  
       
-    }
+      Serial.println(String(digitalRead(BATIDA_PIN)) + "sainda da função");
 
   /*Serial.println(&timeinfo, "%Y-%m-%d %H:%M:%S");   
   tft.drawString("             ", 62, 105, 4);    
@@ -234,7 +262,7 @@ void verifica_batida_prensa(){
   tft.drawString((String)timeinfo.tm_sec, 137, 105, 4); 
 */
 
-
+  batida_prensa = false;  
 }
 
 

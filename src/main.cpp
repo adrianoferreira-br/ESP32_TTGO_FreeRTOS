@@ -43,6 +43,7 @@ void setup() {
   /*    APPLICATION   */
   setup_batidas_prensa();
 
+
 }
 
 
@@ -66,11 +67,11 @@ void loop()
   //loop_state();
 
   /*    APPLICATION_2    */
-  verifica_batida_prensa();
+  //verifica_batida_prensa();
+  verifica_interrupcao();
   
 
 }
-
 
 
 

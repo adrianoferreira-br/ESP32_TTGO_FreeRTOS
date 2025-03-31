@@ -20,6 +20,7 @@ void calcula_fluxo();
 void pulseCounter();
 void verifica_batida_prensa(void);
 void setup_batidas_prensa();
+void verifica_interrupcao();
 
 
 

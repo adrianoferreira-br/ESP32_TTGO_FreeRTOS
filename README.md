@@ -11,6 +11,10 @@ https://www.smartkits.com.br/ttgo-t-display-v1-1-esp32-com-display-ips-1-14-colo
 https://lilygo.cc/products/lilygo%C2%AE-ttgo-t-display-1-14-inch-lcd-esp32-control-board?form=MG0AV3
 ![ESP32_TTGO_T-Display](doc/pinmap_t-display.jpg)
 
+## Informações do processador
+https://en.wikipedia.org/wiki/ESP32
+informações [link](./doc/Espressif_Systems_01292021_esp32-1991551.pdf).
+
 ## Configuração da placa no platformio.ini
 https://docs.platformio.org/en/latest/boards/espressif32/lilygo-t-display.html
 https://docs.platformio.org/en/latest/boards/espressif32/lilygo-t-display.html?utm_source=platformio&utm_medium=piohome
