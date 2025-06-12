@@ -12,12 +12,16 @@ https://lilygo.cc/products/lilygo%C2%AE-ttgo-t-display-1-14-inch-lcd-esp32-contr
 ![ESP32_TTGO_T-Display](doc/pinmap_t-display.jpg)
 
 ## Informações do processador
+https://www.mouser.com/datasheet/2/891/Espressif_Systems_01292021_esp32-1991551.pdf
 https://en.wikipedia.org/wiki/ESP32
 informações [link](./doc/Espressif_Systems_01292021_esp32-1991551.pdf).
+https://en.wikipedia.org/wiki/ESP32
 
 ## Configuração da placa no platformio.ini
 https://docs.platformio.org/en/latest/boards/espressif32/lilygo-t-display.html
 https://docs.platformio.org/en/latest/boards/espressif32/lilygo-t-display.html?utm_source=platformio&utm_medium=piohome
+https://github.com/platformio/platformio-core?utm_source=platformio&utm_medium=piohome
+
 
 
 ## Display:
@@ -81,3 +85,10 @@ upload_flags =
 - C:\Users\Adriano\.platformio\penv\Scripts\pio run --target upload   (compila e faz upload para placa)
 - C:\Users\Adriano\.platformio\penv\Scripts\pio run --target upload --upload-port <IP_ADDRESS_OF_ESP32>
 ```
+
+## Notas adicionais
+>[!NOTE]
+> teste note
+
+>[!WARNING]
+> teste warning
