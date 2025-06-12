@@ -97,7 +97,7 @@ void init_state() {
 void setup_batidas_prensa() {
 
   // Configura a interrupção para o botão
-  attachInterrupt(digitalPinToInterrupt(BATIDA_PIN), InterruptionPino12, RISING);
+  attachInterrupt(digitalPinToInterrupt(BATIDA_PIN), InterruptionPino12, FALLING); // Configura a interrupção para o botão (pino 35) na borda de descida (pressionado)  
 
   //Defini GPIO
   pinMode(BATIDA_PIN, INPUT_PULLUP); // Configura o pino como entrada com pull-up interno
@@ -125,9 +125,6 @@ void loop_state() {
 
   // Calcula a tensão e mostra no display
   calcula_tensao();
-
-  // Calcula a tensão e mostra no display
-  //verifica_batida_prensa();
 
   // Verifica fluxo com sensor YF-S201
   //calcula_fluxo();
@@ -175,8 +172,8 @@ void IRAM_ATTR InterruptionPino12() {
 
 void verifica_interrupcao(){
   if (batida_prensa){
-    verifica_batida_prensa();
-    Serial.println(String(digitalRead(BATIDA_PIN)) + "- função verifica interrupção");
+    verifica_batida_prensa();  
+    batida_prensa = false;  
   }
   return;
 }
@@ -200,15 +197,15 @@ void verifica_batida_prensa(){
     // Verifica se interrupção é falsa, batida de retorno
     delay(200);
     if (digitalRead(BATIDA_PIN) == HIGH){                 
-      Serial.println("Batida falsa, retorno!");
-      Serial.println(String(digitalRead(BATIDA_PIN)));        
+     // Serial.println("Batida falsa, retorno!");
+     // Serial.println(String(digitalRead(BATIDA_PIN)));        
       return;
     }
 
     // Confirma se nível continua 0
     if(digitalRead(BATIDA_PIN) == LOW){
         delay(250);        
-        Serial.println(String(digitalRead(BATIDA_PIN)) + "atraso1");
+      //  Serial.println(String(digitalRead(BATIDA_PIN)) + "atraso1");
     }else {
         Serial.println("falhou 1111");
         Serial.println(String(digitalRead(BATIDA_PIN)));
@@ -238,6 +235,7 @@ void verifica_batida_prensa(){
       //envia mqtt
       strcpy(nome_equipamento, NOME_EQUIPAMENTO);      
       strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
+      Serial.println("Enviando via MQTT");
       mqtt_send_data(nome_equipamento, timeStr);
 
       // Mostra quantidade de batida no display
@@ -253,16 +251,20 @@ void verifica_batida_prensa(){
       
       Serial.println(String(digitalRead(BATIDA_PIN)) + "sainda da função");
 
-  /*Serial.println(&timeinfo, "%Y-%m-%d %H:%M:%S");   
-  tft.drawString("             ", 62, 105, 4);    
-  tft.drawString((String)timeinfo.tm_hour, 65, 105, 4);  
-  tft.drawString(":", 94, 105, 4);
-  tft.drawString((String)timeinfo.tm_min, 100, 105, 4);
-  tft.drawString(":", 130, 105, 4);
-  tft.drawString((String)timeinfo.tm_sec, 137, 105, 4); 
-*/
 
-  batida_prensa = false;  
+       batida_prensa = false;  
+
+  
+  /*Serial.println(&timeinfo, "%Y-%m-%d %H:%M:%S");   
+    tft.drawString("             ", 62, 105, 4);    
+    tft.drawString((String)timeinfo.tm_hour, 65, 105, 4);  
+    tft.drawString(":", 94, 105, 4);
+    tft.drawString((String)timeinfo.tm_min, 100, 105, 4);
+    tft.drawString(":", 130, 105, 4);
+    tft.drawString((String)timeinfo.tm_sec, 137, 105, 4); 
+  */
+
+ 
 }
 
 
