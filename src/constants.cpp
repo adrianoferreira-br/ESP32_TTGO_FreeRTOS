@@ -2,20 +2,39 @@
  *
  */
 #include "constants.h"
+#define Presto  // Presto | Adriano
+#define prensa  // prensa | prc  | linea
 
 
+
+#ifdef Presto  
 // Informações para acesso a Internet
-char* SSID = "PRESTO!";//"STARLINK"; //  "PhoneAdr";       //     // Substitua pelo seu SSID para acesso a Internet
-char* PASSWORD = "#prestoalimentos";//"11121314"; //"UDJ1-ddsp"; //      // Substitua pela sua senha de acesso a Internet
+char* SSID = "PRESTO!";                 //Substitua pelo seu SSID para acesso a Internet
+char* PASSWORD = "#prestoalimentos";    //Substitua pela sua senha de acesso a Internet
 
 // Informações para acesso ao servidor MQTT
-char* MQTT_SERVER = "192.168.0.203";//"192.168.100.4";          //"172.24.96.1";//"82d3aa30f5744315a2bdde52bafe1ec7.s1.eu.hivemq.cloud"; // Substitua pelo endereço do servidor MQTT
+char* MQTT_SERVER = "192.168.0.203";    // Substitua pelo endereço do servidor MQTT
+int PORT_MQTT = 1883;                   // Porta do servidor MQTT      padrão: 1883
+char* MQTT_USERNAME = "Adriano";
+char* MQTT_PASSWORD = "Rafa1404";       // TODO: criptografar a senha em outro momento. (Cuidado com o Git)
+
+#elif defined Adriano
+
+// Informações para acesso a Internet
+char* SSID = "STARLINK"; //"PhoneAdr";  // Substitua pelo seu SSID para acesso a Internet
+char* PASSWORD = "11121314"; //"UDJ1-ddsp"; // Substitua pela sua senha de acesso a Internet
+
+// Informações para acesso ao servidor MQTT
+char* MQTT_SERVER = "192.168.100.4";          //"172.24.96.1";//"82d3aa30f5744315a2bdde52bafe1ec7.s1.eu.hivemq.cloud"; // Substitua pelo endereço do servidor MQTT
 int PORT_MQTT = 1883;                             // Porta do servidor MQTT      padrão: 1883
 char* MQTT_USERNAME = "Adriano";
 char* MQTT_PASSWORD = "Rafa1404";                 // TODO: criptografar a senha em outro momento. (Cuidado com o Git)
 
+
+#endif // Presto
+
 // Informações referente a aplicação
-char* NOME_EQUIPAMENTO = "prensa_1";                    // Nome do equipamento
+char* NOME_EQUIPAMENTO = "prensa_3";                    // Nome do equipamento
 
 // Análise de corrente e verificação de estado de operação do equipamento (Processando ou aguarndando insumo)
 float CALIBRATION_CURRENT_FACTOR = 2.8;         // Fator de calibração (varia de acordo com o sensor e meio)  
@@ -30,8 +49,5 @@ char* FIREBASE_HOST = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"; // Hos
 char* FIREBASE_AUTH = "<YOUR_GoogleAPIKey_HERE>";                         // Chave de autenticação do Firebase   TODO: Criptografar a chave de autenticação
 
 // Versão
-char* VERSION = "v0.1.0";  // Versão da prensa validada junto com o Saulo no dia 28/03/25
-
-
-
-
+char* VERSION = "v25.4.14";  // Versão atual de uso.
+              //"v0.1.0";  // Versão da prensa validada junto com o Saulo no dia 28/03/25
