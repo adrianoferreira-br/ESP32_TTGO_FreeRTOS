@@ -6,6 +6,7 @@
 #include <display.h>
 #include <WiFi.h>
 #include <Arduino.h>
+#include "constants.h"
 
 
 
@@ -40,7 +41,8 @@ void init_display()
     int origemX = tft.width();    
     int origemY = tft.height();    
     tft.drawString(((String)origemX) + " x " + ((String)origemY),90,50,2);     //string, x, y, font  : Fonte 2, 4, 6, 7
-    delay(1500);  
+    delay(500);  
+    showBootInfo(); // Exibe informações de boot (versão e nome do equipamento)    
     tft.fillScreen(TFT_RED);         
     delay(500);  
     tft.fillScreen(TFT_GREEN);         
@@ -116,4 +118,21 @@ void drawGauge(int value) {
   int pointerX = centerX + pointerLength * cos(angle * PI / 180);
   int pointerY = centerY + pointerLength * sin(angle * PI / 180);
   tft.drawLine(centerX, centerY, pointerX, pointerY, TFT_RED);
+}
+
+
+void showBootInfo() {        
+    
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);   
+
+    // Exibe VERSION na parte superior
+    int16_t topY = 10;
+    tft.drawString(VERSION, (tft.width() / 2)-4, topY);
+
+    // Exibe NOME_EQUIPAMENTO na parte inferior
+    int16_t bottomY = tft.height() - 20;
+    tft.drawString(NOME_EQUIPAMENTO, (tft.width() / 2)-4, bottomY-2);
+
+    delay(3000); // Aguarda 3 segundos
+    
 }
