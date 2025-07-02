@@ -244,7 +244,7 @@ void reconnect()
     if (client.connect("ESP32Client")) 
     { 
       Serial.println("Conectado"); 
-      client.subscribe("AdrPresto"); 
+      client.subscribe("AdrPresto",1); // Inscreve-se no tópico "AdrPresto" com QoS 1
     } 
     else 
     { 
@@ -277,13 +277,12 @@ void mqtt_send_data(String nome_equipamento, String horario){
   char jsonBuffer[256];
   serializeJson(doc, jsonBuffer);
 
-  // Publique a mensagem JSON
-  if (client.publish("AdrPresto", jsonBuffer)) {
-    Serial.println("Mensagem JSON enviada com sucesso");
-  } else {
-    Serial.println("Falha ao enviar mensagem JSON");
+  
+  // O método publish(topic, payload, retained, qos) está disponível nas versões recentes do PubSubClient
+  bool result = client.publish("AdrPresto", (const uint8_t*)jsonBuffer, strlen(jsonBuffer)); // retained = false, qos = 1
+  if (!result) {    
+    Serial.println("Falha ao enviar mensagem JSON com QoS 1");
   }
-
 } 
 
 
