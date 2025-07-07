@@ -2,7 +2,7 @@
  *
  */
 #include "constants.h"
-#define Presto  // Presto | Adriano
+#define Adriano  // Presto | Adriano
 #define prensa  // prensa | prc  | linea
 
 
@@ -34,7 +34,7 @@ char* MQTT_PASSWORD = "Rafa1404";                 // TODO: criptografar a senha 
 #endif // Presto
 
 // Informações referente a aplicação
-char* NOME_EQUIPAMENTO = "prensa_3";                    // Nome do equipamento
+char* NOME_EQUIPAMENTO = "teste";                    // Nome do equipamento
 
 // Análise de corrente e verificação de estado de operação do equipamento (Processando ou aguarndando insumo)
 float CALIBRATION_CURRENT_FACTOR = 2.8;         // Fator de calibração (varia de acordo com o sensor e meio)  
@@ -49,5 +49,5 @@ char* FIREBASE_HOST = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"; // Hos
 char* FIREBASE_AUTH = "<YOUR_GoogleAPIKey_HERE>";                         // Chave de autenticação do Firebase   TODO: Criptografar a chave de autenticação
 
 // Versão
-char* VERSION = "v25.4.14";  // Versão atual de uso.
+char* VERSION = "v25.4.15";  // Versão atual de uso.
               //"v0.1.0";  // Versão da prensa validada junto com o Saulo no dia 28/03/25

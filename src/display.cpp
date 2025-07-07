@@ -6,6 +6,7 @@
 #include <display.h>
 #include <WiFi.h>
 #include <Arduino.h>
+#include "constants.h"
 
 
 
@@ -50,7 +51,9 @@ void init_display()
     tft.fillScreen(TFT_ORANGE);     
     delay(500);        
     tft.fillScreen(TFT_BLACK);    
-
+    tft.drawString("  Procurando rede...", 2, 10, 4); //string, x, y, font
+    tft.drawString("Versao:   " + String(VERSION), 2, 55, 4); //string, x, y, font
+    tft.drawString("Equip:  " + String(NOME_EQUIPAMENTO), 2, 100, 4); //string, x, y, font
     //graficoBarra(1,105,180,132,50,132,TFT_BLUE);    // x, y, largura, altura, valor, valorMaximo, cor)
    
  

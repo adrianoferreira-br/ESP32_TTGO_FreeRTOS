@@ -29,6 +29,9 @@ extern int AMOSTRAS_COMPROVACAO_ESTADO;           // Tempo de comprovação de e
 extern char* FIREBASE_HOST;                       // Host do Firebase
 extern char* FIREBASE_AUTH;                       // Chave de autenticação do Firebase   TODO: Criptografar a chave de autenticação
 
+// Versão
+extern char* VERSION;                             // Versão atual de uso. ex. "v25.4.15"
+
 
 
 

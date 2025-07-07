@@ -60,6 +60,9 @@ int tipoPotencia = 0;
 // Variável global volátil para sinalizar a interrupção
 volatile bool buttonPressed = false;
 
+// Variável global para armazenar o ID da leitura
+long id_leitura = 0;
+
 /**********************************************************************************************
  *     FUNÇÃO DE SETUP E CONFIGURAÇÃO INICIAL DA APLICAÇÃO
  */
@@ -230,14 +233,14 @@ void verifica_batida_prensa(){
         return;
     }
       
-      Serial.println(String(digitalRead(BATIDA_PIN)) + "vai enviar dados");
+      id_leitura++;  // Incrementa o ID da leitura
+      Serial.println(String(digitalRead(BATIDA_PIN)) + "batida: " + String(id_leitura));  // Mostra a leitura do pino 12
 
       //envia mqtt
       strcpy(nome_equipamento, NOME_EQUIPAMENTO);      
       strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
       Serial.println("Enviando via MQTT");
-      mqtt_send_data(nome_equipamento, timeStr);
-
+      mqtt_send_data(nome_equipamento, timeStr, id_leitura, "");  // Envia dados via MQTT
       // Mostra quantidade de batida no display
       Serial.println(String(digitalRead(BATIDA_PIN)) + "Incrementa e mostra no display");
       qnt_batidas_prensa++;      

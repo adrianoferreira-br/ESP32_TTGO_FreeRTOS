@@ -4,7 +4,7 @@
  */
 
 
- #include "wifi_mqtt.h"
+#include "wifi_mqtt.h"
 #include "constants.h"
 #include "main.h"
 #include <ArduinoJson.h>
@@ -42,10 +42,10 @@ void setup_wifi(){
    WiFi.begin(ssid, password); 
    do 
    { 
-        delay(15000); 
+        delay(5000); 
         Serial.print("."); 
         i++;
-   } while (((WiFi.status() != WL_CONNECTED) && (i<10)));
+   } while (((WiFi.status() != WL_CONNECTED) && (i<20)));
 
    if (WiFi.status() != WL_CONNECTED)
    {
@@ -53,6 +53,7 @@ void setup_wifi(){
       return;
    } else {
     Serial.println(""); 
+    tft.fillScreen(TFT_BLACK);    
     Serial.println("WiFi conectado"); 
     Serial.print("Endereço IP: "); 
     Serial.println(WiFi.localIP());                
@@ -250,7 +251,7 @@ void reconnect()
     { 
       Serial.print("falhou, rc="); 
       Serial.print(client.state()); 
-      Serial.println(" tentando novamente em 5 segundos"); 
+      Serial.println(" tentando novamente em 3 segundos"); 
       delay(3000); 
     } 
   } 
@@ -259,7 +260,7 @@ void reconnect()
 /**********************************************************************************************
  *     ENVIA AS INFORMAÇÕES PARA O PROTOCOLO MQTT
  */
-void mqtt_send_data(String nome_equipamento, String horario){
+void mqtt_send_data(String nome_equipamento, String horario, int id_leitura, String observacao) {
   if (!client.connected()) {
     reconnect();
   }
@@ -269,8 +270,8 @@ void mqtt_send_data(String nome_equipamento, String horario){
   StaticJsonDocument<256> doc;
   doc["equipamento"] = nome_equipamento;
   doc["hora"] = horario;
-  //doc["apparentPower"] = apparentPower;
-  //doc["FP"] = String(powerFactor);
+  doc["id_leitura"] = String(id_leitura);
+  doc["observacao"] = observacao;
 
 
   // Serialize o objeto JSON para uma string
