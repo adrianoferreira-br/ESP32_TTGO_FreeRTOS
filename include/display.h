@@ -9,6 +9,7 @@ void init_display();
 void displayPrint(char*,int,int,int);
 void graficoBarra(int, int, int, int, int, int, int);
 void drawGauge(int);
+void showBootInfo();
 
 extern TFT_eSPI tft;
 

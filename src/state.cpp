@@ -52,6 +52,10 @@ volatile bool reflexSensorTriggered = false;
 const int BOTAO_35 = 35;
 
 
+// Variáveis para sincronização NTP
+unsigned long lastNtpSync = 0;
+const unsigned long ntpSyncInterval = 30UL * 60UL * 1000UL; // 30 minutos em ms
+
 time_t before = 0;
 
 //Potência
@@ -106,7 +110,7 @@ void setup_batidas_prensa() {
   pinMode(BATIDA_PIN, INPUT_PULLUP); // Configura o pino como entrada com pull-up interno
   
   // Inicializa horario do ntp com fuso -3
-  configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+  //configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
 
 }
 
@@ -118,6 +122,8 @@ void setup_batidas_prensa() {
  */
 void loop_state() {  
 
+  
+
   // Verifica se o botão foi pressionado
   if (buttonPressed) {
     buttonPressed = false;  // Reseta a variável de estado do botão
@@ -128,7 +134,7 @@ void loop_state() {
 
   // Calcula a tensão e mostra no display
   calcula_tensao();
-
+  
   // Verifica fluxo com sensor YF-S201
   //calcula_fluxo();
 
@@ -189,13 +195,21 @@ void verifica_batida_prensa(){
     char timeStr[20];  // armazena string do horário
     struct tm timeinfo;
     char nome_equipamento[10];    
+     unsigned long now = millis();
     
     //atualiza horário    
-    Serial.println(String(digitalRead(BATIDA_PIN)) + "- função verifica batida prensa");    
-    if (!getLocalTime(&timeinfo)) {
+    Serial.println(String(digitalRead(BATIDA_PIN)) + "- verifica_batida_prensa");    
+    
+  if (now - lastNtpSync > ntpSyncInterval || lastNtpSync == 0) {
+        configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+        lastNtpSync = now;
+        Serial.println("NTP sincronizado");        
+  }    
+
+  if (!getLocalTime(&timeinfo)) {
       Serial.println("Erro ao obter tempo!");
-      return;
-    }
+    //  return;
+  }
     
     // Verifica se interrupção é falsa, batida de retorno
     delay(200);
@@ -435,12 +449,19 @@ void show_time() {
 
   char timeStr[20];  // Used to store time string
   struct tm timeinfo;
+  unsigned long now = millis();
 
-  configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+
+  if (now - lastNtpSync > ntpSyncInterval || lastNtpSync == 0) {
+        configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+        lastNtpSync = now;
+        Serial.println("NTP sincronizado");
+  }
+  //syncNtpIfNeeded(); // Synchronize NTP time if needed  
   
   if (!getLocalTime(&timeinfo)) {
-    Serial.println("Erro ao obter tempo!");
-    return;
+    Serial.println("Erro ao obter tempo2!");
+ //   return;
   }
   // Mostra o horário
   Serial.println(&timeinfo, "%Y-%m-%d %H:%M:%S");   
@@ -512,4 +533,16 @@ void calcula_fluxo(){
       }
     break;
   }
+}
+
+/**********************************************************************************************
+ *     SINCRONIZAÇÃO NTP SE NECESSÁRIO
+ */
+void syncNtpIfNeeded() {
+    unsigned long now = millis();
+    if (now - lastNtpSync > ntpSyncInterval || lastNtpSync == 0) {
+        configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+        lastNtpSync = now;
+        Serial.println("NTP sincronizado");
+    }
 }
