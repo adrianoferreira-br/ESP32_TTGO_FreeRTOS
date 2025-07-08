@@ -2,15 +2,12 @@
  *
  */
 #include "constants.h"
-<<<<<<< HEAD
+
+
 #define Adriano  // Presto | Adriano
 #define prensa  // prensa | prc  | linea
-=======
-#define Presto  // Presto | Adriano
-#define prensa  // prensa_1 | PRC_01  | linea_1 
->>>>>>> 32f521586af6a03f24a2b7b55f1bc92b6cbe7bae
 
-
+// Definições de constantes para o projeto
 
 #ifdef Presto  
 // Informações para acesso a Internet
@@ -39,11 +36,7 @@ char* MQTT_PASSWORD = "Rafa1404";                 // TODO: criptografar a senha 
 #endif // Presto
 
 // Informações referente a aplicação
-<<<<<<< HEAD
 char* NOME_EQUIPAMENTO = "teste";                    // Nome do equipamento
-=======
-char* NOME_EQUIPAMENTO = "linea_1";                    // Nome do equipamento
->>>>>>> 32f521586af6a03f24a2b7b55f1bc92b6cbe7bae
 
 // Análise de corrente e verificação de estado de operação do equipamento (Processando ou aguarndando insumo)
 float CALIBRATION_CURRENT_FACTOR = 2.8;         // Fator de calibração (varia de acordo com o sensor e meio)  
@@ -58,10 +51,4 @@ char* FIREBASE_HOST = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"; // Hos
 char* FIREBASE_AUTH = "<YOUR_GoogleAPIKey_HERE>";                         // Chave de autenticação do Firebase   TODO: Criptografar a chave de autenticação
 
 // Versão
-<<<<<<< HEAD
-char* VERSION = "v25.4.15";  // Versão atual de uso.
-              //"v0.1.0";  // Versão da prensa validada junto com o Saulo no dia 28/03/25
-=======
-char* VERSION = "v25.7.02";  // Versão atual de uso.
-             
->>>>>>> 32f521586af6a03f24a2b7b55f1bc92b6cbe7bae
+char* VERSION = "v25.07.07";  // Versão atual de uso.

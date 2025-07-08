@@ -42,7 +42,7 @@ void init_display()
     int origemY = tft.height();    
     tft.drawString(((String)origemX) + " x " + ((String)origemY),90,50,2);     //string, x, y, font  : Fonte 2, 4, 6, 7
     delay(500);  
-    showBootInfo(); // Exibe informações de boot (versão e nome do equipamento)    
+    //showBootInfo(); // Exibe informações de boot (versão e nome do equipamento)    
     tft.fillScreen(TFT_RED);         
     delay(500);  
     tft.fillScreen(TFT_GREEN);         
