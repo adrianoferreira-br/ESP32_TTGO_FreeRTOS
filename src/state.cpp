@@ -68,7 +68,7 @@ volatile bool buttonPressed = false;
 long id_leitura = 0;
 
 // Defina o tamanho máximo do buffer
-#define MAX_BUFFERED_MSGS 20
+#define MAX_BUFFERED_MSGS 300
 
 // Estrutura para armazenar os dados da batida
 struct BatidaMsg {
@@ -161,8 +161,8 @@ void loop_state() {
     Serial.println("Sensor reflexivo ativado!");
     Qnt++;
   }
+  //  try_send_buffered_batidas();
 
-  try_send_buffered_batidas();
 }
 
 
@@ -217,8 +217,8 @@ void verifica_batida_prensa(){
     char nome_equipamento[10];    
      unsigned long now = millis();
     
-    //atualiza horário    
-    Serial.println(String(digitalRead(BATIDA_PIN)) + "- verifica_batida_prensa");    
+    //atualiza horário   
+    //Serial.println(String(digitalRead(BATIDA_PIN)) + "- verifica_batida_prensa");    
     
   if (now - lastNtpSync > ntpSyncInterval || lastNtpSync == 0) {
         configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
@@ -241,28 +241,25 @@ void verifica_batida_prensa(){
 
     // Confirma se nível continua 0
     if(digitalRead(BATIDA_PIN) == LOW){
-        delay(200);        
-      //  Serial.println(String(digitalRead(BATIDA_PIN)) + "atraso1");
+        delay(200);              
     }else {
-        Serial.println("falhou 1111");
+        Serial.println("falhou ponto 1");
         Serial.println(String(digitalRead(BATIDA_PIN)));
         return;
     }        
 
     if(digitalRead(BATIDA_PIN) == LOW){
-        delay(200);        
-        Serial.println(String(digitalRead(BATIDA_PIN)) + "atraso2");
+        delay(200);                
     }else {
-        Serial.println("falhou 22222");
+        Serial.println("falhou ponto 2");
         Serial.println(String(digitalRead(BATIDA_PIN)));
         return;
     }
 
     if(digitalRead(BATIDA_PIN) == LOW){
-        delay(200);        
-        Serial.println(String(digitalRead(BATIDA_PIN)) + "atraso3");
+        delay(200);                
     }else {
-        Serial.println("falhou 33333");
+        Serial.println("falhou ponto 3");
         Serial.println(String(digitalRead(BATIDA_PIN)));
         return;
     }
@@ -293,22 +290,11 @@ void verifica_batida_prensa(){
       // Mostra horário da ultima batida
       strftime(timeStr, sizeof(timeStr), "%H:%M:%S", &timeinfo);      
       tft.drawString("             ", 62, 105, 4);    
-      tft.drawString(timeStr, 65, 105, 4);  
+      tft.drawString(timeStr, 130, 105, 4);  
       
-      Serial.println(String(digitalRead(BATIDA_PIN)) + "sainda da função");
-
-
-       batida_prensa = false;  
-
-  
-  /*Serial.println(&timeinfo, "%Y-%m-%d %H:%M:%S");   
-    tft.drawString("             ", 62, 105, 4);    
-    tft.drawString((String)timeinfo.tm_hour, 65, 105, 4);  
-    tft.drawString(":", 94, 105, 4);
-    tft.drawString((String)timeinfo.tm_min, 100, 105, 4);
-    tft.drawString(":", 130, 105, 4);
-    tft.drawString((String)timeinfo.tm_sec, 137, 105, 4); 
-  */
+      batida_prensa = false;   
+      
+      try_send_buffered_batidas();
 
  
 }
@@ -343,7 +329,7 @@ void calcula_tensao(){
   //apparentPower = Vrms * Irms;
   apparentPower = monitorEletricity.apparentPower;
   
-powerFactor = abs(monitorEletricity.powerFactor);
+  powerFactor = abs(monitorEletricity.powerFactor);
 
   
   // mostra informação no Display e serial
@@ -586,11 +572,13 @@ void buffer_batida(const char* nome, const char* timeStr, long id, const char* o
         batidaBuffer[bufferTail].id_leitura = id;
         strncpy(batidaBuffer[bufferTail].observacao, obs, sizeof(batidaBuffer[bufferTail].observacao)-1);
         bufferTail = (bufferTail + 1) % MAX_BUFFERED_MSGS;
-        bufferCount++;
+        bufferCount++;        
     } else {
         // Buffer cheio, pode descartar ou sobrescrever o mais antigo
         Serial.println("Buffer de batidas cheio! Mensagem descartada.");
     }
+    tft.drawString(String(bufferCount), 10, 105, 4);
+    Serial.println("buffer_inc: " + String(bufferCount));
 }
 
 /**********************************************************************************************
@@ -602,10 +590,12 @@ void try_send_buffered_batidas() {
         bool enviado = mqtt_send_data(msg.nome_equipamento, msg.timeStr, msg.id_leitura, msg.observacao);
         if (enviado) {
             bufferHead = (bufferHead + 1) % MAX_BUFFERED_MSGS;
-            bufferCount--;
+            bufferCount--;            
         } else {
             // Se falhar, pare para tentar novamente depois
             break;
         }
-    }
+        tft.drawString(String(bufferCount), 10, 105, 4);
+        Serial.println("buffer_dec: " + String(bufferCount));
+    } 
 }

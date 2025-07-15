@@ -100,7 +100,7 @@ void handleRoot() {
   html += "<h2>Equipamento: ";
   html += NOME_EQUIPAMENTO;
   html += "</h2>";
-  html += "<h2>Batida nº:   " + String(idBatida) + "</h2>";
+  html += "<h2>Batida nr:   " + String(idBatida) + "</h2>";
   html += "</body></html>";
 
   server.send(200, "text/html", html);
@@ -272,7 +272,7 @@ void callback(char* topic, byte* payload, unsigned int length)
 
 void reconnect() 
 { 
-  int qnt = 3;
+  int qnt = 2;
   while (!client.connected() && qnt > 1) 
   { 
     qnt--;
@@ -286,8 +286,8 @@ void reconnect()
     { 
       Serial.print("falhou, rc="); 
       Serial.print(client.state()); 
-      Serial.println(" tentando novamente em 3 segundos"); 
-      delay(3000); 
+      Serial.println(" tentando novamente em 1 segundos"); 
+      delay(1000); 
     } 
   } 
 }
