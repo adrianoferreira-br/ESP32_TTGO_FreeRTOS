@@ -4,8 +4,10 @@
 #include "constants.h"
 
 
-#define Adriano  // Presto | Adriano
-#define prensa  // prensa | prc  | linea
+#define Presto  // Presto | Adriano
+
+// Informações do equipamento
+char* NOME_EQUIPAMENTO = "teste";   // // prensa_1 | prensa_2 | prensa_3 | PRC_01  | linea_1 | teste 
 
 // Definições de constantes para o projeto
 
@@ -19,6 +21,8 @@ char* MQTT_SERVER = "192.168.0.203";    // Substitua pelo endereço do servidor 
 int PORT_MQTT = 1883;                   // Porta do servidor MQTT      padrão: 1883
 char* MQTT_USERNAME = "Adriano";
 char* MQTT_PASSWORD = "Rafa1404";       // TODO: criptografar a senha em outro momento. (Cuidado com o Git)
+
+
 
 #elif defined Adriano
 
@@ -35,8 +39,6 @@ char* MQTT_PASSWORD = "Rafa1404";                 // TODO: criptografar a senha 
 
 #endif // Presto
 
-// Informações referente a aplicação
-char* NOME_EQUIPAMENTO = "teste";                    // Nome do equipamento
 
 // Análise de corrente e verificação de estado de operação do equipamento (Processando ou aguarndando insumo)
 float CALIBRATION_CURRENT_FACTOR = 2.8;         // Fator de calibração (varia de acordo com o sensor e meio)  
