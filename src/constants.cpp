@@ -51,4 +51,4 @@ char* FIREBASE_HOST = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"; // Hos
 char* FIREBASE_AUTH = "<YOUR_GoogleAPIKey_HERE>";                         // Chave de autenticação do Firebase   TODO: Criptografar a chave de autenticação
 
 // Versão
-char* VERSION = "v25.07.07";  // Versão atual de uso.
+char* VERSION = "v25.07.09";  // Versão atual de uso.

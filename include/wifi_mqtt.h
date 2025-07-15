@@ -18,7 +18,7 @@ void reconnect(void);
 void callback(char*, byte*, unsigned int);
 void loop_mqqt(void);
 //void mqtt_send_data(String, String);
-void mqtt_send_data(String, String, int, String);
+bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_leitura, const char* observacao);
 //partitions
 void show_partitions();
 
@@ -26,6 +26,9 @@ void show_partitions();
 void config_ota();
 void loop_ota();  
 
+// WebServer
+void handleRoot();
+void setup_webserver();
 
 
 

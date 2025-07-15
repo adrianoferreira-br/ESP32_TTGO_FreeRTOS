@@ -67,6 +67,23 @@ volatile bool buttonPressed = false;
 // Variável global para armazenar o ID da leitura
 long id_leitura = 0;
 
+// Defina o tamanho máximo do buffer
+#define MAX_BUFFERED_MSGS 20
+
+// Estrutura para armazenar os dados da batida
+struct BatidaMsg {
+    char nome_equipamento[16];
+    char timeStr[24];
+    long id_leitura;
+    char observacao[32];
+};
+
+// Buffer circular
+BatidaMsg batidaBuffer[MAX_BUFFERED_MSGS];
+int bufferHead = 0;
+int bufferTail = 0;
+int bufferCount = 0;
+
 /**********************************************************************************************
  *     FUNÇÃO DE SETUP E CONFIGURAÇÃO INICIAL DA APLICAÇÃO
  */
@@ -145,8 +162,11 @@ void loop_state() {
     Qnt++;
   }
 
- 
+  try_send_buffered_batidas();
 }
+
+
+
 
 
 /**********************************************************************************************
@@ -221,7 +241,7 @@ void verifica_batida_prensa(){
 
     // Confirma se nível continua 0
     if(digitalRead(BATIDA_PIN) == LOW){
-        delay(250);        
+        delay(200);        
       //  Serial.println(String(digitalRead(BATIDA_PIN)) + "atraso1");
     }else {
         Serial.println("falhou 1111");
@@ -230,7 +250,7 @@ void verifica_batida_prensa(){
     }        
 
     if(digitalRead(BATIDA_PIN) == LOW){
-        delay(250);        
+        delay(200);        
         Serial.println(String(digitalRead(BATIDA_PIN)) + "atraso2");
     }else {
         Serial.println("falhou 22222");
@@ -239,7 +259,7 @@ void verifica_batida_prensa(){
     }
 
     if(digitalRead(BATIDA_PIN) == LOW){
-        delay(250);        
+        delay(200);        
         Serial.println(String(digitalRead(BATIDA_PIN)) + "atraso3");
     }else {
         Serial.println("falhou 33333");
@@ -253,8 +273,17 @@ void verifica_batida_prensa(){
       //envia mqtt
       strcpy(nome_equipamento, NOME_EQUIPAMENTO);      
       strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
-      Serial.println("Enviando via MQTT");
-      mqtt_send_data(nome_equipamento, timeStr, id_leitura, "");  // Envia dados via MQTT
+
+    // Tenta enviar imediatamente
+    if (WiFi.status() == WL_CONNECTED) {
+        bool enviado = mqtt_send_data(nome_equipamento, timeStr, id_leitura, " ");
+        if (!enviado) {
+            buffer_batida(nome_equipamento, timeStr, id_leitura, "");
+        }
+    } else {
+        buffer_batida(nome_equipamento, timeStr, id_leitura, "");
+    }
+
       // Mostra quantidade de batida no display
       Serial.println(String(digitalRead(BATIDA_PIN)) + "Incrementa e mostra no display");
       qnt_batidas_prensa++;      
@@ -544,5 +573,39 @@ void syncNtpIfNeeded() {
         configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
         lastNtpSync = now;
         Serial.println("NTP sincronizado");
+    }
+}
+
+/**********************************************************************************************
+ *     ADICIONA MENSAGEM AO BUFFER
+ */
+void buffer_batida(const char* nome, const char* timeStr, long id, const char* obs) {
+    if (bufferCount < MAX_BUFFERED_MSGS) {
+        strncpy(batidaBuffer[bufferTail].nome_equipamento, nome, sizeof(batidaBuffer[bufferTail].nome_equipamento)-1);
+        strncpy(batidaBuffer[bufferTail].timeStr, timeStr, sizeof(batidaBuffer[bufferTail].timeStr)-1);
+        batidaBuffer[bufferTail].id_leitura = id;
+        strncpy(batidaBuffer[bufferTail].observacao, obs, sizeof(batidaBuffer[bufferTail].observacao)-1);
+        bufferTail = (bufferTail + 1) % MAX_BUFFERED_MSGS;
+        bufferCount++;
+    } else {
+        // Buffer cheio, pode descartar ou sobrescrever o mais antigo
+        Serial.println("Buffer de batidas cheio! Mensagem descartada.");
+    }
+}
+
+/**********************************************************************************************
+ *     TENTA ENVIAR TODAS AS MENSAGENS DO BUFFER
+ */
+void try_send_buffered_batidas() {
+    while (bufferCount > 0) {
+        BatidaMsg& msg = batidaBuffer[bufferHead];
+        bool enviado = mqtt_send_data(msg.nome_equipamento, msg.timeStr, msg.id_leitura, msg.observacao);
+        if (enviado) {
+            bufferHead = (bufferHead + 1) % MAX_BUFFERED_MSGS;
+            bufferCount--;
+        } else {
+            // Se falhar, pare para tentar novamente depois
+            break;
+        }
     }
 }

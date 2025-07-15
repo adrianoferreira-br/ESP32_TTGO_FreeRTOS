@@ -14,6 +14,11 @@
 //Ota
 #include <ArduinoOTA.h>
 
+// WebServer
+#include <WebServer.h>
+
+WebServer server(80); // Porta 80 padrão HTTP
+
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -23,9 +28,10 @@ const char* password = PASSWORD;        //"11121314";//"UDJ1-ddsp";// "SUA_SENHA
 const char* mqtt_server = MQTT_SERVER;  //"192.168.100.4";//"broker.hivemq.com";
 const int port_mqtt = PORT_MQTT;        //1883
 
+long idBatida = 0; // ID da batida
+
 //String ip;
 
-//WebServer server(80);
 
 /**************************************************************
  * INICIALIZAÇÃO DO WIFI
@@ -59,6 +65,8 @@ void setup_wifi(){
     Serial.println(WiFi.localIP());                
    }       
 
+   setup_webserver();
+
   }
 
 
@@ -70,7 +78,7 @@ void setup_wifi(){
 void loop_wifi(){
   // Preenche informações referente a rede
   if (WiFi.status() == WL_CONNECTED) {      
-      show_ip();         
+      show_ip();              
   } else {
       tft.setTextColor(TFT_RED, TFT_BLACK);    
       tft.drawString("Disconnected     ", 0, 0, 2);  
@@ -78,6 +86,34 @@ void loop_wifi(){
       
   }   
 }
+
+
+/**************************************************************
+ * WEB SERVER
+ */
+
+void handleRoot() {
+
+  String html = "<html><head><meta http-equiv='refresh' content='1'></head><body>";
+
+  html += "<h1>Presto Alimentos - Monitoramento de Maquina</h1>";
+  html += "<h2>Equipamento: ";
+  html += NOME_EQUIPAMENTO;
+  html += "</h2>";
+  html += "<h2>Batida nº:   " + String(idBatida) + "</h2>";
+  html += "</body></html>";
+
+  server.send(200, "text/html", html);
+}
+
+
+void setup_webserver()  
+{
+  server.on("/", handleRoot);
+  server.begin();
+}
+
+
 
 
 /**************************************************************
@@ -211,7 +247,6 @@ void loop_mqqt() {
   //client.publish("AdrPresto", "Hello MQTT from ESP32");
   //delay(2000);   
   
-  //server.handleClient();
  
 
 }
@@ -260,34 +295,30 @@ void reconnect()
 /**********************************************************************************************
  *     ENVIA AS INFORMAÇÕES PARA O PROTOCOLO MQTT
  */
-void mqtt_send_data(String nome_equipamento, String horario, int id_leitura, String observacao) {
-  if (!client.connected()) {
-    reconnect();
-  }
-  client.loop();
+bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_leitura, const char* observacao) {
+    if (!client.connected()) {
+        return false;
+    }
+    client.loop();
 
-  // Crie um objeto JSON
-  StaticJsonDocument<256> doc;
-  doc["equipamento"] = nome_equipamento;
-  doc["hora"] = horario;
-  doc["id_leitura"] = String(id_leitura);
-  doc["observacao"] = observacao;
+    StaticJsonDocument<256> doc;
+    doc["equipamento"] = nome_equipamento;
+    doc["hora"] = horario;
+    doc["id_leitura"] = String(id_leitura);
+    doc["observacao"] = observacao;
 
+    char jsonBuffer[256];
+    serializeJson(doc, jsonBuffer);
 
-  // Serialize o objeto JSON para uma string
-  char jsonBuffer[256];
-  serializeJson(doc, jsonBuffer);
+    bool result = client.publish("AdrPresto", (const uint8_t*)jsonBuffer, strlen(jsonBuffer), false, 1); // QoS 1
 
-  
-  // O método publish(topic, payload, retained, qos) está disponível nas versões recentes do PubSubClient
-  bool result = client.publish("AdrPresto", (const uint8_t*)jsonBuffer, strlen(jsonBuffer)); // retained = false, qos = 1
-  if (!result) {    
-    Serial.println("Falha ao enviar mensagem JSON com QoS 1");
-  }
-} 
+    // web server update
+    idBatida = id_leitura; // Atualiza o ID da batida
+    handleRoot(); // Atualiza a página web após enviar os dados
+    server.handleClient(); // Processa requisições do servidor web
 
-
-
+    return result;
+}
 
 /**********************************************************************************************
  *     MOSTRA O IP DA REDE NO DISPLAY
