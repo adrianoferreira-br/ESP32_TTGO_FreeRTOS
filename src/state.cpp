@@ -54,7 +54,7 @@ const int BOTAO_35 = 35;
 
 // Variáveis para sincronização NTP
 unsigned long lastNtpSync = 0;
-const unsigned long ntpSyncInterval = 30UL * 60UL * 1000UL; // 30 minutos em ms
+const unsigned long ntpSyncInterval = 60UL * 60UL * 1000UL; // 1 hora
 
 time_t before = 0;
 
@@ -217,8 +217,13 @@ void verifica_batida_prensa(){
     char nome_equipamento[10];    
      unsigned long now = millis();
     
-    //atualiza horário   
+    //informação para log
     //Serial.println(String(digitalRead(BATIDA_PIN)) + "- verifica_batida_prensa");    
+    tft.drawString("*",2, 50, 6); //simula um led no display a cada batida (acende o "led")
+    
+     //atualiza horário   
+    
+
     
   if (now - lastNtpSync > ntpSyncInterval || lastNtpSync == 0) {
         configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
@@ -232,53 +237,52 @@ void verifica_batida_prensa(){
   }
     
     // Verifica se interrupção é falsa, batida de retorno
-    delay(200);
+    delay(100);
     if (digitalRead(BATIDA_PIN) == HIGH){                 
-     // Serial.println("Batida falsa, retorno!");
-     // Serial.println(String(digitalRead(BATIDA_PIN)));        
+     // Serial.println("Batida falsa, retorno!");     
       return;
     }
 
     // Confirma se nível continua 0
     if(digitalRead(BATIDA_PIN) == LOW){
-        delay(200);              
+        delay(100);              
     }else {
-        Serial.println("falhou ponto 1");
-        Serial.println(String(digitalRead(BATIDA_PIN)));
+        Serial.println("falhou <100ms");        
         return;
     }        
 
     if(digitalRead(BATIDA_PIN) == LOW){
-        delay(200);                
+        delay(100);                
     }else {
-        Serial.println("falhou ponto 2");
-        Serial.println(String(digitalRead(BATIDA_PIN)));
+        Serial.println("falhou <200ms");        
         return;
     }
 
     if(digitalRead(BATIDA_PIN) == LOW){
-        delay(200);                
+        delay(100);                
     }else {
-        Serial.println("falhou ponto 3");
-        Serial.println(String(digitalRead(BATIDA_PIN)));
+        Serial.println("falhou <300ms");        
         return;
     }
-      
+     
+
       id_leitura++;  // Incrementa o ID da leitura
       Serial.println(String(digitalRead(BATIDA_PIN)) + "batida: " + String(id_leitura));  // Mostra a leitura do pino 12
 
-      //envia mqtt
+      //prepara dados para enviar mqtt
       strcpy(nome_equipamento, NOME_EQUIPAMENTO);      
       strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
 
     // Tenta enviar imediatamente
     if (WiFi.status() == WL_CONNECTED) {
         bool enviado = mqtt_send_data(nome_equipamento, timeStr, id_leitura, " ");
-        if (!enviado) {
-            buffer_batida(nome_equipamento, timeStr, id_leitura, "");
+        // Se falha do MQTT, armazena no buffer
+        if (!enviado) {            
+            buffer_batida(nome_equipamento, timeStr, id_leitura, "Retransmitido - falha MQTT");
         }
     } else {
-        buffer_batida(nome_equipamento, timeStr, id_leitura, "");
+        // Se falha do WiFi, armazena no buffer        
+        buffer_batida(nome_equipamento, timeStr, id_leitura, "Retransmitido - Falha WiFi");
     }
 
       // Mostra quantidade de batida no display
@@ -295,6 +299,7 @@ void verifica_batida_prensa(){
       batida_prensa = false;   
       
       try_send_buffered_batidas();
+      tft.drawString(" ",2, 50, 6); //simula um led no display a cada batida (apaga o "led")
 
  
 }
@@ -595,7 +600,7 @@ void try_send_buffered_batidas() {
             // Se falhar, pare para tentar novamente depois
             break;
         }
-        tft.drawString(String(bufferCount), 10, 105, 4);
+        tft.drawString(String(bufferCount) + "  ", 10, 105, 4);
         Serial.println("buffer_dec: " + String(bufferCount));
     } 
 }

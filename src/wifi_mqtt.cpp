@@ -48,10 +48,10 @@ void setup_wifi(){
    WiFi.begin(ssid, password); 
    do 
    { 
-        delay(5000); 
+        delay(1000); 
         Serial.print("."); 
         i++;
-   } while (((WiFi.status() != WL_CONNECTED) && (i<20)));
+   } while (((WiFi.status() != WL_CONNECTED) && (i<360)));
 
    if (WiFi.status() != WL_CONNECTED)
    {
@@ -286,8 +286,8 @@ void reconnect()
     { 
       Serial.print("falhou, rc="); 
       Serial.print(client.state()); 
-      Serial.println(" tentando novamente em 1 segundos"); 
-      delay(1000); 
+      Serial.println(" tentando novamente 500 mseg"); 
+      delay(500); 
     } 
   } 
 }
