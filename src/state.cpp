@@ -279,10 +279,12 @@ void verifica_batida_prensa(){
         // Se falha do MQTT, armazena no buffer
         if (!enviado) {            
             buffer_batida(nome_equipamento, timeStr, id_leitura, "Retransmitido - falha MQTT");
+            Serial.println("Falha MQTT - Add info in buffer");
         }
     } else {
         // Se falha do WiFi, armazena no buffer        
         buffer_batida(nome_equipamento, timeStr, id_leitura, "Retransmitido - Falha WiFi");
+        Serial.println("Falha WiFi - Add info in buffer");
     }
 
       // Mostra quantidade de batida no display

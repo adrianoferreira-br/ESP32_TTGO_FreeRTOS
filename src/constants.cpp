@@ -4,7 +4,7 @@
 #include "constants.h"
 
 
-#define Presto  // Presto | Adriano
+#define Adriano  // Presto | Adriano
 
 // Informações do equipamento
 char* NOME_EQUIPAMENTO = "teste";   // // prensa_1 | prensa_2 | prensa_3 | PRC_01  | linea_1 | teste 
@@ -53,4 +53,4 @@ char* FIREBASE_HOST = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"; // Hos
 char* FIREBASE_AUTH = "<YOUR_GoogleAPIKey_HERE>";                         // Chave de autenticação do Firebase   TODO: Criptografar a chave de autenticação
 
 // Versão
-char* VERSION = "v25.07.15";  // Versão atual de uso.
+char* VERSION = "v25.07.16";  // Versão atual de uso.
