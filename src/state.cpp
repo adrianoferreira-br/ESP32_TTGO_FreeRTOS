@@ -110,8 +110,8 @@ void init_state() {
   firebase_setup();
 
 
-   // Inicializa horario do ntp com fuso -3
-   configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+  // Inicializa horario do ntp com fuso -3
+  configTime(-3 * 3600, 0, "a.st1.ntp.br", "ntp.br", "time.nist.gov");
 }
 
 
@@ -226,7 +226,7 @@ void verifica_batida_prensa(){
 
     
   if (now - lastNtpSync > ntpSyncInterval || lastNtpSync == 0) {
-        configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+        configTime(-3 * 3600, 0, "a.st1.ntp.br", "ntp.br", "time.nist.gov");
         lastNtpSync = now;
         Serial.println("NTP sincronizado");        
   }    
@@ -475,7 +475,7 @@ void show_time() {
 
 
   if (now - lastNtpSync > ntpSyncInterval || lastNtpSync == 0) {
-        configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+        configTime(-3 * 3600, 0, "a.st1.ntp.br", "ntp.br", "time.nist.gov");
         lastNtpSync = now;
         Serial.println("NTP sincronizado");
   }
@@ -563,7 +563,7 @@ void calcula_fluxo(){
 void syncNtpIfNeeded() {
     unsigned long now = millis();
     if (now - lastNtpSync > ntpSyncInterval || lastNtpSync == 0) {
-        configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+        configTime(-3 * 3600, 0, "a.st1.ntp.br", "ntp.br", "time.nist.gov");
         lastNtpSync = now;
         Serial.println("NTP sincronizado");
     }

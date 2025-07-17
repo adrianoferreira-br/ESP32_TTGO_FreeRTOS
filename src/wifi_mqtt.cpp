@@ -257,9 +257,9 @@ void loop_mqqt() {
  */
 void callback(char* topic, byte* payload, unsigned int length) 
 {
-   Serial.print("Mensagem recebida no tópico: "); 
+   Serial.print("Mensagem recebida. Tópico: "); 
    Serial.print(topic); 
-   Serial.print(". Mensagem: "); 
+   Serial.print(".  : "); 
    String message; 
    for (unsigned int i = 0; i < length; i++) 
    { 
