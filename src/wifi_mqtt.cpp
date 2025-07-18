@@ -272,15 +272,15 @@ void callback(char* topic, byte* payload, unsigned int length)
 
 void reconnect() 
 { 
-  int qnt = 2;
+  int qnt = 3;
   while (!client.connected() && qnt > 1) 
   { 
     qnt--;
     Serial.print("Tentando conectar ao MQTT..."); 
-    if (client.connect("ESP32Client")) 
+    if (client.connect(NOME_EQUIPAMENTO)) 
     { 
       Serial.println("Conectado"); 
-      client.subscribe("AdrPresto",1); // Inscreve-se no tópico "AdrPresto" com QoS 1
+      //client.subscribe("AdrPresto",1); // Inscreve-se no tópico "AdrPresto" com QoS 1
     } 
     else 
     { 
