@@ -307,10 +307,9 @@ bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_l
     doc["id_leitura"] = String(id_leitura);
     doc["observacao"] = observacao;
 
-    char jsonBuffer[256];
-    serializeJson(doc, jsonBuffer);
-
-    bool result = client.publish("AdrPresto", (const uint8_t*)jsonBuffer, strlen(jsonBuffer), false, 1); // QoS 1
+    char jsonBuffer[256] = {0};
+    size_t jsonLen = serializeJson(doc, jsonBuffer);
+    bool result = client.publish("AdrPresto", (const uint8_t*)jsonBuffer, jsonLen, false); // QoS 0
 
     // web server update
     idBatida = id_leitura; // Atualiza o ID da batida

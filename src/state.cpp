@@ -275,7 +275,7 @@ void verifica_batida_prensa(){
 
     // Tenta enviar imediatamente
     if (WiFi.status() == WL_CONNECTED) {
-        bool enviado = mqtt_send_data(nome_equipamento, timeStr, id_leitura, " ");
+        bool enviado = mqtt_send_data(nome_equipamento, timeStr, id_leitura, "");
         // Se falha do MQTT, armazena no buffer
         if (!enviado) {            
             buffer_batida(nome_equipamento, timeStr, id_leitura, "Retransmitido - falha MQTT");
