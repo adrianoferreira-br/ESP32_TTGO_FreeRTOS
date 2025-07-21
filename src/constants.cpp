@@ -4,10 +4,10 @@
 #include "constants.h"
 
 
-#define Adriano  // Presto | Adriano
+#define Presto // Presto | Adriano
 
 // Informações do equipamento
-char* NOME_EQUIPAMENTO = "teste";   // // prensa_1 | prensa_2 | prensa_3 | PRC_01  | linea_1 | teste 
+char* NOME_EQUIPAMENTO = "prensa_3";   // prensa_1 | prensa_2 | prensa_3 | prc_1  | linea_1 | teste 
 
 // Definições de constantes para o projeto
 
@@ -53,4 +53,21 @@ char* FIREBASE_HOST = "XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"; // Hos
 char* FIREBASE_AUTH = "<YOUR_GoogleAPIKey_HERE>";                         // Chave de autenticação do Firebase   TODO: Criptografar a chave de autenticação
 
 // Versão
-char* VERSION = "v25.07.16";  // Versão atual de uso.
+char* VERSION = "v25.07.18";  // Versão atual de uso.
+
+
+/*
+
+----------------------- P R E S T O    A L I M E N T O S -----------------------
+prc_01
+    192.168.0.163         a0-dd-6c-74-fe-04     dinâmico
+linea_1
+    192.168.0.95          a0-dd-6c-6f-60-4c     dinâmico
+prensa_1
+    192.168.0.100         a0-dd-6c-74-f4-cc     dinâmico
+prensa_2
+    192.168.0.104         a0-dd-6c-74-f9-d4     dinâmico
+prensa_3
+    192.168.0.175         a0-dd-6c-74-f5-f8     dinâmico
+
+*/
