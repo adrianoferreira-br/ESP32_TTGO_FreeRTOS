@@ -43,6 +43,9 @@ void setup() {
   /*    APPLICATION   */
   setup_batidas_prensa();
 
+  /*  DHT Sensor  */
+  dht_setup();
+
 
 }
 
@@ -69,7 +72,9 @@ void loop()
   /*    APPLICATION_2    */
   //verifica_batida_prensa();
   verifica_interrupcao();
-  
+
+  /*  DHT Sensor  */
+  //dht_loop();
 
 }
 

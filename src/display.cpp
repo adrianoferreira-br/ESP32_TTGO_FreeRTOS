@@ -138,3 +138,11 @@ void showBootInfo() {
     delay(3000); // Aguarda 3 segundos
     
 }
+
+
+void show_temperature(float temp) {
+    tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+    tft.drawString("   " + String(temp, 1), 10, 50, 7);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.drawString("C", 170, 75, 4);
+}

@@ -12,6 +12,7 @@
 #include "freertos/task.h"
 #include "state.h"
 #include "esp_task_wdt.h"
+#include "dht_xx.h"
 
 
 void vTask1(void *pvParameters);  //
