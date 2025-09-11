@@ -13,15 +13,17 @@
 #include "esp_ota_ops.h"
 //Ota
 #include <ArduinoOTA.h>
-
 // WebServer
 #include <WebServer.h>
+// Memória NVS  (Non-Volatile Storage)
+#include <Preferences.h>
 
 WebServer server(80); // Porta 80 padrão HTTP
 
 
 WiFiClient espClient;
 PubSubClient client(espClient);
+Preferences prefs; // Cria o objeto Preferences
 
 const char* ssid = SSID;                //"STARLINK";//"PhoneAdr"; // Substitua pelo seu SSID 
 const char* password = PASSWORD;        //"11121314";//"UDJ1-ddsp";// "SUA_SENHA"; // Substitua pela sua senha 
@@ -66,6 +68,9 @@ void setup_wifi(){
    }       
 
    setup_webserver();
+
+
+
 
   }
 
@@ -266,6 +271,76 @@ void callback(char* topic, byte* payload, unsigned int length)
     message += (char)payload[i]; 
    } 
    Serial.println(message); 
+
+
+  if (String(topic) == "Reboot_") {
+    Serial.println("Reiniciando o sistema conforme comando recebido...");
+    delay(1000);
+    ESP.restart(); // Reinicia o ESP32
+  }
+
+
+ /* Exemplo de mensagem esperada: 
+        {"server":"192.168.100.4",
+         "port":1883,
+         "username":"Adriano",
+         "password":"Rafa1404"}
+*/
+  if (String(topic) == "config_mqtt") {
+    Serial.println("Reconfigurando o MQTT conforme comando recebido...");
+    // Analisa a mensagem JSON
+    DynamicJsonDocument doc(256);
+    DeserializationError error = deserializeJson(doc, message);
+    // Verifica se houve erro na análise
+    if (!error) {
+        strncpy(MQTT_SERVER, doc["server"] | "", sizeof(MQTT_SERVER));
+        PORT_MQTT = doc["port"] | 1883;
+        strncpy(MQTT_USERNAME, doc["username"] | "", sizeof(MQTT_USERNAME));
+        strncpy(MQTT_PASSWORD, doc["password"] | "", sizeof(MQTT_PASSWORD));
+        Serial.println("Configurações do MQTT atualizadas:");
+        Serial.println("Servidor: " + String(MQTT_SERVER));
+        Serial.println("Porta: " + String(PORT_MQTT));
+        Serial.println("Usuário: " + String(MQTT_USERNAME));
+        Serial.println("Senha: " + String(MQTT_PASSWORD));
+          // Salve na NVS se quiser persistência após reboot
+        prefs.begin("mqtt", false);
+        prefs.putString("server", MQTT_SERVER);
+        prefs.putInt("port", PORT_MQTT);
+        prefs.putString("username", MQTT_USERNAME);
+        prefs.putString("password", MQTT_PASSWORD);
+        prefs.end();
+    } else {
+        Serial.println("Erro ao analisar a mensagem de configuração do MQTT.");
+    }
+  }
+
+  /* Envio de informações do MQTT */
+  if (String(topic) == "info_mqtt") {
+    Serial.println("Enviando informações do MQTT conforme comando recebido...");
+    Serial.println("Servidor: " + String(MQTT_SERVER));
+    Serial.println("Porta: " + String(PORT_MQTT));
+    Serial.println("Usuário: " + String(MQTT_USERNAME));
+    Serial.println("Senha: " + String(MQTT_PASSWORD));
+  }
+
+
+  /* Grava o IP recebido na NVS */ 
+  if (String(topic) == "config_ip") {    
+    Serial.println("Atualizando configurações de rede: " + message);
+    // Aqui você pode adicionar o código para processar a mensagem recebida  
+    prefs.begin("my-app", false); // Abre o namespace "my-app" em modo de leitura e escrita
+    prefs.putString("last_message", message); // Armazena a mensagem com a chave "last_message"
+    prefs.end(); // Fecha o namespace "my-app"
+  }
+
+  if (String(topic) == "info_ip") {    
+    Serial.println("Lendo o IP salvo na NVS conforme comando recebido...");
+    prefs.begin("my-app", true); // Abre o namespace "my-app" em modo somente leitura
+    String lastMessage = prefs.getString("last_message", "Nenhum IP salvo"); // Lê a mensagem armazenada com a chave "last_message"
+    Serial.println("Última mensagem salva: " + lastMessage);
+    prefs.end(); // Fecha o namespace "my-app"
+  } 
+
 }
 
 
@@ -280,7 +355,13 @@ void reconnect()
     if (client.connect(NOME_EQUIPAMENTO)) 
     { 
       Serial.println("Conectado"); 
-      //client.subscribe("AdrPresto",1); // Inscreve-se no tópico "AdrPresto" com QoS 1
+      //client.subscribe("AdrPresto",1); // Inscreve-se no tópico "AdrPresto" com QoS 1      
+      client.subscribe("Reboot_",1);
+      client.subscribe("config_ip",1);
+      client.subscribe("info_ip",1);
+      client.subscribe("config_mqtt",1);
+      client.subscribe("info_mqtt",1);
+
     } 
     else 
     { 
@@ -353,3 +434,17 @@ void show_ip () {
       tft.drawString((String)NivelSinal, 205, 1, 4);
       tft.setTextColor(TFT_WHITE, TFT_BLACK);    
 }
+
+
+
+
+
+
+/*
+{
+"equipamento":"teste",
+"hora":"2025-07-17 21:11:17",
+"id_leitura":"3",
+"observacao":""
+}
+*/
