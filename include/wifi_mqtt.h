@@ -23,7 +23,7 @@ bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_l
 void show_partitions();
 
 //Ota
-void config_ota();
+void setup_ota();
 void loop_ota();  
 
 // WebServer

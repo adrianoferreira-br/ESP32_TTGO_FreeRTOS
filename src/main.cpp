@@ -25,17 +25,17 @@ void setup() {
   /*    HARDWARE   */   
   define_hardware();
 
+  /*    WIFI    */
+  setup_wifi();  
+
   /*    PARTITIONS   */   
-  //show_partitions();
+  show_partitions();
 
   /*    OTA   */   
-  //config_ota();
+  setup_ota();
 
   /*    DISPLAY  */
-  init_display();
-  
-  /*    WIFI    */
-  setup_wifi();
+  init_display();  
   
   /*    MQTT    */
   setup_mqtt();
@@ -60,6 +60,9 @@ void loop()
   /*    WIFI    */
   loop_wifi();  
 
+  /*    OTA   */
+  loop_ota();
+
   /*    MQTT    */
   loop_mqqt();
 
@@ -75,6 +78,8 @@ void loop()
 
   /*  DHT Sensor  */
   //dht_loop();
+
+  
 
 }
 

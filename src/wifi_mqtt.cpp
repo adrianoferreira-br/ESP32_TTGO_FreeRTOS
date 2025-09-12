@@ -10,13 +10,14 @@
 #include <ArduinoJson.h>
 //partions
 #include "esp_partition.h"
-#include "esp_ota_ops.h"
-//Ota
-#include <ArduinoOTA.h>
 // WebServer
 #include <WebServer.h>
 // Memória NVS  (Non-Volatile Storage)
 #include <Preferences.h>
+//OTA
+#include <ArduinoOTA.h>
+
+
 
 WebServer server(80); // Porta 80 padrão HTTP
 
@@ -82,7 +83,7 @@ void setup_wifi(){
  */
 void loop_wifi(){
   // Preenche informações referente a rede
-  if (WiFi.status() == WL_CONNECTED) {      
+  if (WiFi.status() == WL_CONNECTED) {       
       show_ip();              
   } else {
       tft.setTextColor(TFT_RED, TFT_BLACK);    
@@ -125,99 +126,54 @@ void setup_webserver()
  * MOSTRA INFO DAS PARTIÇÕES 
  */
 void show_partitions() {
-
-    Serial.println("Lista de partições:");
-
-    // Percorre todas as partições e imprime detalhes
-    esp_partition_iterator_t it = esp_partition_find(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, NULL);
-    while (it != NULL) {
-        const esp_partition_t* part = esp_partition_get(it);
-        Serial.printf("Nome: %s | Tipo: %d | Subtipo: %d | Tamanho: %d bytes | Endereço: 0x%06X\n",
-                      part->label, part->type, part->subtype, part->size, part->address);
-        it = esp_partition_next(it);
-    }
-    esp_partition_iterator_release(it);
-
-    
-    // Verificar a partição ativa
-    const esp_partition_t *running = esp_ota_get_running_partition();
-    Serial.print("Running partition type: ");
-    Serial.println(running->type);
-    Serial.print("Running partition subtype: ");
-    Serial.println(running->subtype);
-    Serial.print("Running partition address: ");
-    Serial.println(running->address, HEX);
-
-    Serial.printf("Flash chip size: %u bytes\n", spi_flash_get_chip_size());
-
-    // Inicializar a partição OTA apenas se necessário
-    const esp_partition_t *next_update_partition = esp_ota_get_next_update_partition(NULL);
-    if (next_update_partition != NULL) {
-        esp_err_t err = esp_ota_set_boot_partition(next_update_partition);
-        if (err != ESP_OK) {
-          Serial.print("Failed to set boot partition: ");
-          Serial.println(esp_err_to_name(err));
-        } else {
-          Serial.println("Boot partition set successfully");
-        }
-    } else {
-        Serial.println("No OTA update partition found");
-    }
-
-    // Verificar novamente a partição ativa após a inicialização
-    running = esp_ota_get_running_partition();
-    Serial.print("Running partition type: ");
-    Serial.println(running->type);
-    Serial.print("Running partition subtype: ");
-    Serial.println(running->subtype);
-    Serial.print("Running partition address: ");
-    Serial.println(running->address, HEX);
-
+  Serial.println("==== Partições encontradas ====");
+  const esp_partition_t* part = NULL;
+  esp_partition_iterator_t it = esp_partition_find(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  while (it != NULL) {
+    part = esp_partition_get(it);
+    Serial.printf("APP: %s, Offset: 0x%06x, Size: 0x%06x\n", part->label, part->address, part->size);
+    it = esp_partition_next(it);
   }
+  esp_partition_iterator_release(it);
+
+  it = esp_partition_find(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  while (it != NULL) {
+    part = esp_partition_get(it);
+    Serial.printf("DATA: %s, Offset: 0x%06x, Size: 0x%06x\n", part->label, part->address, part->size);
+    it = esp_partition_next(it);
+  }
+  esp_partition_iterator_release(it);
+  Serial.println("==============================="); 
+}
 
 
 /**************************************************************
  * INICIALIZAÇÃO DO OTA 
  */
-void config_ota() {
-   
-    ArduinoOTA.setPort(3232);
-    ArduinoOTA.onStart([]() {
-      String type;
-      if (ArduinoOTA.getCommand() == U_FLASH) {
-          type = "sketch";
-      } else { // U_SPIFFS
-          type = "filesystem";
-      }
-      Serial.println("Start updating " + type);
-    });
+void setup_ota(void){
 
-    ArduinoOTA.onEnd([]() {
-      Serial.println("\nEnd");
-    });
-
-    ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-        Serial.printf("Progress: %u%%\r", (progress / (total / 100)));
-    });
-
-    ArduinoOTA.onError([](ota_error_t error) {
-        Serial.printf("Error[%u]: ", error);
-        if (error == OTA_AUTH_ERROR) {
-          Serial.println("Auth Failed");
-        } else if (error == OTA_BEGIN_ERROR) {
-          Serial.println("Begin Failed");
-        } else if (error == OTA_CONNECT_ERROR) {
-          Serial.println("Connect Failed");
-        } else if (error == OTA_RECEIVE_ERROR) {
-          Serial.println("Receive Failed");
-        } else if (error == OTA_END_ERROR) {
-          Serial.println("End Failed");
-        }
-    });
-
-    ArduinoOTA.begin();
-    Serial.println("OTA ready");
-
+  // Inicialize o OTA
+  ArduinoOTA.setHostname("meu_esp32"); // Nome que aparecerá na IDE Arduino
+  ArduinoOTA.onStart([]() {
+    Serial.println("Iniciando OTA...");
+  });
+  ArduinoOTA.onEnd([]() {
+    Serial.println("\nOTA finalizada!");
+  });
+  ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
+    Serial.printf("Progresso: %u%%\r", (progress / (total / 100)));
+  });
+  ArduinoOTA.onError([](ota_error_t error) {
+    Serial.printf("Erro[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) Serial.println("Falha de autenticação");
+    else if (error == OTA_BEGIN_ERROR) Serial.println("Falha ao iniciar");
+    else if (error == OTA_CONNECT_ERROR) Serial.println("Falha de conexão");
+    else if (error == OTA_RECEIVE_ERROR) Serial.println("Falha ao receber");
+    else if (error == OTA_END_ERROR) Serial.println("Falha ao finalizar");
+  });
+  ArduinoOTA.begin();
+  Serial.println("OTA: Serviço OTA inicializado!");
+  
 }
 
 
