@@ -5,7 +5,8 @@
 
 
 
-#define BOTAO_35 35
+//#define BOTAO_35 35
+
 #define PINO_12 12
 #define WDT_TIMEOUT 5
 
@@ -31,21 +32,33 @@ void setup() {
   /*    PARTITIONS   */   
   show_partitions();
 
-  /*    OTA   */   
-  setup_ota();
-
-  /*    DISPLAY  */
+    /*    DISPLAY  */
   init_display();  
-  
+  Serial.println("Display inicializado");
+
   /*    MQTT    */
   setup_mqtt();
+  Serial.println("Setup MQTT inicializado");
+
+/*    OTA   */   
+  setup_ota();
+  Serial.println("Setup OTA inicializado");
+
 
   /*    APPLICATION   */
   setup_batidas_prensa();
 
   /*  DHT Sensor  */
   dht_setup();
+  tft.fillScreen(TFT_BLACK);      
+  
+  /* Ultrassônico */
+  void setup_ultrasonic();
+  Serial.println("Setup Ultrassônico inicializado");
 
+  /* Battery Voltage */
+  setup_tensao_bat();
+  Serial.println("Setup Battery Voltage inicializado");
 
 }
 
@@ -60,11 +73,12 @@ void loop()
   /*    WIFI    */
   loop_wifi();  
 
+  /*    MQTT    */
+  loop_mqqt();
+
   /*    OTA   */
   loop_ota();
 
-  /*    MQTT    */
-  loop_mqqt();
 
   /*    WDT    */
   //esp_task_wdt_reset();
@@ -77,9 +91,16 @@ void loop()
   verifica_interrupcao();
 
   /*  DHT Sensor  */
-  //dht_loop();
+  dht_loop();
 
-  
+  /* Ultrassônico */
+  loop_ultrasonic();
+
+  /* Battery Voltage */
+  loop_tensao_bat();
+
+  /* delay */
+  delay(3000);
 
 }
 
@@ -102,10 +123,14 @@ void define_hardware(){
   Serial.begin(115200); 
 
   // circuito prensa
-  //pinMode(PINO_12, INPUT_PULLUP);   
+  pinMode(PINO_12, INPUT_PULLUP);   
 
   // botão proximo ao reset  
-  //pinMode(BOTAO_35, INPUT);    
+  //pinMode(BOTAO_35, INPUT);   
+  
+  
+  pinMode(ULTRASONIC_TRIG, OUTPUT);  
+  pinMode(ULTRASONIC_ECHO, INPUT); 
 
 }
 

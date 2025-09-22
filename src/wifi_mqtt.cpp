@@ -86,9 +86,9 @@ void loop_wifi(){
   if (WiFi.status() == WL_CONNECTED) {       
       show_ip();              
   } else {
-      tft.setTextColor(TFT_RED, TFT_BLACK);    
-      tft.drawString("Disconnected     ", 0, 0, 2);  
-      tft.drawString("                 ", 130, 0, 2);  
+     // tft.setTextColor(TFT_RED, TFT_BLACK);    
+     // tft.drawString("Disconnected     ", 0, 0, 2);  
+     // tft.drawString("                 ", 130, 0, 2);  
       
   }   
 }

@@ -13,6 +13,14 @@
 #include "state.h"
 #include "esp_task_wdt.h"
 #include "dht_xx.h"
+#include "jsn_sr04t.h"
+#include "voltage_bat.h"
+
+
+#define ULTRASONIC_TRIG 26
+#define ULTRASONIC_ECHO 27
+
+#define VBAT_PIN 35  // GPIO35 geralmente é usado para ler a tensão
 
 
 void vTask1(void *pvParameters);  //
@@ -21,6 +29,7 @@ void define_hardware();
 
 
 extern String ip;
+
 
 
 
