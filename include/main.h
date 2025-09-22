@@ -15,6 +15,7 @@
 #include "dht_xx.h"
 #include "jsn_sr04t.h"
 #include "voltage_bat.h"
+#include "constants.h"
 
 
 #define ULTRASONIC_TRIG 26

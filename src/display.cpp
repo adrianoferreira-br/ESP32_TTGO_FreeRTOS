@@ -8,23 +8,7 @@
 #include <Arduino.h>
 #include "constants.h"
 
-
-
-
-/* Informações úteirs (Display TFT, ST7789 (ou ST7735?)):
- * Resolução: 240x135px   1.14"
- * Fontes: 2, 4, 6, 7
- * Cores: TFT_BLACK, TFT_WHITE, TFT_RED, TFT_GREEN, TFT_BLUE, TFT_CYAN, TFT_MAGENTA, TFT_YELLOW, TFT_ORANGE, TFT_PINK, TFT_GREY, TFT_DARKGREY, TFT_LIGHTGREY, TFT_BROWN, TFT_DARKGREEN, TFT_DARKCYAN, TFT_PURPLE, TFT_NAVY, TFT_DARKRED, TFT_MAROON, TFT_OLIVE, TFT_LIGHTGREY, TFT_DARKGREY, TFT_BLUE, TFT_GREEN, TFT_RED, TFT_WHITE, TFT_BLACK
- * Rotação: 0, 1, 2, 3
- * Tipo de fonte: A4, A5, A6, A7
- * 
- *  tft.drawString(voltage,  tft.width() / 2, tft.height() / 2 );
- */
-
-
 TFT_eSPI tft = TFT_eSPI();
-
-
 
 /*  init_display
  *  Description: Initialize the display, set basic items like: rotation, font, background and text color.
@@ -32,34 +16,22 @@ TFT_eSPI tft = TFT_eSPI();
 void init_display()
 { 
     tft.init();
-    tft.setRotation(3);
+    tft.setRotation(1);  // 3- landpage com conector a esquerda
     tft.setTextFont(4);
     tft.setTextSize(1);
     tft.fillScreen(TFT_BLACK);         
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);        
-    int origemX = tft.width();    
-    int origemY = tft.height();    
-    tft.drawString(((String)origemX) + " x " + ((String)origemY),90,50,2);     //string, x, y, font  : Fonte 2, 4, 6, 7
-    delay(500);  
-    //showBootInfo(); // Exibe informações de boot (versão e nome do equipamento)    
-    tft.fillScreen(TFT_RED);         
-    delay(500);  
-    tft.fillScreen(TFT_GREEN);         
-    delay(500);  
-    tft.fillScreen(TFT_BLUE);         
-    delay(500);  
-    tft.fillScreen(TFT_ORANGE);     
-    delay(500);        
-    tft.fillScreen(TFT_BLACK);    
-    tft.drawString("  Procurando rede...", 2, 10, 4); //string, x, y, font
-    tft.drawString("Versao:   " + String(VERSION), 2, 55, 4); //string, x, y, font
-    tft.drawString("Equip:  " + String(NOME_EQUIPAMENTO), 2, 100, 4); //string, x, y, font
-    //graficoBarra(1,105,180,132,50,132,TFT_BLUE);    // x, y, largura, altura, valor, valorMaximo, cor)
-   
- 
-  // tft.fillCircle(120, 120, 10, TFT_YELLOW);
-  // drawGauge(35); // Exemplo com um valor de 50
+    // Mostra resolução para debug (opcional)
+    tft.drawString(String(tft.width()) + " x " + String(tft.height()), 90, 50, 2);
+    delay(500);
+    // Animação de boot (opcional)
+    uint16_t bootColors[] = {TFT_RED, TFT_GREEN, TFT_BLUE, TFT_ORANGE};
+    for (uint8_t i = 0; i < 4; i++) {
+        tft.fillScreen(bootColors[i]);
+        delay(300);
+    }
+    tft.fillScreen(TFT_BLACK);
 }
 
 
@@ -77,6 +49,10 @@ void displayPrint(char* str, int qnt, int x, int y)
 
 
 
+
+/*
+ *  Description: Draw a bar graph on the display
+ */
 void graficoBarra(int x, int y, int largura, int altura, int valor, int valorMaximo, int cor) {
   
     // Verificação de divisão por zero
@@ -84,7 +60,6 @@ void graficoBarra(int x, int y, int largura, int altura, int valor, int valorMax
         Serial.println("Erro: valorMaximo é zero.");
         return;
     }    
-
     tft.drawRect(x, y, largura, altura, TFT_WHITE);
     tft.fillRect(x, y, largura, altura, TFT_WHITE);
     tft.fillRect(x, y, (valor * largura) / valorMaximo, altura, cor);
@@ -123,34 +98,72 @@ void drawGauge(int value) {
 }
 
 
+
+/*
+ *  Description: Show boot information on the display
+ */
 void showBootInfo() {        
     
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);   
-
-    // Exibe VERSION na parte superior
-    int16_t topY = 10;
-    tft.drawString(VERSION, (tft.width() / 2)-4, topY);
-
-    // Exibe NOME_EQUIPAMENTO na parte inferior
-    int16_t bottomY = tft.height() - 20;
-    tft.drawString(NOME_EQUIPAMENTO, (tft.width() / 2)-4, bottomY-2);
-
-    delay(3000); // Aguarda 3 segundos
-    
+    tft.fillScreen(TFT_BLACK);
+    tft.setTextDatum(MC_DATUM); // Centraliza texto
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    // Exibe versão na parte superior centralizada
+    tft.drawString("Versao: " + String(VERSION), tft.width() / 2, 30, 4);
+    // Exibe nome do equipamento na parte inferior centralizada
+    tft.drawString("Equip: " + String(NOME_EQUIPAMENTO), tft.width() / 2, tft.height() - 30, 4);
+    delay(2000); // Aguarda 2 segundos
+    tft.setTextDatum(TL_DATUM); // Retorna para o padrão (top-left)
 }
 
 
+/*
+ *  Description: Show temperature on the display
+*/
+
 void show_temperature(float temp) {
     tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-    tft.drawString("   " + String(temp, 1), 10, 50, 7);
+    tft.drawString("   " + String(temp, 1), 10, 50, 4);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawString("C", 170, 75, 4);
 }
 
 
+/*
+*  Description: Show distance on the display
+*/
 void show_distancia(float dist) {
     tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-    tft.drawString("   " + String(dist, 1), 10, 90, 7);
+    tft.drawString("   " + String(dist, 1), 10, 90, 4);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawString("cm", 170, 115, 4);
-} 
+}
+
+/*
+ *  Description: Show battery voltage on the display
+*/
+void show_battery_voltage(float voltage) {
+    tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+    tft.drawString("   " + String(voltage, 2), 10, 130, 2);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.drawString("V", 170, 155, 4);
+}
+
+/*
+ *  Description: Show the number of presses on the display
+*/
+void show_batidas(int batidas) {
+    tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+    tft.drawString("   " + String(batidas), 55, 50, 6);
+}
+
+
+/*
+ *  Description: Show the current time on the display
+*/
+void show_time(char* timeStr) {
+    tft.setTextColor(TFT_YELLOW, TFT_BLACK);        
+   // tft.drawString("          ", 120, 105, 4);    
+    tft.drawString("   " + String(timeStr), 127, 105, 4);    
+}
+
+

@@ -33,32 +33,44 @@ void setup() {
   show_partitions();
 
     /*    DISPLAY  */
-  init_display();  
+  init_display();    
   Serial.println("Display inicializado");
+  showBootInfo(); // Exibe informações de boot (versão e nome do equipamento)
 
   /*    MQTT    */
   setup_mqtt();
   Serial.println("Setup MQTT inicializado");
 
-/*    OTA   */   
+  /*    OTA   */   
   setup_ota();
   Serial.println("Setup OTA inicializado");
 
 
-  /*    APPLICATION   */
-  setup_batidas_prensa();
+  /*    BATIDA   */
+  if (SENSOR_BATIDA) {
+    setup_batidas_prensa();      
+    Serial.println("Setup Batida Prensa inicializado");
+  }
 
   /*  DHT Sensor  */
-  dht_setup();
-  tft.fillScreen(TFT_BLACK);      
+  if (SENSOR_TEMPERATURE) {
+    dht_setup();    
+    Serial.println("Setup DHT inicializado");
+  }
   
   /* Ultrassônico */
-  void setup_ultrasonic();
-  Serial.println("Setup Ultrassônico inicializado");
+  if (SENSOR_WATER_LEVEL) {
+    void setup_ultrasonic();
+    Serial.println("Setup Ultrassônico inicializado");
+  }
 
   /* Battery Voltage */
-  setup_tensao_bat();
-  Serial.println("Setup Battery Voltage inicializado");
+  if (SENSOR_BATTERY_VOLTAGE) {
+    setup_tensao_bat();
+    Serial.println("Setup Battery Voltage inicializado");
+  }
+
+  tft.fillScreen(TFT_BLACK);      
 
 }
 
@@ -87,20 +99,31 @@ void loop()
   //loop_state();
 
   /*    APPLICATION_2    */
-  //verifica_batida_prensa();
-  verifica_interrupcao();
+
+  if (SENSOR_BATIDA) {
+      verifica_interrupcao();
+  }
 
   /*  DHT Sensor  */
-  dht_loop();
+  if (SENSOR_TEMPERATURE){
+    dht_loop();
+  } 
 
   /* Ultrassônico */
-  loop_ultrasonic();
+  if (SENSOR_WATER_LEVEL){
+    loop_ultrasonic();
+  }
 
   /* Battery Voltage */
-  loop_tensao_bat();
+  if (SENSOR_BATTERY_VOLTAGE){
+    loop_tensao_bat();
+  }
 
   /* delay */
-  delay(3000);
+  if (!SENSOR_BATIDA){
+    delay(2000);  // aguarda 2 segundos para próxima leitura do DHT
+  }
+
 
 }
 
@@ -126,8 +149,7 @@ void define_hardware(){
   pinMode(PINO_12, INPUT_PULLUP);   
 
   // botão proximo ao reset  
-  //pinMode(BOTAO_35, INPUT);   
-  
+  //pinMode(BOTAO_35, INPUT);     
   
   pinMode(ULTRASONIC_TRIG, OUTPUT);  
   pinMode(ULTRASONIC_ECHO, INPUT); 
