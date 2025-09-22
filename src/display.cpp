@@ -52,19 +52,29 @@ void displayPrint(char* str, int qnt, int x, int y)
 
 /*
  *  Description: Draw a bar graph on the display
+ *  @param x, y: posição inicial
+ *  @param largura, altura: dimensões do gráfico
+ *  @param valor: valor atual
+ *  @param valorMaximo: valor máximo
+ *  @param cor: cor da barra
+ *  @param horizontal: true = horizontal, false = vertical
  */
-void graficoBarra(int x, int y, int largura, int altura, int valor, int valorMaximo, int cor) {
-  
-    // Verificação de divisão por zero
+void graficoBarra(int x, int y, int largura, int altura, int valor, int valorMaximo, int cor, bool horizontal = true) {
     if (valorMaximo == 0) {
         Serial.println("Erro: valorMaximo é zero.");
         return;
-    }    
+    }
     tft.drawRect(x, y, largura, altura, TFT_WHITE);
-    tft.fillRect(x, y, largura, altura, TFT_WHITE);
-    tft.fillRect(x, y, (valor * largura) / valorMaximo, altura, cor);
-}
+    tft.fillRect(x, y, largura, altura, TFT_WHITE); // Fundo branco
 
+    if (horizontal) {
+        int barra = (valor * largura) / valorMaximo;
+        tft.fillRect(x, y, barra, altura, cor);
+    } else {
+        int barra = (valor * altura) / valorMaximo;
+        tft.fillRect(x, y + (altura - barra), largura, barra, cor);
+    }
+}
   
 
 /* drawGauge
@@ -116,16 +126,6 @@ void showBootInfo() {
 }
 
 
-/*
- *  Description: Show temperature on the display
-*/
-
-void show_temperature(float temp) {
-    tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-    tft.drawString("   " + String(temp, 1), 10, 50, 4);
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.drawString("C", 170, 75, 4);
-}
 
 
 /*
@@ -133,9 +133,31 @@ void show_temperature(float temp) {
 */
 void show_distancia(float dist) {
     tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-    tft.drawString("   " + String(dist, 1), 10, 90, 4);
+    tft.drawString("   " + String(dist, 1), 120, 25, 4);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.drawString("cm", 170, 115, 4);
+    tft.drawString("cm", 200, 25, 4);    
+    graficoBarra(10, 20, 50, 100, 80-dist, 80, TFT_BLUE, false); // Exemplo de uso do gráfico de barras
+}
+
+
+/*
+ *  Description: Show temperature on the display
+*/
+void show_temperature(float temp) {
+    tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+    tft.drawString("   " + String(temp, 1), 120, 55, 4);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.drawString("C", 200, 55, 4);
+}
+
+/*
+ *  Description: Show humidity on the display
+*/
+void show_humidity(float hum) {
+    tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+    tft.drawString("   " + String(hum, 1), 120, 85, 4);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.drawString("%", 200, 85, 4);
 }
 
 /*
@@ -143,9 +165,9 @@ void show_distancia(float dist) {
 */
 void show_battery_voltage(float voltage) {
     tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-    tft.drawString("   " + String(voltage, 2), 10, 130, 2);
+    tft.drawString("   " + String(voltage, 2), 120, 115, 4);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.drawString("V", 170, 155, 4);
+    tft.drawString("V", 200, 115, 4);
 }
 
 /*

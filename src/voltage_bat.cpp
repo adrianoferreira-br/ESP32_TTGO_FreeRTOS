@@ -12,7 +12,7 @@ void loop_tensao_bat() {
     Serial.print("Tensão da placa: ");
     Serial.print(vbat, 2);
     Serial.println(" V");
-    delay(2000);
+    show_battery_voltage(vbat);    
 }
 
 

@@ -54,10 +54,10 @@ void dht_loop() {
   else {
     Serial.print(F("Temperature: "));
     Serial.print(event.temperature);
-    Serial.println(F("°C"));
-    if (!isnan(event.temperature)) {
-        show_temperature(event.temperature);
-}
+    Serial.println(F("°C"));    
+    if (!isnan(event.temperature)) {        
+      show_temperature(event.temperature);     
+    }
   }
   // Get humidity event and print its value.
   dht.humidity().getEvent(&event);
@@ -68,5 +68,8 @@ void dht_loop() {
     Serial.print(F("Humidity: "));
     Serial.print(event.relative_humidity);
     Serial.println(F("%"));
+    if (!isnan(event.relative_humidity)) {
+      show_humidity(event.relative_humidity);
+    }
   }
 }

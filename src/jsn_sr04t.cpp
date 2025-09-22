@@ -25,7 +25,7 @@ void loop_ultrasonic() {
        Serial.print("Distância: ");
        Serial.print(dist);
        Serial.println(" cm");
-       show_distancia(dist);
+       show_distancia(dist);       
    } else {
        Serial.println("Falha na leitura do ultrassônico!");
    }      
