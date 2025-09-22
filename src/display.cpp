@@ -146,3 +146,11 @@ void show_temperature(float temp) {
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawString("C", 170, 75, 4);
 }
+
+
+void show_distancia(float dist) {
+    tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+    tft.drawString("   " + String(dist, 1), 10, 90, 7);
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    tft.drawString("cm", 170, 115, 4);
+} 

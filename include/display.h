@@ -11,6 +11,7 @@ void graficoBarra(int, int, int, int, int, int, int);
 void drawGauge(int);
 void showBootInfo();
 void show_temperature(float temp);
+void show_distancia(float dist);
 
 extern TFT_eSPI tft;
 
