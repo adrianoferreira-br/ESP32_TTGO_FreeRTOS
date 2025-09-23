@@ -6,6 +6,7 @@
 #include "Arduino.h"
 
 
+
 void init_display();
 void displayPrint(char*,int,int,int);
 void graficoBarra(int, int, int, int, int, int, int);

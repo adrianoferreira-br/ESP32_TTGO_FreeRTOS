@@ -9,7 +9,7 @@
 
 
 const char* firebaseHost = "https://presto-prc-default-rtdb.firebaseio.com/";
-const char* firebaseAuth = "RSDCg4zrJcYBVcn8i9ewxRhOTzbDMYzoju0SdIuI";
+const char* firebaseAuth = "RSDCg4zrJcYBVcn8i9ewxRhOTzbDMYzoju";
 
 
 // Instancia do Firebase
@@ -177,7 +177,7 @@ void firebase_updateValues()
   
    // Reatribuição da variáveis
 
-   //String Nomee;
+   /*String Nomee;
    AMOSTRAS_COMPROVACAO_ESTADO = sampleAvgBatida;
   
    // calibrationVoltage;
@@ -188,7 +188,7 @@ void firebase_updateValues()
     LIMIAR_SUPERIOR = (limiteSup < limiteMax)? limiteSup :  2000 - 100;
     LIMIAR_INFERIOR = (limiteInf < limiteMax)? limiteInf :  2000 - 200;
     LIMITE_MAX = (limiteMax > 1) ? limiteMax : 2000;
-
+*/
     //String SSID placa Ethernet;
     /*
     char Buffer[30];

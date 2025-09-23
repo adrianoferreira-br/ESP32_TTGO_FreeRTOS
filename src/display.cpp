@@ -7,8 +7,11 @@
 #include <WiFi.h>
 #include <Arduino.h>
 #include "constants.h"
+#include "main.h"
 
 TFT_eSPI tft = TFT_eSPI();
+
+
 
 /*  init_display
  *  Description: Initialize the display, set basic items like: rotation, font, background and text color.
@@ -136,7 +139,11 @@ void show_distancia(float dist) {
     tft.drawString("   " + String(dist, 1), 120, 25, 4);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawString("cm", 200, 25, 4);    
-    graficoBarra(10, 20, 50, 100, 80-dist, 80, TFT_BLUE, false); // Exemplo de uso do gráfico de barras
+    graficoBarra(3, 20, 60, 113,  length_max - dist, length_max, TFT_BLUE, false); // Exemplo de uso do gráfico de barras
+    tft.drawString("0", 70, 20, 2); // Exibe medida inicial do reservatório
+    tft.drawString(String(length_max), 70, 120, 2); // Exibe altura máxima do ponto inicial até o modo sem agua
+    tft.setTextColor(TFT_BLACK, TFT_WHITE);
+    tft.drawString(String(100-(dist/length_max * 100))+"%", 12, 70, 2);
 }
 
 

@@ -22,13 +22,9 @@ extern bool SENSOR_WATER_LEVEL;                   // true | false
 extern bool SENSOR_BATIDA;                        // true | false
 extern bool SENSOR_BATTERY_VOLTAGE;            // true | false
 
-// Análise de corrente e verificação de estado de operação do equipamento (Processando ou aguarndando insumo)
-extern float CALIBRATION_CURRENT_FACTOR;          // Fator de calibração (varia de acordo com o sensor e meio)  
-extern float CALIBRATION_VOLTAGE_FACTOR;            
-extern int LIMIAR_SUPERIOR;                     // Limiar superior para detecção de equipamento processando
-extern int LIMIAR_INFERIOR;                     // Limiar inferior para detecção de equipamento aguardando insumo
-extern int LIMITE_MAX;  
-extern int AMOSTRAS_COMPROVACAO_ESTADO;           // Tempo de comprovação de estado
+// Definições de constantes para o projeto
+extern float length_max;
+
 
 // Informações para acesso ao Firebase
 extern char* FIREBASE_HOST;                       // Host do Firebase

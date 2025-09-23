@@ -18,6 +18,7 @@ void setup_batidas_prensa();
 void verifica_interrupcao();
 void try_send_buffered_batidas();
 void buffer_batida(const char* nome, const char* timeStr, long id, const char* obs);
+void define_length_max();
 
 
 

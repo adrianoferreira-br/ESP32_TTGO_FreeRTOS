@@ -16,6 +16,7 @@
 #include "jsn_sr04t.h"
 #include "voltage_bat.h"
 #include "constants.h"
+#include "mem_flash.h"
 
 
 #define ULTRASONIC_TRIG 26
@@ -30,6 +31,7 @@ void define_hardware();
 
 
 extern String ip;
+
 
 
 

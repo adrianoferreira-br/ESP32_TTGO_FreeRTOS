@@ -8,12 +8,12 @@
 #include "display.h"
 #include <TFT_eSPI.h>
 #include "Arduino.h"
-#include "main.h"
-#include "EmonLib.h"                 
+#include "main.h"          
 #include "time.h"
 #include "constants.h"
-#include "extern_data.h"
 #include "wifi_mqtt.h"
+#include "mem_flash.h"
+
 
 
 // Pino do sensor reflexivo
@@ -27,7 +27,8 @@ volatile bool batida_prensa = false;
 volatile bool reflexSensorTriggered = false;
 
 // botão da placa
-const int BOTAO_35 = 35;
+const int BUTTON_35 = 35;
+float length_max = 100;  //cx d´agua
 
 
 // Variáveis para sincronização NTP
@@ -74,6 +75,8 @@ void setup_batidas_prensa() {
   
   // Inicializa horario do ntp com fuso -3
   //configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
+
+   
 
 }
 
@@ -288,4 +291,24 @@ void try_send_buffered_batidas() {
         tft.drawString(String(bufferCount) + "  ", 10, 105, 4);
         Serial.println("buffer_dec: " + String(bufferCount));
     } 
+}
+
+
+/*
+*     DEFINE A ALTURA MÁXIMA DO RESERVATÓRIO
+*/
+void define_length_max(){  
+  //Configura o botão para definir a altura máxima do reservatório
+  if (digitalRead(BUTTON_35) == LOW){  // botão pressionado (GND){
+      Serial.println("Botão pressionado - config caixa de água");
+      length_max = ultrasonic_read_cm();
+      Serial.println("Altura máxima do reservatório: " + String(length_max) + " cm");
+      //grava variavel em memoria não volátil
+      save_flash_length_max(length_max);      
+  }
+  else {
+      //lê variavel em memoria não volátil
+      length_max = read_flash_length_max();      
+      Serial.println("Altura máxima do reservatório (lido da EEPROM): " + String(length_max) + " cm");
+  }
 }

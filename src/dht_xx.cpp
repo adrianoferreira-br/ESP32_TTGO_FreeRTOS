@@ -12,8 +12,7 @@ DHT_Unified dht(DHTPIN, DHTTYPE);
 uint32_t delayMS = 2000;
 
 void dht_setup() {
-  dht.begin();
-  Serial.println(F("DHTxx Unified Sensor Example"));
+  dht.begin();  
   // Print temperature sensor details.
   sensor_t sensor;
   dht.temperature().getSensor(&sensor);

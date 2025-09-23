@@ -5,8 +5,7 @@
 
 
 
-//#define BOTAO_35 35
-
+#define BUTTON_35 35
 #define PINO_12 12
 #define WDT_TIMEOUT 5
 
@@ -25,6 +24,7 @@ void setup() {
 
   /*    HARDWARE   */   
   define_hardware();
+  setup_mem_flash();
 
   /*    WIFI    */
   setup_wifi();  
@@ -66,9 +66,13 @@ void setup() {
 
   /* Battery Voltage */
   if (SENSOR_BATTERY_VOLTAGE) {
-    setup_tensao_bat();
-    Serial.println("Setup Battery Voltage inicializado");
+    //setup_tensao_bat();
+    //Serial.println("Setup Battery Voltage inicializado");
   }
+
+  /* botão de configuração */
+   define_length_max();
+  
 
   tft.fillScreen(TFT_BLACK);      
 
@@ -116,13 +120,14 @@ void loop()
 
   /* Battery Voltage */
   if (SENSOR_BATTERY_VOLTAGE){
-    loop_tensao_bat();
+    //loop_tensao_bat();  //GPIO35 é compartilhado com sensor de tensão da bateria.
   }
 
   /* delay */
   if (!SENSOR_BATIDA){
     delay(2000);  // aguarda 2 segundos para próxima leitura do DHT
   }
+ 
 
 
 }
@@ -149,7 +154,7 @@ void define_hardware(){
   pinMode(PINO_12, INPUT_PULLUP);   
 
   // botão proximo ao reset  
-  //pinMode(BOTAO_35, INPUT);     
+  pinMode(BUTTON_35, INPUT);     
   
   pinMode(ULTRASONIC_TRIG, OUTPUT);  
   pinMode(ULTRASONIC_ECHO, INPUT); 
