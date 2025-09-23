@@ -12,26 +12,28 @@
 #include "esp_partition.h"
 // WebServer
 #include <WebServer.h>
+#include "web_server.h"
 // Memória NVS  (Non-Volatile Storage)
 #include <Preferences.h>
 //OTA
 #include <ArduinoOTA.h>
+#include <EEPROM.h>
 
 
 
-WebServer server(80); // Porta 80 padrão HTTP
-
+//WebServer server(80); // Porta 80 padrão HTTP
+//Preferences prefs; // Cria o objeto Preferences
 
 WiFiClient espClient;
 PubSubClient client(espClient);
-Preferences prefs; // Cria o objeto Preferences
+
 
 const char* ssid = SSID;                //"STARLINK";//"PhoneAdr"; // Substitua pelo seu SSID 
 const char* password = PASSWORD;        //"11121314";//"UDJ1-ddsp";// "SUA_SENHA"; // Substitua pela sua senha 
 const char* mqtt_server = MQTT_SERVER;  //"192.168.100.4";//"broker.hivemq.com";
 const int port_mqtt = PORT_MQTT;        //1883
 
-long idBatida = 0; // ID da batida
+
 
 //String ip;
 
@@ -68,9 +70,7 @@ void setup_wifi(){
     Serial.println(WiFi.localIP());                
    }       
 
-   setup_webserver();
-
-
+   
 
 
   }
@@ -94,30 +94,6 @@ void loop_wifi(){
 }
 
 
-/**************************************************************
- * WEB SERVER
- */
-
-void handleRoot() {
-
-  String html = "<html><head><meta http-equiv='refresh' content='1'></head><body>";
-
-  html += "<h1>Presto Alimentos - Monitoramento de Maquina</h1>";
-  html += "<h2>Equipamento: ";
-  html += NOME_EQUIPAMENTO;
-  html += "</h2>";
-  html += "<h2>Batida nr:   " + String(idBatida) + "</h2>";
-  html += "</body></html>";
-
-  server.send(200, "text/html", html);
-}
-
-
-void setup_webserver()  
-{
-  server.on("/", handleRoot);
-  server.begin();
-}
 
 
 
@@ -145,6 +121,7 @@ void show_partitions() {
   esp_partition_iterator_release(it);
   Serial.println("==============================="); 
 }
+
 
 
 /**************************************************************
@@ -228,7 +205,7 @@ void callback(char* topic, byte* payload, unsigned int length)
    } 
    Serial.println(message); 
 
-
+   
   if (String(topic) == "Reboot_") {
     Serial.println("Reiniciando o sistema conforme comando recebido...");
     delay(1000);
@@ -317,7 +294,11 @@ void reconnect()
       client.subscribe("info_ip",1);
       client.subscribe("config_mqtt",1);
       client.subscribe("info_mqtt",1);
-
+      client.subscribe(CLIENTE,1); // Inscreve-se no tópico do cliente específico
+     // client.subscribe(CLIENTE + "/" + LOCAL , 1); // Inscreve-se no tópico do local específico
+     // client.subscribe(CLIENTE + "/" + LOCAL + "/" + TIPO_EQUIPAMENTO, 1); // Inscreve-se no tópico do tipo de equipamento específico
+     // client.subscribe(CLIENTE + "/" + LOCAL + "/" + TIPO_EQUIPAMENTO + "/" + String(DISPOSITIVO_ID), 1); // Inscreve-se no tópico do dispositivo específico
+      Serial.println("Inscrito nos tópicos com sucesso!");
     } 
     else 
     { 
@@ -346,12 +327,12 @@ bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_l
 
     char jsonBuffer[256] = {0};
     size_t jsonLen = serializeJson(doc, jsonBuffer);
-    bool result = client.publish("AdrPresto", (const uint8_t*)jsonBuffer, jsonLen, false); // QoS 0
+    bool result = client.publish(CLIENTE/*serv.*/, (const uint8_t*)jsonBuffer, jsonLen, false); // QoS 0
 
     // web server update
     idBatida = id_leitura; // Atualiza o ID da batida
-    handleRoot(); // Atualiza a página web após enviar os dados
-    server.handleClient(); // Processa requisições do servidor web
+    //handleRoot(); // Atualiza a página web após enviar os dados
+
 
     return result;
 }
@@ -404,3 +385,5 @@ void show_ip () {
 "observacao":""
 }
 */
+
+

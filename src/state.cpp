@@ -20,6 +20,7 @@
 #define BATIDA_PIN 12 
 int qnt_batidas_prensa = 0;
 volatile bool batida_prensa = false;
+long idBatida = 0; // Variável global para armazenar o ID da batida
 
 
 

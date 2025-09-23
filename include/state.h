@@ -21,6 +21,8 @@ void buffer_batida(const char* nome, const char* timeStr, long id, const char* o
 void define_length_max();
 
 
+extern long idBatida; // Apenas declaração, sem inicialização
+
 
 #endif // STATE_H_
 

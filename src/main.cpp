@@ -13,6 +13,8 @@
 TaskHandle_t task_handle_Menu = NULL;
 TaskHandle_t task_handle2 = NULL;
 
+Preferences prefs; // Cria o objeto Preferences
+
 
 
 /**************************************************************
@@ -28,6 +30,7 @@ void setup() {
 
   /*    WIFI    */
   setup_wifi();  
+  setup_webserver();
 
   /*    PARTITIONS   */   
   show_partitions();
@@ -87,13 +90,16 @@ void setup() {
 void loop() 
 {
   /*    WIFI    */
-  loop_wifi();  
-
-  /*    MQTT    */
-  loop_mqqt();
+  loop_wifi();    
+  loop_webserver();  /*    WEB SERVER    */
+  
 
   /*    OTA   */
   loop_ota();
+
+
+  /*    MQTT    */
+  loop_mqqt();
 
 
   /*    WDT    */
@@ -128,7 +134,6 @@ void loop()
     delay(2000);  // aguarda 2 segundos para próxima leitura do DHT
   }
  
-
 
 }
 

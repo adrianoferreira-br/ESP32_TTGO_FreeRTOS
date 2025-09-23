@@ -17,6 +17,8 @@
 #include "voltage_bat.h"
 #include "constants.h"
 #include "mem_flash.h"
+#include "web_server.h"
+#include <Preferences.h>
 
 
 #define ULTRASONIC_TRIG 26
@@ -31,6 +33,7 @@ void define_hardware();
 
 
 extern String ip;
+extern Preferences prefs; // Cria o objeto Preferences
 
 
 

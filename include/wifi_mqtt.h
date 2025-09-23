@@ -6,7 +6,7 @@
 #include <PubSubClient.h>
 #include "constants.h"
 #include "main.h"
-//#include <WebServer.h>
+
 
 // Wifi
 void setup_wifi(void);
@@ -27,8 +27,9 @@ void setup_ota();
 void loop_ota();  
 
 // WebServer
-void handleRoot();
-void setup_webserver();
+//void handleRoot();
+//void handleConfigMQTT();
+//void setup_webserver();
 
 
 
