@@ -303,12 +303,12 @@ void define_length_max(){
       Serial.println("Botão pressionado - config caixa de água");
       length_max = ultrasonic_read_cm();
       Serial.println("Altura máxima do reservatório: " + String(length_max) + " cm");
-      //grava variavel em memoria não volátil
-      save_flash_length_max(length_max);      
+      //grava variavel em memoria não volátil      
+      save_flash_float(ADDR_LENGTH_MAX, length_max);
   }
   else {
-      //lê variavel em memoria não volátil
-      length_max = read_flash_length_max();      
+      //lê variavel em memoria não volátil      
+      length_max = read_flash_float(ADDR_LENGTH_MAX);
       Serial.println("Altura máxima do reservatório (lido da EEPROM): " + String(length_max) + " cm");
   }
 }

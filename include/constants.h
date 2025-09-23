@@ -4,6 +4,21 @@
 #ifndef CONSTANTS_H_
 #define CONSTANTS_H_
 
+
+// Endereço e tamanho da EEPROM
+#define EEPROM_SIZE 256 // Tamanho necessário para armazenar um float (4 bytes)
+#define EEPROM_ADDRESS 0 // Endereço inicial para armazenar o float
+#define ADDR_LENGTH_MAX   0   // float (4 bytes)
+#define ADDR_IP          10   // string (ex: 16 bytes)
+#define ADDR_WIFI_SSID   30   // string (ex: 32 bytes)
+#define ADDR_WIFI_PASS   70   // string (ex: 32 bytes)
+#define ADDR_MQTT_SERVER 110  // string (ex: 32 bytes)
+#define ADDR_MQTT_PORT   150  // int (4 bytes)
+#define ADDR_MQTT_USER   160  // string (ex: 32 bytes)
+#define ADDR_MQTT_PASS   200  // string (ex: 32 bytes)
+
+
+
 // Informações para acesso a Internet
 extern char* SSID;      // "STARLINK";            // Substitua pelo seu SSID para acesso a Internet
 extern char* PASSWORD; //"11121314";              // Substitua pela sua senha de acesso a Internet
@@ -32,6 +47,8 @@ extern char* FIREBASE_AUTH;                       // Chave de autenticação do 
 
 // Versão
 extern char* VERSION;                             // Versão atual de uso. ex. "v25.4.15"
+
+
 
 
 
