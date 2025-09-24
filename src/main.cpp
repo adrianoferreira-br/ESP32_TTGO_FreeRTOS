@@ -13,7 +13,7 @@
 TaskHandle_t task_handle_Menu = NULL;
 TaskHandle_t task_handle2 = NULL;
 
-Preferences prefs; // Cria o objeto Preferences
+
 
 
 

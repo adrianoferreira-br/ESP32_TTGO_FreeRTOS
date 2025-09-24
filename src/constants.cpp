@@ -6,11 +6,16 @@
 
 #define Adriano // Presto | Adriano
 
-// Informações do equipamento
-char* NOME_EQUIPAMENTO = "teste";   // prensa_1 | prensa_2 | prensa_3 | prc_1  | linea_1 | linea_2 | teste | cx_agua
+// informação do device para topoico MQTT
+char* CLIENTE = "Adriano"; // Presto | Adriano
+char* LOCAL = "Casa";      // Presto: Fábrica | Loja1 | Loja2 | Casa | Teste
+char* TIPO_EQUIPAMENTO = "teste"; // prensa | prensa_1 | prensa_2 | prensa_3 | prc_1  | linea_1 | linea_2 | cx_agua | teste
+int DISPOSITIVO_ID = 1; // Identificação do dispositivo (deve ser único para cada equipamento)
 
-// Versão
-char* VERSION = "v25.09.21";  // Versão atual de uso.
+
+
+char* NOME_EQUIPAMENTO = "teste";   // prensa_1 | prensa_2 | prensa_3 | prc_1  | linea_1 | linea_2 | teste | cx_agua
+char* VERSION = "v25.09.22";  // Versão atual de uso. YY.MM.DD
 
 // Informações do sensor
 /*#if defined prensa_1 || defined prensa_2 || defined prensa_3 || defined prc_1 || defined linea_1 || defined linea_2
@@ -18,7 +23,7 @@ char* VERSION = "v25.09.21";  // Versão atual de uso.
 #elif defined cx_agua || defined teste
   #define SENSOR_WATER_LEVEL true
 #else
-  #define SENSOR_BATIDA false
+  #define SENSOR_BATIDA fals
   #define SENSOR_WATER_LEVEL false
 #endif
 */

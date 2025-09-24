@@ -33,9 +33,6 @@ void define_hardware();
 
 
 extern String ip;
-extern Preferences prefs; // Cria o objeto Preferences
-
-
 
 
 
