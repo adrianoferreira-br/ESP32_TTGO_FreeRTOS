@@ -24,47 +24,44 @@ TaskHandle_t task_handle2 = NULL;
 
 void setup() {  
 
-  /*    HARDWARE   */   
-  define_hardware();
-  setup_mem_flash();
-
-  /*    WIFI    */
-  setup_wifi();  
-  setup_webserver();
-
-  /*    PARTITIONS   */   
+  /*    HARDWARE   */     
+  define_hardware();   
+  setup_mem_flash(); 
   show_partitions();
 
-    /*    DISPLAY  */
-  init_display();    
-  Serial.println("Display inicializado");
+  /*    WIFI    */
+  setup_wifi();       
+  setup_webserver();
+  
+  /*    DISPLAY  */
+  init_display();      
   showBootInfo(); // Exibe informações de boot (versão e nome do equipamento)
 
   /*    MQTT    */
   setup_mqtt();
-  Serial.println("Setup MQTT inicializado");
 
   /*    OTA   */   
   setup_ota();
-  Serial.println("Setup OTA inicializado");
 
+  /***** DEFINE APLICAÇÃO ******/
+  if (SENSOR_BATIDA) {
+    setup_batidas_prensa();
+  }
 
   /*    BATIDA   */
   if (SENSOR_BATIDA) {
-    setup_batidas_prensa();      
-    Serial.println("Setup Batida Prensa inicializado");
+    setup_batidas_prensa();          
   }
 
   /*  DHT Sensor  */
   if (SENSOR_TEMPERATURE) {
-    dht_setup();    
-    Serial.println("Setup DHT inicializado");
+    dht_setup();        
   }
   
   /* Ultrassônico */
   if (SENSOR_WATER_LEVEL) {
     void setup_ultrasonic();
-    Serial.println("Setup Ultrassônico inicializado");
+    define_length_max();    
   }
 
   /* Battery Voltage */
@@ -74,7 +71,7 @@ void setup() {
   }
 
   /* botão de configuração */
-   define_length_max();
+   
   
 
   tft.fillScreen(TFT_BLACK);      

@@ -37,6 +37,7 @@ void dht_setup() {
   Serial.println(F("------------------------------------"));
   // Set delay between sensor readings based on sensor details.
   delayMS = sensor.min_delay / 1000;
+  Serial.println("Setup DHT inicializado");
 }
 
 

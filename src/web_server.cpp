@@ -1,8 +1,8 @@
 #include <WiFi.h>
 #include <WebServer.h>
 #include <WiFi.h>
-#include <Preferences.h>
 #include "constants.h"
+#include "mem_flash.h"
 #include "wifi_mqtt.h"
 #include "web_server.h"
 #include "state.h"
@@ -69,12 +69,11 @@ void handleConfigMQTT() {
     String pass_mqtt = server.arg("pass");
 
     // Salva na NVS
-    prefs.begin("mqtt", false);
-    prefs.putString("server", server_mqtt);
-    prefs.putInt("port", port_mqtt);
-    prefs.putString("username", user_mqtt);
-    prefs.putString("password", pass_mqtt);
-    prefs.end();
+    save_flash_string(KEY_MQTT_SERVER, server_mqtt.c_str());
+    save_flash_int(KEY_MQTT_PORT, port_mqtt);
+    save_flash_string(KEY_MQTT_USER, user_mqtt.c_str());
+    save_flash_string(KEY_MQTT_PASS, pass_mqtt.c_str());
+    
 
     // Atualiza variáveis em RAM
     strncpy(MQTT_SERVER, server_mqtt.c_str(), sizeof(MQTT_SERVER));

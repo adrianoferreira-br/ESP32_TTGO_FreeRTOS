@@ -18,6 +18,7 @@ void save_flash_float(const char* key, float value) {
     prefs.begin("flash", false);
     prefs.putFloat(key, value);
     prefs.end();
+    Serial.println("Float salvo na flash: " + String(value));
 }
 
 /*
@@ -37,12 +38,13 @@ void save_flash_string(const char* key, const char* value) {
     prefs.begin("flash", false);
     prefs.putString(key, value);
     prefs.end();
+    Serial.println("String salva na flash: " + String(value));
 }
 
 /*
  * Lê uma string
  */
-void read_flash_string(const char* key, char* buffer, size_t maxLen) {
+void read_flash_string(const char* key, char* buffer, int maxLen) {
     prefs.begin("flash", true);
     String val = prefs.getString(key, "");
     prefs.end();
@@ -57,6 +59,7 @@ void save_flash_int(const char* key, int value) {
     prefs.begin("flash", false);
     prefs.putInt(key, value);
     prefs.end();
+    Serial.println("Int salvo na flash: " + String(value));
 }
 
 /*
