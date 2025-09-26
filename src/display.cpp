@@ -26,15 +26,17 @@ void init_display()
     tft.setTextDatum(TL_DATUM);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);        
     // Mostra resolução para debug (opcional)
-    tft.drawString(String(tft.width()) + " x " + String(tft.height()), 90, 50, 2);
+    /*tft.drawString(String(tft.width()) + " x " + String(tft.height()), 90, 50, 2);
     delay(500);
     // Animação de boot (opcional)
     uint16_t bootColors[] = {TFT_RED, TFT_GREEN, TFT_BLUE, TFT_ORANGE};
     for (uint8_t i = 0; i < 4; i++) {
         tft.fillScreen(bootColors[i]);
         delay(300);
-    }
+    }*/
     tft.fillScreen(TFT_BLACK);
+    tft.pushImage(30, 40, 192, 51, (uint16_t *)INDX4_240x135); // Logo Presto
+    delay(3000);
 }
 
 
@@ -196,3 +198,37 @@ void show_time(char* timeStr) {
 }
 
 
+/**********************************************************************************************
+ *     MOSTRA O IP DA REDE NO DISPLAY
+ */
+void show_ip () {
+  
+  // Mostra o IP
+  char ipStr[16];  
+  int NivelSinal = 0;
+  IPAddress ip = WiFi.localIP();
+
+
+  sprintf(ipStr, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
+  tft.setTextColor(TFT_WHITE, TFT_BLACK);    
+  tft.drawString(ipStr, 0, 0, 2); 
+
+  // Mostra o nível do sinal
+   NivelSinal = WiFi.RSSI();
+      //Serial.print("Nível Sinal:" + (String)NivelSinal + "dBm");
+      if (NivelSinal >= -50) {
+        tft.setTextColor(TFT_GREEN, TFT_BLACK);    
+        tft.drawString("Otimo   ", 150,0 , 2);
+      } else if (NivelSinal >= -70) {
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);    
+        tft.drawString("Bom    ", 150, 0, 2);
+      } else if (NivelSinal >= -80) {
+        tft.setTextColor(TFT_ORANGE, TFT_BLACK);    
+        tft.drawString("Ruim   ", 150, 0, 2);
+      } else {
+        tft.setTextColor(TFT_RED, TFT_BLACK);    
+        tft.drawString("Pessimo", 150, 0, 2);
+      }
+      tft.drawString((String)NivelSinal, 205, 1, 4);
+      tft.setTextColor(TFT_WHITE, TFT_BLACK);    
+}
