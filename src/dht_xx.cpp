@@ -10,6 +10,10 @@
 
 DHT_Unified dht(DHTPIN, DHTTYPE);
 uint32_t delayMS = 2000;
+float temperatura = 0.0;
+float umidade = 0.0;
+
+
 
 void dht_setup() {
   dht.begin();  
@@ -57,6 +61,7 @@ void dht_loop() {
     Serial.println(F("°C"));    
     if (!isnan(event.temperature)) {        
       show_temperature(event.temperature);     
+      temperatura = event.temperature;
     }
   }
   // Get humidity event and print its value.
@@ -70,6 +75,7 @@ void dht_loop() {
     Serial.println(F("%"));
     if (!isnan(event.relative_humidity)) {
       show_humidity(event.relative_humidity);
+      umidade = event.relative_humidity;
     }
-  }
+  }    
 }

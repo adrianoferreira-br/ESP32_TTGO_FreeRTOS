@@ -23,6 +23,7 @@ volatile bool batida_prensa = false;
 long idBatida = 0; // Variável global para armazenar o ID da batida
 float distance_max = 100; // distância máxima do sensor ultrassônico em cm (padrão 400cm para o JSN-SR04T)
 float percentual_reservatorio = 0.0; // percentual do reservatório
+float altura_reservatorio = 100.0; // distância máxima do sensor ultrassônico em cm (padrão max. 400cm para o JSN-SR04T)
 
 
 
@@ -315,6 +316,7 @@ void define_length_max(){
       //lê variavel em memoria não volátil          
       length_max = read_flash_float(KEY_LENGTH_MAX);
       Serial.println("Altura máxima do reservatório (lido da EEPROM): " + String(length_max) + " cm");
+      altura_reservatorio = length_max;
   }
 }
 

@@ -60,15 +60,21 @@ extern char* VERSION;                             // Versão atual de uso. ex. "
 
 
 // informações do sensor ultrassônico
-extern float percentual_reservatorio; // percentual do reservatório
-extern float length_max;             // altura máxima do reservatório em cm (deve ser configurada conforme o local de instalação)
-extern float distance_max;           // distância máxima do sensor ultrassônico em cm (padrão 400cm para o JSN-SR04T)
+extern float percentual_reservatorio;   // percentual do reservatório
+extern float altura_medida;                // altura máxima do reservatório em cm (deve ser configurada conforme o local de instalação)
+extern float altura_reservatorio;  // distância máxima do sensor ultrassônico em cm (padrão 400cm para o JSN-SR04T)
+extern int altura_despresada;    // altura em cm a ser desprezada na leitura (deve ser configurada conforme o local de instalação)
+// informações do sensor DHT22
+extern float temperatura;           // temperatura em Celsius   
+extern float umidade;               // umidade em %
+// informações do sensor de batida
+extern long idBatida;      // id da última batida registrada
+// informações do sensor de tensão da bateria
+extern float tensao_bateria;       // tensão da bateria em volts
 
 
 
 
+#endif // CONSTANTS_H_
 
-#endif // CONSTANTS_H_ 
 
-
-//PRETO!    #prestoalimentos

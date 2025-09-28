@@ -87,9 +87,14 @@ void handleReadings() {
   String html = "<html><head><meta http-equiv='refresh' content='1'></head><body>";
 
   html += "<h1>Presto Alimentos - Monitoramento</h1>";
-  html += "<h2>nivel do reservatorio: ";
+  html += "<h2>Nivel do reservatorio: ";
   html += String(percentual_reservatorio, 1) + "%</h2>";  
+  html += "<h2>Altura desprezada: " + String(altura_despresada) + " cm</h2>";
+  html += "<h2>Altura medida: " + String(altura_medida, 1) + " cm</h2>";
+  html += "<h2>Altura do reservatorio (total): " + String(altura_reservatorio, 1) + " cm</h2>";  
   html += "<h2>Batida nr:   " + String(idBatida) + "</h2>";
+  html += "<h2>Temperatura: " + String(temperatura) + " C</h2>";
+  html += "<h2>Umidade:    " + String(umidade) + " %</h2>";
   html += "<h2><a href='/'>Voltar</a></h2>";      
   html += "</body></html>";
   server.send(200, "text/html", html);
