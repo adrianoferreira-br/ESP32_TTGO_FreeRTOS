@@ -6,6 +6,8 @@ void setup_webserver();
 void loop_webserver();
 void handleRoot();
 void handleConfigMQTT();
+void handleReadings();
+void handleInfo();
 
 
 

@@ -22,6 +22,8 @@ void setup_webserver()
 {
   server.on("/", handleRoot);
   server.on("/config_mqtt", handleConfigMQTT); // <-- nova rota
+  server.on("/readings", handleReadings);
+  server.on("/info", handleInfo);
   server.begin();
 }
 
@@ -36,22 +38,60 @@ void loop_webserver() {
 
 
 
+void handleRoot() {
+
+  String html = "<html><head><meta http-equiv='refresh' content='1'></head><body>";
+
+  html += "<h1>Presto Alimentos </h1>";
+  //link para handleInfo
+  html += "<h2><a href='/info'>Info Sistema</a></h2>";
+  html += "<h2><a href='/readings'>Monitoramento Maquina</a></h2>";
+  html += "<h2><a href='/config_mqtt'>Configurar MQTT</a></h2>";
+  html += "</body></html>";
+  server.send(200, "text/html", html);
+}
+
+
 
 /**************************************************************
  *   IP/
  */
 
-void handleRoot() {
+void handleInfo() {
 
   String html = "<html><head><meta http-equiv='refresh' content='1'></head><body>";
 
-  html += "<h1>Presto Alimentos - Monitoramento de Maquina</h1>";
-  html += "<h2>Equipamento: ";
-  html += NOME_EQUIPAMENTO;
-  html += "</h2>";
-  html += "<h2>Batida nr:   " + String(idBatida) + "</h2>";
+  html += "<h1>Presto Alimentos - Informacao de sistema</h1>";
+  html += "<h2>Equipamento: " + String(NOME_EQUIPAMENTO) + "</h2>";  
+  html += "<h2>IP: " + WiFi.localIP().toString() + "</h2>";
+  html += "<h2>Versao: " + String(VERSION) + "</h2>";
+  html += "<h2>MQTT Server: " + String(MQTT_SERVER) + "</h2>";
+  html += "<h2>MQTT Port: " + String(PORT_MQTT) + "</h2>";
+  html += "<h2>MQTT User: " + String(MQTT_USERNAME) + "</h2>";
+  html += "<h2>MQTT Status: " /*+ String(client.connected() ? "Conectado" : "Desconectado") +*/ "</h2>";
+  //html += "<h2><a href='/config_mqtt'>Configurar MQTT</a></h2>";
+  //html += "<h2><a href='/'>Atualizar</a></h2>";      
+  html += "<h2><a href='/'>Voltar</a></h2>";
   html += "</body></html>";
 
+  server.send(200, "text/html", html);
+}
+
+
+/**************************************************************
+ *    IP/readings
+ */
+
+void handleReadings() {
+
+  String html = "<html><head><meta http-equiv='refresh' content='1'></head><body>";
+
+  html += "<h1>Presto Alimentos - Monitoramento</h1>";
+  html += "<h2>nivel do reservatorio: ";
+  html += String(percentual_reservatorio, 1) + "%</h2>";  
+  html += "<h2>Batida nr:   " + String(idBatida) + "</h2>";
+  html += "<h2><a href='/'>Voltar</a></h2>";      
+  html += "</body></html>";
   server.send(200, "text/html", html);
 }
 
