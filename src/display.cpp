@@ -133,7 +133,7 @@ void showBootInfo() {
 
 
 
-/*
+/*****************************************************************************************
 *  Description: Show distance on the display
 */
 void show_distancia(float dist) {
@@ -143,10 +143,22 @@ void show_distancia(float dist) {
     tft.drawString("cm", 200, 25, 4);    
     graficoBarra(3, 20, 60, 113,  length_max - dist, length_max, TFT_BLUE, false); // Exemplo de uso do gráfico de barras
     tft.drawString("0", 70, 20, 2); // Exibe medida inicial do reservatório
-    tft.drawString(String(length_max), 70, 120, 2); // Exibe altura máxima do ponto inicial até o modo sem agua
-    tft.setTextColor(TFT_BLACK, TFT_WHITE);
-    tft.drawString(String(100-(dist/length_max * 100))+"%", 12, 70, 2);
+    tft.drawString(String(length_max), 70, 120, 2); // Exibe altura máxima do ponto inicial até o modo sem agua    
 }
+
+
+
+/*
+*  Description: Show percentual disponível no reservatório
+*/
+void show_percentual_reservatorio(float percentual) {
+    char buffer[16];
+    snprintf(buffer, sizeof(buffer), "%.1f%%", percentual);
+    tft.setTextColor(TFT_GREEN, TFT_BLACK);
+    tft.drawString(buffer, 10, 60, 2); // Ajuste a posição conforme necessário
+}
+
+
 
 
 /*

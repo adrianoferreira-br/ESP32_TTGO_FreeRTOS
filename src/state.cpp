@@ -21,6 +21,9 @@
 int qnt_batidas_prensa = 0;
 volatile bool batida_prensa = false;
 long idBatida = 0; // Variável global para armazenar o ID da batida
+float distance_max = 100; // distância máxima do sensor ultrassônico em cm (padrão 400cm para o JSN-SR04T)
+float percentual_reservatorio = 0.0; // percentual do reservatório
+
 
 
 
@@ -77,7 +80,7 @@ void setup_batidas_prensa() {
   // Inicializa horario do ntp com fuso -3
   //configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
 
-   
+  Serial.println("Sensor de batida da prensa configurado.");   
 
 }
 
@@ -295,17 +298,17 @@ void try_send_buffered_batidas() {
 }
 
 
-/*
+/**********************************************************************************************
 *     DEFINE A ALTURA MÁXIMA DO RESERVATÓRIO
 */
 void define_length_max(){  
   //Configura o botão para definir a altura máxima do reservatório
   if (digitalRead(BUTTON_35) == LOW){  // botão pressionado (GND){
       Serial.println("Botão pressionado - config caixa de água");
-      length_max = ultrasonic_read_cm();
-      Serial.println("Altura máxima do reservatório: " + String(length_max) + " cm");
+      UltrasonicResult res = ultrasonic_read();
+      Serial.println("Altura máxima do reservatório: " + String(res.distance_cm) + " cm");
       //grava variavel em memoria não volátil                   
-      save_flash_float(KEY_LENGTH_MAX, length_max);
+      save_flash_float(KEY_LENGTH_MAX, res.distance_cm);
       Serial.println("Altura máxima do reservatório gravada na EEPROM");
   }
   else {
@@ -314,3 +317,7 @@ void define_length_max(){
       Serial.println("Altura máxima do reservatório (lido da EEPROM): " + String(length_max) + " cm");
   }
 }
+
+
+
+/**********************************************************************************************/

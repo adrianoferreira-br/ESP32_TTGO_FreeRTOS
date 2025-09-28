@@ -8,6 +8,9 @@
 #include "display.h"
 
 
+struct UltrasonicResult resultado;
+
+
 /*  SETUP */
 void setup_ultrasonic() {  
   
@@ -20,33 +23,55 @@ void setup_ultrasonic() {
 /* LOOP */
 void loop_ultrasonic() {
 
-   float dist = ultrasonic_read_cm();
-   if (dist >= 0) {
+   UltrasonicResult res = ultrasonic_read();
+   if (res.valido) {  
        Serial.print("Distância: ");
-       Serial.print(dist);
-       Serial.println(" cm");
-       show_distancia(dist);       
+       Serial.print(res.distance_cm);
+       Serial.print(" cm | Percentual: ");
+       Serial.print(res.percentual);
+       Serial.println(" %");
+       show_distancia(res.distance_cm);
+       show_percentual_reservatorio(res.percentual);
    } else {
        Serial.println("Falha na leitura do ultrassônico!");
-   }      
+   }
 }
 
 
 
-float ultrasonic_read_cm() {
-  // Gera pulso de trigger
-  digitalWrite(ULTRASONIC_TRIG, LOW);
-  delayMicroseconds(200);
-  digitalWrite(ULTRASONIC_TRIG, HIGH);
-  delayMicroseconds(15);
-  digitalWrite(ULTRASONIC_TRIG, LOW);
+UltrasonicResult ultrasonic_read() {
+    UltrasonicResult result;
+    result.distance_cm = -1;
+    result.percentual = 0;
+    result.valido = false;
 
-  // Mede o tempo do pulso no pino ECHO
-  long duration = pulseIn(ULTRASONIC_ECHO, HIGH, 30000); // timeout 30ms (~5m)
-  if (duration == 0) return -1; // Falha na leitura
+    digitalWrite(ULTRASONIC_TRIG, LOW);
+    delayMicroseconds(200);
+    digitalWrite(ULTRASONIC_TRIG, HIGH);
+    delayMicroseconds(15);
+    digitalWrite(ULTRASONIC_TRIG, LOW);
 
-  // Calcula a distância em centímetros
-  float distance_cm = (duration / 2.0) * 0.0343;
-  
-  return distance_cm;
+    long duration = pulseIn(ULTRASONIC_ECHO, HIGH, 30000);
+    if (duration == 0) return result;
+
+    float distance_cm = (duration / 2.0) * 0.0343;
+    float distance_max = length_max;
+
+    if (distance_cm > distance_max) {
+        Serial.println("Distância acima do máximo permitido!");
+        return result;
+    }
+    // despreza 20cm de atuação mínima de leitura do sensor e realiza o percentual de liquido no reservatorio
+    float percentual = (1-((distance_max - distance_cm - 20) / (distance_max - 20)) * 100.0) ;
+    if (percentual < 0) percentual = 0;
+    if (percentual > 100) percentual = 100;
+
+    result.distance_cm = distance_cm;
+    result.percentual = percentual;
+    result.valido = true;
+
+    percentual_reservatorio = percentual;
+
+
+    return result;
 }

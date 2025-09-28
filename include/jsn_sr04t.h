@@ -4,8 +4,17 @@
 #include <Arduino.h>
 #include "main.h"
 
+
+struct UltrasonicResult {
+    float distance_cm;
+    float percentual;
+    bool valido;
+};
+
+
 void setup_ultrasonic();
 void loop_ultrasonic();
-float ultrasonic_read_cm();
+UltrasonicResult ultrasonic_read();
 
-#endif
+
+#endif // JSN_SR04T_H_

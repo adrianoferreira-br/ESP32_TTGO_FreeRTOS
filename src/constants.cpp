@@ -7,15 +7,18 @@
 #define Adriano // Presto | Adriano
 
 // informação do device para topoico MQTT
-char* CLIENTE = "Adriano"; // Presto | Adriano
+char* CLIENTE = "Presto"; // Presto | Adriano
 char* LOCAL = "Casa";      // Presto: Fábrica | Loja1 | Loja2 | Casa | Teste
 char* TIPO_EQUIPAMENTO = "teste"; // prensa | prensa_1 | prensa_2 | prensa_3 | prc_1  | linea_1 | linea_2 | cx_agua | teste
 int DISPOSITIVO_ID = 1; // Identificação do dispositivo (deve ser único para cada equipamento)
 
 
 
-char* NOME_EQUIPAMENTO = "teste";   // prensa_1 | prensa_2 | prensa_3 | prc_1  | linea_1 | linea_2 | teste | cx_agua
+
+
+char* NOME_EQUIPAMENTO = "presto-plh-l01-rsv";   // prensa_1 | prensa_2 | prensa_3 | prc_1  | linea_1 | linea_2 | teste | cx_agua
 char* VERSION = "v25.09.22";  // Versão atual de uso. YY.MM.DD
+
 
 // Informações do sensor
 /*#if defined prensa_1 || defined prensa_2 || defined prensa_3 || defined prc_1 || defined linea_1 || defined linea_2
@@ -44,10 +47,10 @@ char* PASSWORD = "prestoiot100";    //Substitua pela sua senha de acesso a Inter
 
 // Informações para acesso ao servidor MQTT
 //char* MQTT_SERVER = "192.168.0.203";    // Substitua pelo endereço do servidor MQTT
-char* MQTT_SERVER = "192.168.127.248";
+char MQTT_SERVER[32] = "192.168.127.248";
 int PORT_MQTT = 1883;                   // Porta do servidor MQTT      padrão: 1883
-char* MQTT_USERNAME = "Adriano";
-char* MQTT_PASSWORD = "Rafa1404";       // TODO: criptografar a senha em outro momento. (Cuidado com o Git)
+char MQTT_USERNAME[32] = "Adriano";
+char MQTT_PASSWORD[32] = "Rafa1404";       // TODO: criptografar a senha em outro momento. (Cuidado com o Git)
 
 
 
@@ -58,10 +61,14 @@ char* SSID = "STARLINK"; //"PhoneAdr";  // Substitua pelo seu SSID para acesso a
 char* PASSWORD = "11121314"; //"UDJ1-ddsp"; // Substitua pela sua senha de acesso a Internet
 
 // Informações para acesso ao servidor MQTT
-char* MQTT_SERVER = "192.168.100.4";          //"172.24.96.1";//"82d3aa30f5744315a2bdde52bafe1ec7.s1.eu.hivemq.cloud"; // Substitua pelo endereço do servidor MQTT
+char MQTT_SERVER[32] = "srv.vamodale.com"; //"192.168.100.4";          //"172.24.96.1";//"82d3aa30f5744315a2bdde52bafe1ec7.s1.eu.hivemq.cloud"; // Substitua pelo endereço do servidor MQTT
 int PORT_MQTT = 1883;                             // Porta do servidor MQTT      padrão: 1883
-char* MQTT_USERNAME = "Adriano";
-char* MQTT_PASSWORD = "Rafa1404";                 // TODO: criptografar a senha em outro momento. (Cuidado com o Git)
+char MQTT_USERNAME[32] = "Adriano";
+char MQTT_PASSWORD[32] = "Rafa1404";                 // TODO: criptografar a senha em outro momento. (Cuidado com o Git)
+
+
+char topico[32] = "presto/floripa/forno/001";
+
 
 
 #endif // Presto

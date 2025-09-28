@@ -15,6 +15,7 @@ void showBootInfo();
 void show_temperature(float temp);
 void show_humidity(float hum);
 void show_distancia(float dist);
+void show_percentual_reservatorio(float percentual);
 void show_battery_voltage(float voltage);
 void show_batidas(int batidas);
 void show_time(char* timeStr);

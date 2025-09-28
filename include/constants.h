@@ -25,15 +25,18 @@ extern char* SSID;      // "STARLINK";            // Substitua pelo seu SSID par
 extern char* PASSWORD; //"11121314";              // Substitua pela sua senha de acesso a Internet
 
 // Informações para acesso ao servidor MQTT
-extern char* MQTT_SERVER; //"192.168.100.4";      // Substitua pelo endereço do servidor MQTT
+extern char MQTT_SERVER[32]; //"192.168.100.4";      // Substitua pelo endereço do servidor MQTT
 extern int PORT_MQTT;                             // Porta do servidor MQTT      padrão: 1883
-extern char* MQTT_USERNAME;
-extern char* MQTT_PASSWORD;                       // TODO: criptografar a senha em outro momento. (Cuidado com o Git)
+extern char MQTT_USERNAME[32];
+extern char MQTT_PASSWORD[32];                       // TODO: criptografar a senha em outro momento. (Cuidado com o Git)
 // informação do topoico MQTT
 extern char* CLIENTE;
 extern char* LOCAL;
 extern char* TIPO_EQUIPAMENTO;
 extern int DISPOSITIVO_ID;
+
+// topico
+extern char topico[32];
 
 // Informações referente a aplicação
 extern char* NOME_EQUIPAMENTO;                    // Nome do equipamento   ex. "prensa_1"
@@ -55,6 +58,11 @@ extern char* FIREBASE_AUTH;                       // Chave de autenticação do 
 extern char* VERSION;                             // Versão atual de uso. ex. "v25.4.15"
 
 
+
+// informações do sensor ultrassônico
+extern float percentual_reservatorio; // percentual do reservatório
+extern float length_max;             // altura máxima do reservatório em cm (deve ser configurada conforme o local de instalação)
+extern float distance_max;           // distância máxima do sensor ultrassônico em cm (padrão 400cm para o JSN-SR04T)
 
 
 
