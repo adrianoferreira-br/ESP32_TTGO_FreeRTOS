@@ -29,14 +29,10 @@ extern char MQTT_SERVER[32]; //"192.168.100.4";      // Substitua pelo endereço
 extern int PORT_MQTT;                             // Porta do servidor MQTT      padrão: 1883
 extern char MQTT_USERNAME[32];
 extern char MQTT_PASSWORD[32];                       // TODO: criptografar a senha em outro momento. (Cuidado com o Git)
-// informação do topoico MQTT
-extern char* CLIENTE;
-extern char* LOCAL;
-extern char* TIPO_EQUIPAMENTO;
-extern int DISPOSITIVO_ID;
+
 
 // topico
-extern char topico[32];
+extern char topico[64];
 
 // Informações referente a aplicação
 extern char* NOME_EQUIPAMENTO;                    // Nome do equipamento   ex. "prensa_1"
@@ -66,12 +62,40 @@ extern float altura_reservatorio;  // distância máxima do sensor ultrassônico
 extern int altura_despresada;    // altura em cm a ser desprezada na leitura (deve ser configurada conforme o local de instalação)
 // informações do sensor DHT22
 extern float temperatura;           // temperatura em Celsius   
-extern float umidade;               // umidade em %
+extern float humidade;               // umidade em %
 // informações do sensor de batida
 extern long idBatida;      // id da última batida registrada
 // informações do sensor de tensão da bateria
 extern float tensao_bateria;       // tensão da bateria em volts
 
+
+
+// Informações do equipamento 
+extern char* CLIENTE;
+extern char* LOCAL;
+extern char* LINHA;
+extern char* FABRICANTE_MAQUINA;
+extern char* NOME_EQUIPAMENTO;    
+extern char* MODELO_MAQUINA;
+extern char* ID_EQUIPAMENTO;
+extern char* TIPO_EQUIPAMENTO;
+// informação do sensor indx4
+extern char* PLACA; // TTGO T-Display | Heltec WiFi Kit 32 | M5Stack Core2
+extern char* MODELO_SENSOR; // Modelo do sensor:  "JSN-SR04T", "DHT22", "Batida", "TensãoBateria"
+extern char* FABRICANTE_SENSOR; // Fabricante do sensor: "JSN", "Aosong", "Outros"
+//extern char* SERIAL_SENSOR; // Número de série do sensor
+extern char* DATA_INSTALACAO; // Data de instalação do sensor
+extern char* TIPO_SENSOR;
+extern char* DISPOSITIVO_ID;
+extern char* VERSAO_HARDWARE;
+extern char* MAC_ADDR;
+// informações extras
+extern char* DATA_INSTALACAO; // Data de instalação do sensor
+extern char* OBSERVACAO_READINGS; // Observação para as leituras enviadas via MQTT
+
+
+// Informação do coletor de dados
+extern char* OBSERVACAO_DEVICE_INFO; // Observação para as informações do dispositivo enviadas via MQTT
 
 
 

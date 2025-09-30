@@ -11,7 +11,7 @@
 DHT_Unified dht(DHTPIN, DHTTYPE);
 uint32_t delayMS = 2000;
 float temperatura = 0.0;
-float umidade = 0.0;
+float humidade = 0.0;
 
 
 
@@ -75,7 +75,7 @@ void dht_loop() {
     Serial.println(F("%"));
     if (!isnan(event.relative_humidity)) {
       show_humidity(event.relative_humidity);
-      umidade = event.relative_humidity;
+      humidade = event.relative_humidity;
     }
   }    
 }

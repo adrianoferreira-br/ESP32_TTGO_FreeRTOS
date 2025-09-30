@@ -19,6 +19,7 @@
 #include "mem_flash.h"
 #include "web_server.h"
 #include <Preferences.h>
+#include "wifi_mqtt.h"
 
 
 #define ULTRASONIC_TRIG 26

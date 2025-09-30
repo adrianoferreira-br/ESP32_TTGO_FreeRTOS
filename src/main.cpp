@@ -12,6 +12,8 @@
 
 TaskHandle_t task_handle_Menu = NULL;
 TaskHandle_t task_handle2 = NULL;
+bool initial_call = true;
+
 
 
 
@@ -28,10 +30,12 @@ void setup() {
   define_hardware();   
   setup_mem_flash(); 
   show_partitions();
+  setup_timer();
 
   /*    WIFI    */
   setup_wifi();       
   setup_webserver();
+  setup_ntp();
   
   /*    DISPLAY  */
   init_display();      
@@ -39,6 +43,7 @@ void setup() {
 
   /*    MQTT    */
   setup_mqtt();
+  
 
   /*    OTA   */   
   setup_ota();
@@ -70,10 +75,8 @@ void setup() {
     //Serial.println("Setup Battery Voltage inicializado");
   }
 
-  /* botão de configuração */
-   
-  
-
+  /* botão de configuração */   
+ 
   tft.fillScreen(TFT_BLACK);      
 
 }
@@ -89,6 +92,7 @@ void loop()
   /*    WIFI    */
   loop_wifi();    
   loop_webserver();  /*    WEB SERVER    */
+
   
 
   /*    OTA   */
@@ -131,6 +135,14 @@ void loop()
     delay(2000);  // aguarda 2 segundos para próxima leitura do DHT
   }
  
+
+  verifica_timer();
+
+  if (initial_call) {   //envia uma mqtt de inicialização
+    mqtt_send_info();
+    initial_call = false;
+  }
+  
 
 }
 

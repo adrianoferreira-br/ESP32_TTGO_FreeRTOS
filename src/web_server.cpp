@@ -42,10 +42,10 @@ void handleRoot() {
 
   String html = "<html><head><meta http-equiv='refresh' content='1'></head><body>";
 
-  html += "<h1>Presto Alimentos </h1>";
+  html += "<h1><span style='color:green;'>Presto Alimentos</span></h1>";
   //link para handleInfo
   html += "<h2><a href='/info'>Info Sistema</a></h2>";
-  html += "<h2><a href='/readings'>Monitoramento Maquina</a></h2>";
+  html += "<h2><a href='/readings'>Monitoramento </a></h2>";
   html += "<h2><a href='/config_mqtt'>Configurar MQTT</a></h2>";
   html += "</body></html>";
   server.send(200, "text/html", html);
@@ -61,16 +61,19 @@ void handleInfo() {
 
   String html = "<html><head><meta http-equiv='refresh' content='1'></head><body>";
 
-  html += "<h1>Presto Alimentos - Informacao de sistema</h1>";
-  html += "<h2>Equipamento: " + String(NOME_EQUIPAMENTO) + "</h2>";  
+  html += "<h1><span style='color:green;'>Presto Alimentos - Informacao de sistema</span></h1>"; 
+  html += "<hr>"; // Linha horizontal
+  html += "<h2>Equipamento: <strong><span style='color:red;'>" + String(NOME_EQUIPAMENTO) + "</span></strong></h2>";  
   html += "<h2>IP: " + WiFi.localIP().toString() + "</h2>";
   html += "<h2>Versao: " + String(VERSION) + "</h2>";
   html += "<h2>MQTT Server: " + String(MQTT_SERVER) + "</h2>";
   html += "<h2>MQTT Port: " + String(PORT_MQTT) + "</h2>";
   html += "<h2>MQTT User: " + String(MQTT_USERNAME) + "</h2>";
   html += "<h2>MQTT Status: " /*+ String(client.connected() ? "Conectado" : "Desconectado") +*/ "</h2>";
+  html += "<h2>MQTT Topic: " + String(topico) + "</h2>";
   //html += "<h2><a href='/config_mqtt'>Configurar MQTT</a></h2>";
   //html += "<h2><a href='/'>Atualizar</a></h2>";      
+  html += "<hr>"; // Linha horizontal
   html += "<h2><a href='/'>Voltar</a></h2>";
   html += "</body></html>";
 
@@ -86,15 +89,17 @@ void handleReadings() {
 
   String html = "<html><head><meta http-equiv='refresh' content='1'></head><body>";
 
-  html += "<h1>Presto Alimentos - Monitoramento</h1>";
-  html += "<h2>Nivel do reservatorio: ";
-  html += String(percentual_reservatorio, 1) + "%</h2>";  
-  html += "<h2>Altura desprezada: " + String(altura_despresada) + " cm</h2>";
-  html += "<h2>Altura medida: " + String(altura_medida, 1) + " cm</h2>";
-  html += "<h2>Altura do reservatorio (total): " + String(altura_reservatorio, 1) + " cm</h2>";  
-  html += "<h2>Batida nr:   " + String(idBatida) + "</h2>";
+  html += "<h1><span style='color:green;'>Presto Alimentos - Monitoramento</span></h1>";
+  html += "<hr>"; // Linha horizontal
+  html += "<h2>Nivel do reservatorio: <strong><span style='color:red;'>" + String(percentual_reservatorio, 1) + "%</span></strong></h2>";  
+  html += "<h2>Altura do reservatorio (total): <strong>" + String(altura_reservatorio, 1) + " cm</strong></h2>";  
+  html += "<h2>Altura desprezada: <strong>" + String(altura_despresada) + " cm</strong></h2>";
+  html += "<h2>Altura util do reservatorio: <strong>" + String(altura_reservatorio - altura_despresada, 1) + " cm</strong></h2>";
+  html += "<h2>Altura medida: <strong>" + String(altura_medida, 1) + " cm</strong></h2>";  
+  html += "<h2>Batida nr:   <strong>" + String(idBatida) + "</strong></h2>";
   html += "<h2>Temperatura: " + String(temperatura) + " C</h2>";
-  html += "<h2>Umidade:    " + String(umidade) + " %</h2>";
+  html += "<h2>Humidade:    " + String(humidade) + " %</h2>";
+  html += "<hr>"; // Linha horizontal
   html += "<h2><a href='/'>Voltar</a></h2>";      
   html += "</body></html>";
   server.send(200, "text/html", html);

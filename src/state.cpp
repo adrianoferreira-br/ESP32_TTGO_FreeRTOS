@@ -28,6 +28,12 @@ float altura_reservatorio = 100.0; // distância máxima do sensor ultrassônico
 
 
 
+//Timer do ESP32
+hw_timer_t * timer = NULL;
+portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
+bool timerToSendReadings = false;
+time_t timestamp_global = 0; // Variável global para armazenar o timestamp
+
 //Verificação de reflexo
 volatile bool reflexSensorTriggered = false;
 
@@ -83,6 +89,60 @@ void setup_batidas_prensa() {
 
   Serial.println("Sensor de batida da prensa configurado.");   
 
+}
+
+
+
+/**********************************************************************************************
+ *     SETUP DO TIMER DO ESP32
+ */
+void setup_timer() {
+  
+  timer = timerBegin(0, 80, true); // Timer 0, prescaler 80 (1us por tick)
+  timerAttachInterrupt(timer, &onTimer, true);
+  timerAlarmWrite(timer, 10000000, true); // 10.000.000us = 10s
+  timerAlarmEnable(timer);
+  
+}
+
+/**
+  *    FUNÇÃO DE INTERRUPÇÃO DO TIMER DO ESP32
+  *    Executa a cada 5 segundos
+  *    Use para tarefas periódicas que não podem esperar o loop principal
+  *    Exemplo: leitura de sensores críticos, atualização de variáveis de estado, etc.
+  *    Lembre-se de manter o código da ISR o mais curto possível para evitar atrasos.
+  *    Use portENTER_CRITICAL_ISR e portEXIT_CRITICAL_ISR para proteger variáveis compartilhadas.
+  *    Evite chamadas de funções demoradas ou bloqueantes dentro da ISR.
+  *    Se precisar fazer algo complexo, defina uma flag e trate no loop principal.
+  */
+void IRAM_ATTR onTimer() {
+  portENTER_CRITICAL_ISR(&timerMux);
+  timerToSendReadings = true; // Sinaliza para enviar ping MQTT
+  portEXIT_CRITICAL_ISR(&timerMux);
+}
+
+
+void verifica_timer(){  
+  if (timerToSendReadings){
+    // Executa a ação desejada
+    // Exemplo: Enviar dados de sensores via MQTT
+    if (WiFi.status() == WL_CONNECTED) {
+        bool enviado = mqtt_send_readings();                 
+        // Se falha do MQTT, armazena no buffer
+        if (!enviado) {            
+            Serial.println("Falha MQTT ao enviar leituras");
+        } else {
+            Serial.println("Leituras enviadas via MQTT");
+        }
+    } else {
+        Serial.println("WiFi desconectado - Nao foi possivel enviar leituras");
+    }
+
+    portENTER_CRITICAL_ISR(&timerMux);
+    timerToSendReadings = false; // Reseta a flag
+    portEXIT_CRITICAL_ISR(&timerMux);
+  }
+  //return;
 }
 
 
@@ -145,7 +205,10 @@ void verifica_batida_prensa(){
         Serial.println("NTP sincronizado");        
     }    
 
-    if (!getLocalTime(&timeinfo)) {
+    if (getLocalTime(&timeinfo)) {
+        timestamp_global = mktime(&timeinfo);
+    }
+    else {
       Serial.println("Erro ao obter tempo!");    
     }
     
@@ -244,6 +307,22 @@ void show_time() {
 
   tft.drawString(timeStr, 125, 173, 2);
  
+}
+
+
+/**********************************************************************************************
+ *     função que retorna o timestamp
+ */
+
+char* get_time_str(char* buffer, size_t bufferSize) {
+    struct tm timeinfo;
+    if (getLocalTime(&timeinfo)) {
+        time_t timestamp = mktime(&timeinfo);
+        snprintf(buffer, bufferSize, "%ld", (long)timestamp);
+    } else {
+        strncpy(buffer, "0", bufferSize);
+    }
+    return buffer;
 }
 
 

@@ -35,7 +35,7 @@ void loop_ultrasonic() {
        Serial.println(" %");
        show_distancia(res.distance_cm);
        show_percentual_reservatorio(res.percentual);
-       altura_medida = res.distance_cm;
+       altura_medida = altura_reservatorio - res.distance_cm;
    } else {
        Serial.println("Falha na leitura do ultrassônico!");
    }
