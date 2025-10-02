@@ -9,8 +9,6 @@
 
 
 struct UltrasonicResult resultado;
-int altura_despresada = 20.0; // cm, nível mínimo de leitura útil
-float nivel_max = altura_reservatorio; // altura total do reservatório
 float altura_medida = 0.0; // altura medida pelo sensor
 
 
@@ -59,7 +57,7 @@ UltrasonicResult ultrasonic_read() {
     if (duration == 0) return result;
 
     float distance_cm = (duration / 2.0) * 0.0343;
-    float distance_max = length_max;
+    float distance_max = level_min;
 
     if (distance_cm > distance_max) {
         Serial.println("Distância acima do máximo permitido!");
@@ -67,7 +65,7 @@ UltrasonicResult ultrasonic_read() {
     }
     // Considerando ponto inicial o topo do reservatório e desprezando os primeiros 20cm devido atuação mínima de leitura do sensor,
     // segue o cálculo do percentual de liquido no reservatorio, já descontado esses 20cm acima do nível da agua
-    float percentual = ((distance_max - distance_cm) / (distance_max - altura_despresada)) * 100.0;
+    float percentual = ((level_min - distance_cm) / (level_min - level_max)) * 100.0;
     // limitar o percentual entre 0 e 100
     if (percentual < 0) percentual = 0;
     if (percentual > 100) percentual = 100;

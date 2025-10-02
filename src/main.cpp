@@ -66,7 +66,7 @@ void setup() {
   /* Ultrassônico */
   if (SENSOR_WATER_LEVEL) {
     void setup_ultrasonic();
-    define_length_max();    
+    set_reservatorio();    
   }
 
   /* Battery Voltage */

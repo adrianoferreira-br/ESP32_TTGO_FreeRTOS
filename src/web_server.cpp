@@ -92,9 +92,8 @@ void handleReadings() {
   html += "<h1><span style='color:green;'>Presto Alimentos - Monitoramento</span></h1>";
   html += "<hr>"; // Linha horizontal
   html += "<h2>Nivel do reservatorio: <strong><span style='color:red;'>" + String(percentual_reservatorio, 1) + "%</span></strong></h2>";  
-  html += "<h2>Altura do reservatorio (total): <strong>" + String(altura_reservatorio, 1) + " cm</strong></h2>";  
-  html += "<h2>Altura desprezada: <strong>" + String(altura_despresada) + " cm</strong></h2>";
-  html += "<h2>Altura util do reservatorio: <strong>" + String(altura_reservatorio - altura_despresada, 1) + " cm</strong></h2>";
+  html += "<h2>Altura do reservatorio (total): <strong>" + String(level_min, 1) + " cm</strong></h2>";    
+  html += "<h2>Altura util do reservatorio: <strong>" + String(level_min - level_max, 1) + " cm</strong></h2>";
   html += "<h2>Altura medida: <strong>" + String(altura_medida, 1) + " cm</strong></h2>";  
   html += "<h2>Batida nr:   <strong>" + String(idBatida) + "</strong></h2>";
   html += "<h2>Temperatura: " + String(temperatura) + " C</h2>";

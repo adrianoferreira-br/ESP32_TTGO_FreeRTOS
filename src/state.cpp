@@ -39,7 +39,8 @@ volatile bool reflexSensorTriggered = false;
 
 // botão da placa
 const int BUTTON_35 = 35;
-float length_max = 100;  //cx d´agua
+float level_max = 20;   //cx d´agua
+float level_min = 100;  //cx d´agua
 
 
 // Variáveis para sincronização NTP
@@ -100,7 +101,7 @@ void setup_timer() {
   
   timer = timerBegin(0, 80, true); // Timer 0, prescaler 80 (1us por tick)
   timerAttachInterrupt(timer, &onTimer, true);
-  timerAlarmWrite(timer, 10000000, true); // 10.000.000us = 10s
+  timerAlarmWrite(timer, 1000000 * SAMPLE_INTERVAL, true); // 10.000.000us = 10s
   timerAlarmEnable(timer);
   
 }
@@ -379,24 +380,58 @@ void try_send_buffered_batidas() {
 
 
 /**********************************************************************************************
-*     DEFINE A ALTURA MÁXIMA DO RESERVATÓRIO
+*     DEFINE A MINIMO E MAXIMO DO RESERVATÓRIO DE ÁGUA
 */
-void define_length_max(){  
-  //Configura o botão para definir a altura máxima do reservatório
+void set_reservatorio(){  
+  //Configura o botão para definir mínimo do reservatório (Altura máxima do sensor)
+  Serial.println("Pressione o botão para definir Minimo do reservatório");
+  tft.fillScreen(TFT_BLACK);
+  tft.drawString("Pressione botao para", 3, 20, 4);
+  tft.drawString("definir nivel min.", 10, 50, 4);
+  tft.drawString(" ou aguarde inciar", 10, 80, 4);
+  delay(4000); // Aguarda 4 segundos para o usuário se preparar
+
+  if (digitalRead(BUTTON_35) == LOW){  // botão pressionado (GND){
+      Serial.println("Botão pressionado - config caixa de água");
+      UltrasonicResult res = ultrasonic_read();
+      Serial.println("Altura mínima do reservatório: " + String(res.distance_cm) + " cm");
+      //grava variavel em memoria não volátil                   
+      save_flash_float(KEY_LEVEL_MIN, res.distance_cm);
+      Serial.println("Altura mínima do reservatório gravada na EEPROM");
+      tft.fillScreen(TFT_BLACK);
+      tft.drawString("Altura minima: " + String(res.distance_cm) + " cm", 3, 20, 4);
+      delay(3000);
+  }
+  else {
+      //lê variavel em memoria não volátil          
+      level_max = read_flash_float(KEY_LEVEL_MAX);
+      level_min = read_flash_float(KEY_LEVEL_MIN);
+      Serial.println("Altura mínima do reservatório (lido da EEPROM): " + String(level_min) + " cm");
+      altura_reservatorio = level_min;
+      Serial.println("Altura máxima do reservatório (lido da EEPROM): " + String(level_max) + " cm");
+        if (level_max < 20 || level_max > 400){
+            level_max = 100; //padrão
+            Serial.println("Altura máxima do reservatório inválida, usando padrão: " + String(level_max) + " cm");
+        }    
+      delay(4000);  
+      return;
+  }  
+  Serial.println("Pressione o botão para definir Máximo do reservatório");
+  tft.fillScreen(TFT_BLACK);
+  tft.drawString("Pressione o botão", 10, 30, 4);
+  tft.drawString(" definir maximo", 10, 60, 4);
+  delay(4000); // Aguarda 4 segundos para o usuário se preparar
   if (digitalRead(BUTTON_35) == LOW){  // botão pressionado (GND){
       Serial.println("Botão pressionado - config caixa de água");
       UltrasonicResult res = ultrasonic_read();
       Serial.println("Altura máxima do reservatório: " + String(res.distance_cm) + " cm");
       //grava variavel em memoria não volátil                   
-      save_flash_float(KEY_LENGTH_MAX, res.distance_cm);
+      save_flash_float(KEY_LEVEL_MAX, res.distance_cm);
       Serial.println("Altura máxima do reservatório gravada na EEPROM");
+      tft.fillScreen(TFT_BLACK);
+      tft.drawString("Altura minima: " + String(res.distance_cm) + " cm", 3, 20, 4);
   }
-  else {
-      //lê variavel em memoria não volátil          
-      length_max = read_flash_float(KEY_LENGTH_MAX);
-      Serial.println("Altura máxima do reservatório (lido da EEPROM): " + String(length_max) + " cm");
-      altura_reservatorio = length_max;
-  }
+
 }
 
 

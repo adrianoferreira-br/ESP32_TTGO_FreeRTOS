@@ -8,7 +8,8 @@
 
 
 // prefs
-#define KEY_LENGTH_MAX   "length_max"
+#define KEY_LEVEL_MAX    "level_max"
+#define KEY_LEVEL_MIN    "level_min"
 #define KEY_IP           "ip"
 #define KEY_WIFI_SSID    "ssid"
 #define KEY_WIFI_PASS    "wifipass"
@@ -43,7 +44,8 @@ extern bool SENSOR_BATIDA;                        // true | false
 extern bool SENSOR_BATTERY_VOLTAGE;            // true | false
 
 // Definições de constantes para o projeto
-extern float length_max;
+extern float level_max;
+extern float level_min;
 
 
 // Informações para acesso ao Firebase
@@ -59,7 +61,7 @@ extern char* VERSION;                             // Versão atual de uso. ex. "
 extern float percentual_reservatorio;   // percentual do reservatório
 extern float altura_medida;                // altura máxima do reservatório em cm (deve ser configurada conforme o local de instalação)
 extern float altura_reservatorio;  // distância máxima do sensor ultrassônico em cm (padrão 400cm para o JSN-SR04T)
-extern int altura_despresada;    // altura em cm a ser desprezada na leitura (deve ser configurada conforme o local de instalação)
+
 // informações do sensor DHT22
 extern float temperatura;           // temperatura em Celsius   
 extern float humidade;               // umidade em %
@@ -88,8 +90,8 @@ extern char* DATA_INSTALACAO; // Data de instalação do sensor
 extern char* TIPO_SENSOR;
 extern char* DISPOSITIVO_ID;
 extern char* VERSAO_HARDWARE;
-extern char* MAC_ADDR;
 // informações extras
+extern int SAMPLE_INTERVAL; // em segundos - Intervalo de amostragem em segundos (padrão 5 minutos)
 extern char* DATA_INSTALACAO; // Data de instalação do sensor
 extern char* OBSERVACAO_READINGS; // Observação para as leituras enviadas via MQTT
 

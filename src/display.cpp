@@ -125,7 +125,7 @@ void showBootInfo() {
     // Exibe versão na parte superior centralizada
     tft.drawString("Versao: " + String(VERSION), tft.width() / 2, 30, 4);
     // Exibe nome do equipamento na parte inferior centralizada
-    tft.drawString("Equip: " + String(NOME_EQUIPAMENTO), tft.width() / 2, tft.height() - 30, 4);
+    tft.drawString("Equip: " + String(DISPOSITIVO_ID), tft.width() / 2, tft.height() - 30, 2);
     delay(2000); // Aguarda 2 segundos
     tft.setTextDatum(TL_DATUM); // Retorna para o padrão (top-left)
 }
@@ -141,9 +141,10 @@ void show_distancia(float dist) {
     tft.drawString("   " + String(dist, 1), 120, 25, 4);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawString("cm", 200, 25, 4);    
-    graficoBarra(3, 20, 60, 113,  length_max - dist, length_max, TFT_BLUE, false); // Exemplo de uso do gráfico de barras
-    tft.drawString("0", 70, 20, 2); // Exibe medida inicial do reservatório
-    tft.drawString(String(length_max), 70, 120, 2); // Exibe altura máxima do ponto inicial até o modo sem agua    
+    graficoBarra(3, 20, 60, 113,  level_min - dist, level_min - level_max, TFT_BLUE, false); // Exemplo de uso do gráfico de barras    
+    
+    tft.drawString(String(level_max), 70, 20, 2); // Exibe medida inicial do reservatório
+    tft.drawString(String(level_min), 70, 120, 2); // Exibe altura máxima do ponto inicial até o modo sem agua    
 }
 
 
@@ -154,10 +155,9 @@ void show_distancia(float dist) {
 void show_percentual_reservatorio(float percentual) {
     char buffer[16];
     snprintf(buffer, sizeof(buffer), "%.1f%%", percentual);
-    tft.setTextColor(TFT_GREEN, TFT_BLACK);
-    tft.drawString(buffer, 10, 60, 2); // Ajuste a posição conforme necessário
+    tft.setTextColor(TFT_RED, TFT_BLACK);
+    tft.drawString(buffer, 120, 115, 4); // Ajuste a posição conforme necessário
 }
-
 
 
 
@@ -166,7 +166,7 @@ void show_percentual_reservatorio(float percentual) {
 */
 void show_temperature(float temp) {
     tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-    tft.drawString("   " + String(temp, 1), 120, 55, 4);
+    tft.drawString(" t: " + String(temp, 1), 120, 55, 4);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawString("C", 200, 55, 4);
 }
@@ -176,7 +176,7 @@ void show_temperature(float temp) {
 */
 void show_humidity(float hum) {
     tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-    tft.drawString("   " + String(hum, 1), 120, 85, 4);
+    tft.drawString(" h:" + String(hum, 1), 120, 85, 4);
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
     tft.drawString("%", 200, 85, 4);
 }

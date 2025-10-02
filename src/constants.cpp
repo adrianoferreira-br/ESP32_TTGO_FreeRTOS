@@ -23,16 +23,15 @@ char* OBSERVACAO_DEVICE_INFO = "Testes Adriano"; // Observação para as informa
 
 
 // Informação do coletor de dados
-char* VERSION = "v25.09.30";  // Versão atual de uso. YY.MM.DD
+char* VERSION = "v25.10.01";  // Versão atual de uso. YY.MM.DD
 char* PLACA = "TTGO T-Display V1.1"; // TTGO T-Display | Heltec WiFi Kit 32 | M5Stack Core2
 char* FIREBASE_HOST = "seu_projeto.firebaseio.com"; // Host do Firebase
 char* FIREBASE_AUTH = "sua_chave_de_autenticacao"; // Chave
 char* MODELO_SENSOR = "JSN-SR04T"; // Modelo do sensor
 char* FABRICANTE_SENSOR = "Fabricante do Sensor"; // Fabricante do sensor
-char* MAC_ADDR = "AA:BB:CC:DD:EE:FF"; // Endereço MAC do sensor
 char* VERSAO_HARDWARE = "v1.0"; // Versão do hardware
-char* DATA_INSTALACAO = "2025-10-01"; // Data de  
-
+char* DATA_INSTALACAO = "2025-10-01"; // Data de instalação do equipamento no local 
+int   SAMPLE_INTERVAL = 10; //em segundos - Intervalo de amostragem em segundos (padrão 5 minutos)
 
 
 // Informações do sensor

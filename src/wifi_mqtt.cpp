@@ -20,9 +20,7 @@
 // flash
 #include "mem_flash.h"
 
-
-
-#define MQTT_MAX_PACKET_SIZE 512
+#define MQTT_MAX_PACKET_SIZE 1024
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -238,7 +236,7 @@ void callback(char* topic, byte* payload, unsigned int length)
 
 
   if (String(topic) == "info") {
-    Serial.println("Enviando informações do sistema conforme comando recebido...");
+    Serial.println("Enviando informações do sistema conforme... Resposta topico INFO");
     bool result = mqtt_send_info();  
   }
 
@@ -391,14 +389,14 @@ bool mqtt_send_info(){//const char* nome_equipamento, const char* horario, long 
        return false;
     }
     client.loop();
-    char time_str_buffer[16];
-    char* timestamp = get_time_str(time_str_buffer, sizeof(time_str_buffer));
+    char time_str_buffer[16];           char* timestamp = get_time_str(time_str_buffer, sizeof(time_str_buffer));    
+    long timestamp2 = atol(time_str_buffer); // Converte string para long
 
-    StaticJsonDocument<256> doc;
+    StaticJsonDocument<1024> doc;
 
     doc["table"] = "device_info";
     doc["device_id"] = DISPOSITIVO_ID;
-    doc["timestamp"] = timestamp;
+    doc["timestamp"] = timestamp2;
     doc["client"] = CLIENTE;
     doc["device_id"] = DISPOSITIVO_ID;    
     doc["plant"] = LOCAL;
@@ -409,15 +407,16 @@ bool mqtt_send_info(){//const char* nome_equipamento, const char* horario, long 
     doc["sensor_type"] = TIPO_SENSOR;
     doc["sensor_manufacturer"] = FABRICANTE_SENSOR;
     doc["sensor_model"] = MODELO_SENSOR;
-    //doc["sensor_serial"] = SERIAL_SENSOR;
     doc["ip_address"] = WiFi.localIP().toString();
-    doc["mac_address"] = MAC_ADDR;
+    doc["mac_address"] = WiFi.macAddress();
     doc["firmware_version"] = VERSION;
     doc["hardware_version"] = VERSAO_HARDWARE;
     doc["installation_date"] = DATA_INSTALACAO;    
+    doc["sample_time_s"] = SAMPLE_INTERVAL;    //ToDo: colocar no topico: settings
     doc["notes"] = OBSERVACAO_DEVICE_INFO;
+    
 
-    char jsonBuffer[256] = {0};
+    char jsonBuffer[1024] = {0};
     size_t jsonLen = serializeJson(doc, jsonBuffer);
     bool result = client.publish(topico, (const uint8_t*)jsonBuffer, jsonLen, false); // QoS 0
     Serial.println("MQTT: Dados info enviados.." + String(topico)); 
@@ -483,9 +482,9 @@ bool mqtt_send_info(){//const char* nome_equipamento, const char* horario, long 
     doc["device_id"] = DISPOSITIVO_ID;
     doc["timestamp"] = timestamp2;
     doc["wifi_rssi_dbm"] = WiFi.RSSI();    
-    doc["level_usage_cm"] = roundf(altura_medida * 100) / 100.0;
-    doc["level_effective_cm"] = roundf((length_max-altura_despresada) * 100) / 100.0;
-    doc["level_usage_%"] = roundf(percentual_reservatorio * 100) / 100.0;		    
+    doc["level_effective_cm"] = roundf((level_min - level_max) * 100) / 100.0; // altura útil do reservatório        
+    doc["level_available_cm"] = roundf((level_min - altura_medida) * 100) / 100.0; // nível disponível no reservatório
+    doc["level_available_%"] = roundf(percentual_reservatorio * 100) / 100.0;		    
     doc["temp_c"] =  roundf(temperatura * 100) / 100.0;
     doc["humidity_%"] = roundf(humidade * 100) / 100.0; 
     doc["notes"] = OBSERVACAO_READINGS;
