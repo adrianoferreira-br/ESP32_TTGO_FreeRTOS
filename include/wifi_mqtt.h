@@ -32,6 +32,7 @@ void setup_ntp(void);
 bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_leitura, const char* observacao);
 bool mqtt_send_readings();
 bool mqtt_send_info();
+bool mqtt_send_settings();
 
 
 

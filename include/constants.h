@@ -10,6 +10,7 @@
 // prefs
 #define KEY_LEVEL_MAX    "level_max"
 #define KEY_LEVEL_MIN    "level_min"
+#define KEY_SAMPLE_TIME_S "sample_time_s"
 #define KEY_IP           "ip"
 #define KEY_WIFI_SSID    "ssid"
 #define KEY_WIFI_PASS    "wifipass"
@@ -46,6 +47,7 @@ extern bool SENSOR_BATTERY_VOLTAGE;            // true | false
 // Definições de constantes para o projeto
 extern float level_max;
 extern float level_min;
+extern int SAMPLE_INTERVAL; // em segundos - Intervalo de amostragem em segundos (padrão 5 minutos)
 
 
 // Informações para acesso ao Firebase
@@ -94,10 +96,9 @@ extern char* VERSAO_HARDWARE;
 extern int SAMPLE_INTERVAL; // em segundos - Intervalo de amostragem em segundos (padrão 5 minutos)
 extern char* DATA_INSTALACAO; // Data de instalação do sensor
 extern char* OBSERVACAO_READINGS; // Observação para as leituras enviadas via MQTT
-
-
 // Informação do coletor de dados
 extern char* OBSERVACAO_DEVICE_INFO; // Observação para as informações do dispositivo enviadas via MQTT
+extern char* OBSERVACAO_SETTINGS; // Observação para as configurações do dispositivo enviadas via MQTT
 
 
 

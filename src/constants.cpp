@@ -18,20 +18,21 @@ char* LINHA = "L01"; // Linha de produção onde o equipamento está instalado: 
 char* FABRICANTE_MAQUINA = ""; //Panitec | Schuler | Komatsu | etc
 char* MODELO_MAQUINA = ""; // Prensa X1000 | Forno Y2000 | etc
 char* TIPO_SENSOR = "Ultrassonico"; // Ultrassonico | DHT22 | Batida | TensãoBateria
-char* OBSERVACAO_READINGS = "Testes Adriano"; // Observação para as leituras enviadas via MQTT
-char* OBSERVACAO_DEVICE_INFO = "Testes Adriano"; // Observação para as informações do dispositivo enviadas via MQTT
+char* OBSERVACAO_READINGS = "Testes no cliente"; // Observação para as leituras enviadas via MQTT
+char* OBSERVACAO_DEVICE_INFO = "Testes no cliente"; // Observação para as informações do dispositivo enviadas via MQTT
+char* OBSERVACAO_SETTINGS = "Testes no cliente"; // Observação para as configurações do dispositivo enviadas via MQTT
 
 
 // Informação do coletor de dados
-char* VERSION = "v25.10.01";  // Versão atual de uso. YY.MM.DD
+char* VERSION = "v25.10.02";  // Versão atual de uso. YY.MM.DD
 char* PLACA = "TTGO T-Display V1.1"; // TTGO T-Display | Heltec WiFi Kit 32 | M5Stack Core2
 char* FIREBASE_HOST = "seu_projeto.firebaseio.com"; // Host do Firebase
 char* FIREBASE_AUTH = "sua_chave_de_autenticacao"; // Chave
 char* MODELO_SENSOR = "JSN-SR04T"; // Modelo do sensor
-char* FABRICANTE_SENSOR = "Fabricante do Sensor"; // Fabricante do sensor
+char* FABRICANTE_SENSOR = "JNT"; // Fabricante do sensor
 char* VERSAO_HARDWARE = "v1.0"; // Versão do hardware
-char* DATA_INSTALACAO = "2025-10-01"; // Data de instalação do equipamento no local 
-int   SAMPLE_INTERVAL = 10; //em segundos - Intervalo de amostragem em segundos (padrão 5 minutos)
+char* DATA_INSTALACAO = "2025-10-02"; // Data de instalação do equipamento no local 
+int   SAMPLE_INTERVAL = 30; //em segundos - Intervalo de amostragem em segundos (padrão 30 minutos)
 
 
 // Informações do sensor

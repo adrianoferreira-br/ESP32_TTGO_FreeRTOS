@@ -234,11 +234,41 @@ void callback(char* topic, byte* payload, unsigned int length)
     ESP.restart(); // Reinicia o ESP32
   }
 
-
   if (String(topic) == "info") {
     Serial.println("Enviando informações do sistema conforme... Resposta topico INFO");
     bool result = mqtt_send_info();  
   }
+
+   if (String(topic) == "settings") {
+        DynamicJsonDocument doc(256);
+        DeserializationError error = deserializeJson(doc, message);
+        if (!error) {
+            prefs.begin("settings", false);
+
+            // Salva apenas os campos que vieram no JSON
+     /*       if (doc.containsKey("level_max")) {
+                float level_max_tmp = doc["level_max"];
+                prefs.putFloat("KEY_LEVEL_MAX", level_max_tmp);
+                Serial.println("Salvo level_max: " + String(level_max_tmp));
+            }
+            if (doc.containsKey("level_min")) {
+                float level_min_tmp = doc["level_min"];
+                prefs.putFloat("KEY_LEVEL_MIN", level_min_tmp);
+                Serial.println("Salvo level_min: " + String(level_min_tmp));
+            }
+            if (doc.containsKey("sample_time_s")) {
+                int sample_time_tmp = doc["sample_time_s"];
+                prefs.putInt("KEY_SAMPLE_TIME_S", sample_time_tmp);
+                Serial.println("Salvo sample_time_s: " + String(sample_time_tmp));
+            }
+            // Adicionar outros campos conforme necessário
+*/            
+            prefs.end();
+        } else {
+            Serial.println("Erro ao analisar a mensagem de configurações.");
+        }
+    }
+
 
  /* Exemplo de mensagem esperada: 
         {"server":"192.168.100.4",
@@ -314,8 +344,10 @@ void reconnect()
       Serial.println("Conectado no MQTT com nome: " + String(DISPOSITIVO_ID));      
       client.subscribe("Reboot_",1);      
       client.subscribe("info",1);
+      client.subscribe("settings",1);
       client.subscribe("config_mqtt",1);
       client.subscribe("config_ip",1);
+      
       //client.subscribe("presto/floripa/forno/001")      
       client.subscribe(topico,1); // Inscreve-se no tópico geral do equipamento
       client.subscribe(CLIENTE,1); // Inscreve-se no tópico do cliente específico      
@@ -371,7 +403,45 @@ bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_l
     return result;
 }
 
+/**********************************************************************************************
+*     ENVIA e SALVA AS INFORMAÇÕES DE SETTINGS PARA O PROTOCOLO MQTT
+*
+* Exemplo de JSON enviado:
+*{   "table": "device_settings",
+*    "device_id": DISPOSITIVO_ID,
+*    "timestamp": timestamp2,
+*    "level_min_cm": level_min,
+*    "level_max_cm": level_max,
+*    "sample_time_s": SAMPLE_INTERVAL,
+*    "notes":""  
+* }
+*/
 
+bool mqtt_send_settings(){//const char* nome_equipamento, const char* horario, long id_leitura, const char* observacao) {
+    if (!client.connected()) {
+       return false;
+    }
+    client.loop();
+    char time_str_buffer[16];           char* timestamp = get_time_str(time_str_buffer, sizeof(time_str_buffer));    
+    long timestamp2 = atol(time_str_buffer); // Converte string para long
+
+    StaticJsonDocument<512> doc;
+
+    doc["table"] = "device_settings";
+    doc["device_id"] = DISPOSITIVO_ID;
+    doc["timestamp"] = timestamp2;    
+    doc["level_min_cm"] = level_min;
+    doc["level_max_cm"] = level_max;    
+    doc["sample_time_s"] = SAMPLE_INTERVAL;    
+    doc["notes"] = OBSERVACAO_SETTINGS;
+
+    char jsonBuffer[512] = {0};
+    size_t jsonLen = serializeJson(doc, jsonBuffer);
+    bool result = client.publish(topico, (const uint8_t*)jsonBuffer, jsonLen, false); // QoS 0
+    Serial.println("MQTT: Dados settings enviados.." + String(topico)); 
+    return result;
+
+}
 
 /**********************************************************************************************
 *     ENVIA AS INFORMAÇÕES PARA O PROTOCOLO MQTT
