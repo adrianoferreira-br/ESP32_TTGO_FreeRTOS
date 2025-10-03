@@ -382,13 +382,17 @@ bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_l
         return false;
     }
     client.loop();
+    char time_str_buffer[16];           char* timestamp = get_time_str(time_str_buffer, sizeof(time_str_buffer));    
+    long timestamp2 = atol(time_str_buffer); // Converte string para long
+
 
     StaticJsonDocument<256> doc;
-    doc["equipamento"] = nome_equipamento;
-    doc["tipo"] = "data";
-    doc["hora"] = horario;
-    doc["id_leitura"] = String(id_leitura);
-    doc["observacao"] = observacao;
+    doc["table"] = "device_readings";
+    doc["device_id"] = DISPOSITIVO_ID;
+    doc["timestamp"] = timestamp2;
+    doc["wifi_rssi_dbm"] = WiFi.RSSI();    
+    doc["takt_time_id"] = id_leitura;
+    doc["note"] = observacao;
 
     char jsonBuffer[256] = {0};
     size_t jsonLen = serializeJson(doc, jsonBuffer);
