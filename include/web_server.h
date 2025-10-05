@@ -8,6 +8,7 @@ void handleRoot();
 void handleConfigMQTT();
 void handleReadings();
 void handleInfo();
+void handleOTA();
 
 
 
