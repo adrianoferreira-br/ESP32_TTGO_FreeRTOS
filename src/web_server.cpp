@@ -3,11 +3,24 @@
 #include <WiFi.h>
 #include <Update.h>
 #include <ArduinoOTA.h>
+#include <esp_ota_ops.h>
+#include <esp_image_format.h>
+#include <esp_flash_partitions.h>
+#include <esp_partition.h>
+#include <MD5Builder.h>
 #include "constants.h"
 #include "mem_flash.h"
 #include "wifi_mqtt.h"
 #include "web_server.h"
 #include "state.h"
+
+// Variáveis globais para OTA ESP-IDF nativo
+static esp_ota_handle_t ota_handle = 0;
+static const esp_partition_t *ota_partition = NULL;
+static size_t totalReceived = 0;
+static size_t lastReported = 0;
+static MD5Builder md5;
+static String firmwareHash = "";
 
 
 
@@ -273,76 +286,28 @@ void handleConfigMQTT() {
  */
 
 void handleOTA() {
+  Serial.printf("WEB OTA: ===== DEBUG ENTRADA handleOTA =====\n");
+  Serial.printf("WEB OTA: Método: %s\n", (server.method() == HTTP_POST) ? "POST" : "GET");
+  Serial.printf("WEB OTA: Tem arg 'upload': %s\n", server.hasArg("upload") ? "SIM" : "NÃO");
+  Serial.printf("WEB OTA: Args totais: %d\n", server.args());
+  
+  for (int i = 0; i < server.args(); i++) {
+    Serial.printf("WEB OTA: Arg[%d]: %s = %s\n", i, server.argName(i).c_str(), server.arg(i).c_str());
+  }
+  
   if (server.method() == HTTP_POST) {
-    // Resposta final após upload
+    // Resposta final após upload ESP-IDF nativo
     server.sendHeader("Connection", "close");
-    
-    if (Update.hasError()) {
-      String errorMsg = "UPDATE FAILED - Error: " + String(Update.getError());
-      Serial.println(errorMsg);
-      
-      // Detalhes específicos do erro com recomendações
-      switch(Update.getError()) {
-        case UPDATE_ERROR_OK:
-          errorMsg += " (OK)";
-          break;
-        case UPDATE_ERROR_WRITE:
-          errorMsg += " (Write Error) - Problema na gravação da flash";
-          break;
-        case UPDATE_ERROR_ERASE:
-          errorMsg += " (Erase Error) - Falha ao apagar partição";
-          break;
-        case UPDATE_ERROR_READ:
-          errorMsg += " (Read Error) - Erro de leitura";
-          break;
-        case UPDATE_ERROR_SPACE:
-          errorMsg += " (Not Enough Space) - Firmware muito grande";
-          break;
-        case UPDATE_ERROR_SIZE:
-          errorMsg += " (Bad Size Given) - Tamanho inválido";
-          break;
-        case UPDATE_ERROR_STREAM:
-          errorMsg += " (Stream Read Timeout) - Timeout na transferência";
-          break;
-        case UPDATE_ERROR_MD5:
-          errorMsg += " (MD5 Check Failed) - Firmware corrompido";
-          break;
-        case UPDATE_ERROR_MAGIC_BYTE:
-          errorMsg += " (Wrong Magic Byte) - Arquivo não é firmware ESP32";
-          break;
-        case UPDATE_ERROR_ACTIVATE:
-          errorMsg += " (Could Not Activate) - Firmware inválido ou corrompido. Verifique se o arquivo .bin é compatível com ESP32";
-          break;
-        case UPDATE_ERROR_NO_PARTITION:
-          errorMsg += " (Partition Not Found) - Problema nas partições OTA";
-          break;
-        case UPDATE_ERROR_BAD_ARGUMENT:
-          errorMsg += " (Bad Argument) - Parâmetros inválidos";
-          break;
-        case UPDATE_ERROR_ABORT:
-          errorMsg += " (Aborted) - Operação cancelada";
-          break;
-        default:
-          errorMsg += " (Unknown Error " + String(Update.getError()) + ")";
-          break;
-      }
-      
-      Serial.println("WEB OTA: " + errorMsg);
-      server.send(500, "text/plain", "❌ " + errorMsg);
-    } else {
-      Serial.println("WEB OTA: ✅ UPDATE SUCCESS! Device rebooting...");
-      server.send(200, "text/plain", "✅ UPDATE SUCCESS! Device rebooting in 3 seconds...");
-      delay(3000);
-      ESP.restart();
-    }
+    server.send(200, "text/plain", "✅ ESP-IDF OTA FINALIZADO! Device rebooting in 3 seconds...");
+    delay(3000);
+    ESP.restart();
   } else if (server.hasArg("upload")) {
-    // Handler de upload de arquivo
+    // Handler de upload de arquivo ESP-IDF nativo
     HTTPUpload& upload = server.upload();
-    static size_t totalReceived = 0;
-    static size_t lastReported = 0;
     
     if (upload.status == UPLOAD_FILE_START) {
-      Serial.printf("WEB OTA: Iniciando upload: %s\n", upload.filename.c_str());
+      Serial.printf("WEB OTA: ===== INICIANDO OTA ESP-IDF NATIVO =====\n");
+      Serial.printf("WEB OTA: Arquivo: %s\n", upload.filename.c_str());
       Serial.printf("WEB OTA: Free heap antes: %u bytes\n", ESP.getFreeHeap());
       
       // Verificar se o arquivo tem extensão .bin
@@ -352,84 +317,122 @@ void handleOTA() {
         return;
       }
       
-      totalReceived = 0;
-      lastReported = 0;
-      
-      // Parar ArduinoOTA durante HTTP upload para evitar conflitos
-      ArduinoOTA.end();
-      
-      // Limpar qualquer operação anterior
-      if (Update.isRunning()) {
-        Update.end();
-        delay(100);
-      }
-      
-      // Calcular espaço disponível de forma mais precisa
-      size_t maxSketchSpace = ESP.getFreeSketchSpace();
-      Serial.printf("WEB OTA: Espaço disponível: %u bytes\n", maxSketchSpace);
-      
-      // Iniciar update com validação aprimorada
-      if (!Update.begin(maxSketchSpace, U_FLASH)) {
-        Serial.printf("WEB OTA: ❌ Falha ao iniciar update. Erro: %u\n", Update.getError());
-        Update.printError(Serial);
-        server.send(500, "text/plain", "❌ Erro ao iniciar atualização");
+      // Obter partição de destino OTA
+      ota_partition = esp_ota_get_next_update_partition(NULL);
+      if (ota_partition == NULL) {
+        Serial.println("WEB OTA: ❌ ERRO: Não foi possível encontrar partição OTA válida!");
+        server.send(500, "text/plain", "❌ Erro: Partição OTA não encontrada");
         return;
       }
       
-      Serial.printf("WEB OTA: Update iniciado com %u bytes disponíveis\n", maxSketchSpace);
-      Update.onProgress([](size_t progress, size_t total) {
-        static size_t lastPercent = 0;
-        size_t percent = (progress * 100) / total;
-        if (percent != lastPercent && percent % 10 == 0) {
-          Serial.printf("WEB OTA: Progresso: %u%%\n", percent);
-          lastPercent = percent;
-        }
-      });
+      Serial.printf("WEB OTA: Partição destino: %s (0x%06x, %u bytes)\n", 
+                    ota_partition->label, ota_partition->address, ota_partition->size);
+      
+      // Inicializar operação OTA ESP-IDF
+      esp_err_t err = esp_ota_begin(ota_partition, OTA_SIZE_UNKNOWN, &ota_handle);
+      if (err != ESP_OK) {
+        Serial.printf("WEB OTA: ❌ Falha ao iniciar ESP-IDF OTA: %s\n", esp_err_to_name(err));
+        server.send(500, "text/plain", "❌ Erro ao iniciar OTA nativo");
+        return;
+      }
+      
+      Serial.printf("WEB OTA: ✅ OTA ESP-IDF iniciado com handle: %u\n", ota_handle);
+      
+      totalReceived = 0;
+      lastReported = 0;
+      md5.begin();
+      
+      // Parar ArduinoOTA para evitar conflitos
+      ArduinoOTA.end();
       
     } else if (upload.status == UPLOAD_FILE_WRITE) {
-      size_t written = Update.write(upload.buf, upload.currentSize);
-      if (written != upload.currentSize) {
-        Serial.printf("WEB OTA: Erro de escrita - esperado %u, escrito %u\n", upload.currentSize, written);
-        Update.printError(Serial);
-      } else {
-        totalReceived += upload.currentSize;
-        
-        // Reportar progresso a cada 10KB
-        if (totalReceived - lastReported >= 10240) {
-          Serial.printf("WEB OTA: Progresso: %u KB recebidos\n", totalReceived / 1024);
-          lastReported = totalReceived;
-        }
+      // Adicionar dados ao cálculo MD5
+      md5.add(upload.buf, upload.currentSize);
+      
+      // Escrever dados diretamente na partição OTA usando ESP-IDF
+      esp_err_t err = esp_ota_write(ota_handle, upload.buf, upload.currentSize);
+      if (err != ESP_OK) {
+        Serial.printf("WEB OTA: ❌ Erro na escrita ESP-IDF: %s\n", esp_err_to_name(err));
+        esp_ota_end(ota_handle);
+        ota_handle = 0;
+        server.send(500, "text/plain", "❌ Erro na escrita de dados");
+        return;
+      }
+      
+      totalReceived += upload.currentSize;
+      
+      // Reportar progresso a cada 50KB para evitar spam
+      if (totalReceived - lastReported >= 51200) {
+        Serial.printf("WEB OTA: ✅ Escrevendo: %u KB na partição %s\n", 
+                      totalReceived / 1024, ota_partition->label);
+        lastReported = totalReceived;
       }
       
     } else if (upload.status == UPLOAD_FILE_END) {
-      Serial.printf("WEB OTA: Finalizando upload - %u bytes recebidos\n", upload.totalSize);
+      Serial.printf("WEB OTA: ===== FINALIZANDO OTA ESP-IDF =====\n");
+      Serial.printf("WEB OTA: Total gravado: %u bytes na partição %s\n", 
+                    totalReceived, ota_partition->label);
       
-      // Verificar se recebemos dados
-      if (upload.totalSize == 0) {
-        Serial.println("WEB OTA: ❌ Nenhum dado recebido");
-        Update.end();
+      // Finalizar cálculo MD5
+      md5.calculate();
+      firmwareHash = md5.toString();
+      Serial.printf("WEB OTA: MD5 do firmware enviado: %s\n", firmwareHash.c_str());
+      
+      if (totalReceived == 0) {
+        Serial.println("WEB OTA: ❌ Nenhum dado foi gravado!");
+        esp_ota_end(ota_handle);
+        ota_handle = 0;
+        server.send(500, "text/plain", "❌ Erro: Nenhum dado recebido");
         return;
       }
       
-      // Finalizar com validação MD5 se disponível
-      bool success = Update.end(true);
-      
-      if (success) {
-        Serial.printf("WEB OTA: ✅ Upload concluído! %u bytes transferidos\n", upload.totalSize);
-        Serial.printf("WEB OTA: MD5 esperado: %s\n", Update.md5String().c_str());
-        Serial.println("WEB OTA: Firmware validado com sucesso!");
-      } else {
-        Serial.printf("WEB OTA: ❌ Falha na finalização - Erro %u\n", Update.getError());
-        Update.printError(Serial);
-        
-        // Log específico para erro de ativação
-        if (Update.getError() == UPDATE_ERROR_ACTIVATE) {
-          Serial.println("WEB OTA: ❌ Falha na ativação - possível firmware inválido");
+      // Finalizar operação OTA ESP-IDF
+      esp_err_t err = esp_ota_end(ota_handle);
+      if (err != ESP_OK) {
+        Serial.printf("WEB OTA: ❌ Falha ao finalizar ESP-IDF OTA: %s\n", esp_err_to_name(err));
+        if (err == ESP_ERR_OTA_VALIDATE_FAILED) {
+          Serial.println("WEB OTA: ❌ Validação de imagem falhou - firmware inválido");
+        } else if (err == ESP_ERR_INVALID_ARG) {
+          Serial.println("WEB OTA: ❌ Handle OTA inválido");
+        } else {
+          Serial.printf("WEB OTA: ❌ Erro desconhecido: %s (0x%x)\n", esp_err_to_name(err), err);
         }
+        ota_handle = 0;
+        server.send(500, "text/plain", "❌ Erro na validação do firmware");
+        return;
       }
+      
+      Serial.printf("WEB OTA: ✅ Firmware gravado com sucesso na partição %s!\n", ota_partition->label);
+      
+      // Configurar partição de boot para o novo firmware
+      err = esp_ota_set_boot_partition(ota_partition);
+      if (err != ESP_OK) {
+        Serial.printf("WEB OTA: ❌ Falha ao configurar boot: %s\n", esp_err_to_name(err));
+        server.send(500, "text/plain", "❌ Erro ao configurar nova partição de boot");
+        return;
+      }
+      
+      Serial.printf("WEB OTA: ✅ Partição de boot configurada para: %s (0x%06x)\n", 
+                    ota_partition->label, ota_partition->address);
+      
+      // Verificar configuração final
+      const esp_partition_t* new_boot = esp_ota_get_boot_partition();
+      if (new_boot && new_boot->address == ota_partition->address) {
+        Serial.printf("WEB OTA: ✅ CONFIRMADO: Boot partition = %s (0x%06x)\n", 
+                      new_boot->label, new_boot->address);
+        Serial.println("WEB OTA: ✅ SUCESSO TOTAL - OTA completo e verificado!");
+      } else {
+        Serial.println("WEB OTA: ⚠️ ATENÇÃO: Partição de boot não foi alterada como esperado");
+      }
+      
+      ota_handle = 0;
+      
     } else if (upload.status == UPLOAD_FILE_ABORTED) {
       Serial.println("WEB OTA: ⚠️ Upload cancelado pelo usuário");
-      Update.end();
+      if (ota_handle != 0) {
+        esp_ota_end(ota_handle);
+        ota_handle = 0;
+      }
     }
   } else {
     // Página de upload principal
@@ -488,8 +491,44 @@ void handleOTA() {
     html += "<a href='/'>⬅️ Voltar ao Menu Principal</a>";
     html += "</div>";
     html += "<script>";
+    html += "function validateFile(file) {";
+    html += "  const status = document.getElementById('status');";
+    html += "  status.className = 'status';";
+    html += "  status.innerHTML = '';";
+    html += "  if (!file) {";
+    html += "    status.className = 'status error';";
+    html += "    status.innerHTML = '❌ Nenhum arquivo selecionado';";
+    html += "    return false;";
+    html += "  }";
+    html += "  if (!file.name.toLowerCase().endsWith('.bin')) {";
+    html += "    status.className = 'status error';";
+    html += "    status.innerHTML = '❌ Arquivo deve ter extensão .bin';";
+    html += "    return false;";
+    html += "  }";
+    html += "  if (file.size < 100000) {";
+    html += "    status.className = 'status error';";
+    html += "    status.innerHTML = '⚠️ Arquivo muito pequeno (' + Math.round(file.size/1024) + ' KB). Verifique se é um firmware válido.';";
+    html += "    return false;";
+    html += "  }";
+    html += "  if (file.size > " + String(ESP.getFreeSketchSpace()) + ") {";
+    html += "    status.className = 'status error';";
+    html += "    status.innerHTML = '❌ Arquivo muito grande (' + Math.round(file.size/1024) + ' KB). Máximo: ' + Math.round(" + String(ESP.getFreeSketchSpace()) + "/1024) + ' KB';";
+    html += "    return false;";
+    html += "  }";
+    html += "  status.className = 'status success';";
+    html += "  status.innerHTML = '✅ Arquivo válido: ' + file.name + ' (' + Math.round(file.size/1024) + ' KB)';";
+    html += "  return true;";
+    html += "}";
+    html += "document.querySelector('input[type=\"file\"]').addEventListener('change', function(e) {";
+    html += "  validateFile(e.target.files[0]);";
+    html += "});";
     html += "document.getElementById('uploadForm').addEventListener('submit', function(e) {";
     html += "  e.preventDefault();";
+    html += "  const fileInput = this.querySelector('input[type=\"file\"]');";
+    html += "  const file = fileInput.files[0];";
+    html += "  if (!validateFile(file)) {";
+    html += "    return false;";
+    html += "  }";
     html += "  const formData = new FormData(this);";
     html += "  const progressContainer = document.getElementById('progressContainer');";
     html += "  const progressFill = document.getElementById('progressFill');";
@@ -497,6 +536,7 @@ void handleOTA() {
     html += "  const status = document.getElementById('status');";
     html += "  progressContainer.style.display = 'block';";
     html += "  this.style.display = 'none';";
+    html += "  progressText.innerHTML = 'Iniciando upload do firmware: ' + file.name + ' (' + Math.round(file.size/1024) + ' KB)';";
     html += "  const xhr = new XMLHttpRequest();";
     html += "  xhr.upload.addEventListener('progress', function(e) {";
     html += "    if (e.lengthComputable) {";
