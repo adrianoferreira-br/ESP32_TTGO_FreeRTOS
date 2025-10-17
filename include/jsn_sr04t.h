@@ -15,6 +15,7 @@ struct UltrasonicResult {
 void setup_ultrasonic();
 void loop_ultrasonic();
 UltrasonicResult ultrasonic_read();
+void reset_percentual_filter(); // Reset do filtro inteligente
 
 
 #endif // JSN_SR04T_H_
