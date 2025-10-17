@@ -1,12 +1,6 @@
-#include <Adafruit_Sensor.h>
-#include <DHT.h>
-#include <DHT_U.h>
-#include "display.h"
+#include "dht_xx.h"
 
 
-// Defina os pinos e tipo do sensor conforme seu hardware
-#define DHTPIN 21         // Exemplo: GPIO4
-#define DHTTYPE DHT11    // DHT11, DHT21, DHT22
 
 DHT_Unified dht(DHTPIN, DHTTYPE);
 uint32_t delayMS = 2000;
