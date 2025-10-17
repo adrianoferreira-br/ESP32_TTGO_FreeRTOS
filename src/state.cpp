@@ -405,7 +405,17 @@ void set_reservatorio(){
   else {
       //lê variavel em memoria não volátil          
       level_max = read_flash_float(KEY_LEVEL_MAX);
+      if (level_max < 20 || level_max > 400 || isnan(level_max)){
+          level_max = 20; //padrão
+          Serial.println("Altura máxima do reservatório inválida, usando padrão: " + String(level_max) + " cm");
+      }
+
       level_min = read_flash_float(KEY_LEVEL_MIN);
+      if (level_min < 20 || level_min > 400 || isnan(level_min)){
+          level_min = 400; //padrão
+          Serial.println("Altura mínima do reservatório inválida, usando padrão: " + String(level_min) + " cm");
+      }
+
       Serial.println("Altura mínima do reservatório (lido da EEPROM): " + String(level_min) + " cm");
       altura_reservatorio = level_min;
       Serial.println("Altura máxima do reservatório (lido da EEPROM): " + String(level_max) + " cm");
@@ -434,6 +444,12 @@ void set_reservatorio(){
 
 }
 
-
+/**************************************************************
+ * LOOP PRINCIPAL DO STATE MACHINE
+ */
+void loop_state(void) {
+  // Implementação básica do state machine
+  // Adicione aqui a lógica específica da aplicação conforme necessário
+}
 
 /**********************************************************************************************/
