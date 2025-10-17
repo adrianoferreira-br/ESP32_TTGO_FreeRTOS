@@ -5,7 +5,6 @@
 #include <WiFi.h>
 #include <PubSubClient.h>
 #include "constants.h"
-#include "main.h"
 
 
 // Wifi
@@ -20,6 +19,7 @@ void loop_mqqt(void);
 
 //partitions
 void show_partitions();
+void show_ota_info();
 
 //Ota
 void setup_ota();
@@ -33,6 +33,7 @@ bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_l
 bool mqtt_send_readings();
 bool mqtt_send_info();
 bool mqtt_send_settings();
+bool mqtt_send_settings_confirmation();
 
 
 

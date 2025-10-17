@@ -4,13 +4,30 @@
 #ifndef CONSTANTS_H_
 #define CONSTANTS_H_
 
+// ============================================================================
+// CONFIGURAÇÃO DO CLIENTE E EQUIPAMENTO
+// ============================================================================
+#define Adriano // Presto | Adriano
+#define EQUIP_RESERVATORIO // EQUIP_PRENSA | EQUIP_PROCESSAMENTO | EQUIP_LINEA | EQUIP_RESERVATORIO | EQUIP_OUTRO
+
+// ============================================================================
+// ATIVAÇÃO AUTOMÁTICA DOS SENSORES BASEADO NO TIPO DE EQUIPAMENTO
+// ============================================================================
+#if defined(EQUIP_PRENSA) || defined(EQUIP_PROCESSAMENTO) || defined(EQUIP_LINEA)
+  #define SENSOR_BATIDA    
+#elif defined(EQUIP_RESERVATORIO)
+  #define SENSOR_TEMPERATURE
+  #define SENSOR_WATER_LEVEL     
+#elif defined(EQUIP_OUTRO)
+  #define SENSOR_TEMPERATURE
+  #define SENSOR_BATTERY_VOLTAGE
+#else
+  // Configuração padrão quando nenhum equipamento específico é definido
+  #define SENSOR_BATTERY_VOLTAGE
+#endif
 
 
-
-// prefs
-#define KEY_LEVEL_MAX    "level_max"
-#define KEY_LEVEL_MIN    "level_min"
-#define KEY_SAMPLE_TIME_S "sample_time_s"
+// prefs - settings_network 
 #define KEY_IP           "ip"
 #define KEY_WIFI_SSID    "ssid"
 #define KEY_WIFI_PASS    "wifipass"
@@ -19,7 +36,26 @@
 #define KEY_MQTT_USER    "mqtt_user"
 #define KEY_MQTT_PASS    "mqtt_pass"
 
+// prefs - settings_device
+#define KEY_CLIENTE      "cliente"
+#define KEY_LOCAL        "local"
+#define KEY_TIPO_EQUIP   "tipo_equip"
+#define KEY_ID_EQUIP     "id_equip"
+#define KEY_NOME_EQUIP   "nome_equip"
+#define KEY_DISPOSITIVO_ID "dispositivo_id"
 
+// prefs - settings_sensor
+#define KEY_LEVEL_MAX    "level_max"
+#define KEY_LEVEL_MIN    "level_min"
+#define KEY_SAMPLE_TIME_S "sample_time_s"
+
+
+// tipos de sensores
+#define EQUIP_TIPO_PRENSA           1
+#define EQUIP_TIPO_PROCESSAMENTO    2
+#define EQUIP_TIPO_LINEA            3
+#define EQUIP_TIPO_RESERVATORIO     4
+#define EQUIP_TIPO_OUTRO            99
 
 
 // Informações para acesso a Internet
@@ -39,10 +75,10 @@ extern char topico[64];
 // Informações referente a aplicação
 extern char* NOME_EQUIPAMENTO;                    // Nome do equipamento   ex. "prensa_1"
 extern char* VERSION;                             // Versão atual de uso. ex. "v25.4.14"
-extern bool SENSOR_TEMPERATURE;                   // true | false
-extern bool SENSOR_WATER_LEVEL;                   // true | false
-extern bool SENSOR_BATIDA;                        // true | false
-extern bool SENSOR_BATTERY_VOLTAGE;            // true | false
+//extern bool SENSOR_TEMPERATURE;                   // true | false
+//extern bool SENSOR_WATER_LEVEL;                   // true | false
+//extern bool SENSOR_BATIDA;                        // true | false
+//extern bool SENSOR_BATTERY_VOLTAGE;            // true | false
 
 // Definições de constantes para o projeto
 extern float level_max;
@@ -55,7 +91,7 @@ extern char* FIREBASE_HOST;                       // Host do Firebase
 extern char* FIREBASE_AUTH;                       // Chave de autenticação do Firebase   TODO: Criptografar a chave de autenticação
 
 // Versão
-extern char* VERSION;                             // Versão atual de uso. ex. "v25.4.15"
+//extern char* VERSION;                             // Versão atual de uso. ex. "v25.4.15"
 
 
 
@@ -99,6 +135,9 @@ extern char* OBSERVACAO_READINGS; // Observação para as leituras enviadas via 
 // Informação do coletor de dados
 extern char* OBSERVACAO_DEVICE_INFO; // Observação para as informações do dispositivo enviadas via MQTT
 extern char* OBSERVACAO_SETTINGS; // Observação para as configurações do dispositivo enviadas via MQTT
+
+
+
 
 
 

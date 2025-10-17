@@ -10,11 +10,15 @@
 #include <ArduinoJson.h>
 //partions
 #include "esp_partition.h"
+#include <esp_ota_ops.h>
 // WebServer
 #include <WebServer.h>
 #include "web_server.h"
 //OTA
 #include <ArduinoOTA.h>
+#include <Update.h>
+//mDNS
+#include <ESPmDNS.h>
 //display
 #include <display.h>
 // flash
@@ -40,12 +44,25 @@ const char* password = PASSWORD;        //"11121314";//"UDJ1-ddsp";// "SUA_SENHA
 void setup_wifi(){
 
    int i = 0;
+   char ssid_tmp[32];
+   char password_tmp[64];
 
-   delay(10); 
-   Serial.begin(115200); 
-   Serial.println(); 
-   Serial.print("Conectando a "); 
-   Serial.println(ssid); 
+   // Lê ssid e password na memoria NVS, se não existir usa os definidos em constants.cpp
+   read_flash_string(KEY_WIFI_SSID, ssid_tmp, 32);
+   read_flash_string(KEY_WIFI_PASS, password_tmp, 64);
+   if (strlen(ssid_tmp) > 0) {
+       ssid = ssid_tmp;       
+   }
+
+   if (strlen(password_tmp) > 0) {
+       password = password_tmp;
+   }
+
+   Serial.println("ssid lindo em NVS: " + String(ssid_tmp) + " Usando: " + String(ssid));
+   Serial.print("Conectando a ");
+   Serial.println(ssid);
+
+
    WiFi.begin(ssid, password); 
    do  
    { 
@@ -62,7 +79,7 @@ void setup_wifi(){
    else 
    {
      Serial.println(""); 
-     tft.fillScreen(TFT_BLACK);    
+     // tft.fillScreen(TFT_BLACK);  // Comentado para teste OTA sem display
      Serial.println("WiFi conectado"); 
      Serial.print("Endereço IP: "); 
      Serial.println(WiFi.localIP());     
@@ -113,26 +130,102 @@ void setup_ntp() {
  */
 void show_partitions() 
 {
-  Serial.println("==== Partições encontradas ====");
+  Serial.println("=== ANÁLISE COMPLETA DAS PARTIÇÕES NO BOOT ===");
+  
+  // Motivo do último reset/boot
+  esp_reset_reason_t reset_reason = esp_reset_reason();
+  Serial.printf("Motivo do boot: ");
+  switch(reset_reason) {
+    case ESP_RST_POWERON: Serial.println("Power-on reset"); break;
+    case ESP_RST_EXT: Serial.println("Reset externo"); break;
+    case ESP_RST_SW: Serial.println("Reset por software (ESP.restart()) ← POSSÍVEL OTA"); break;
+    case ESP_RST_PANIC: Serial.println("Reset por panic/exception"); break;
+    case ESP_RST_INT_WDT: Serial.println("Reset por watchdog interno"); break;
+    case ESP_RST_TASK_WDT: Serial.println("Reset por task watchdog"); break;
+    case ESP_RST_WDT: Serial.println("Reset por watchdog"); break;
+    case ESP_RST_DEEPSLEEP: Serial.println("Wake up do deep sleep"); break;
+    case ESP_RST_BROWNOUT: Serial.println("Reset por brownout"); break;
+    case ESP_RST_SDIO: Serial.println("Reset por SDIO"); break;
+    default: Serial.printf("Motivo desconhecido (%d)\n", reset_reason); break;
+  }
+  
+  // Informações críticas das partições OTA
+  const esp_partition_t* running_partition = esp_ota_get_running_partition();
+  const esp_partition_t* boot_partition = esp_ota_get_boot_partition();
+  
+  Serial.println("\n=== DIAGNÓSTICO CRÍTICO DE PARTIÇÕES ===");
+  if (running_partition) {
+    Serial.printf("🟢 EXECUTANDO DA PARTIÇÃO: %s (0x%06x)\n", 
+                  running_partition->label, running_partition->address);
+  }
+  
+  if (boot_partition) {
+    Serial.printf("🔵 PARTIÇÃO DE BOOT CONFIGURADA: %s (0x%06x)\n", 
+                  boot_partition->label, boot_partition->address);
+  }
+  
+  // ANÁLISE CRÍTICA: Verificar se as partições coincidem
+  if (running_partition && boot_partition) {
+    if (running_partition->address == boot_partition->address) {
+      Serial.println("✅ NORMAL: Sistema está executando da partição de boot correta");
+    } else {
+      Serial.println("❌ PROBLEMA DETECTADO!");
+      Serial.println("   A partição em execução é DIFERENTE da partição de boot!");
+      Serial.println("   POSSÍVEIS CAUSAS:");
+      Serial.println("   1. OTA falhou em ativar a nova partição");
+      Serial.println("   2. Nova partição tem firmware inválido, sistema reverteu");
+      Serial.println("   3. Problema na gravação do OTA data");
+      Serial.println("   4. Corrupção na partição OTA");
+    }
+  }
+  
+  Serial.println("\n=== TODAS AS PARTIÇÕES APP DISPONÍVEIS ===");
   const esp_partition_t* part = NULL;
   esp_partition_iterator_t it = esp_partition_find(ESP_PARTITION_TYPE_APP, ESP_PARTITION_SUBTYPE_ANY, NULL);
+  int app_count = 0;
   while (it != NULL) 
   {
     part = esp_partition_get(it);
-    Serial.printf("APP: %s, Offset: 0x%06x, Size: 0x%06x\n", part->label, part->address, part->size);
+    app_count++;
+    
+    // Indicar status detalhado de cada partição
+    String status = "";
+    if (running_partition && part->address == running_partition->address) {
+      status = " ← EXECUTANDO AGORA";
+    }
+    if (boot_partition && part->address == boot_partition->address) {
+      status += " [BOOT]";
+    }
+    
+    Serial.printf("APP%d: %s, Offset: 0x%06x, Size: %.2f MB%s\n", 
+                  app_count, part->label, part->address, 
+                  part->size / 1024.0 / 1024.0, status.c_str());
     it = esp_partition_next(it);
   }
   esp_partition_iterator_release(it);
-
+  
+  Serial.println("\n=== PARTIÇÕES DE DADOS ===");
   it = esp_partition_find(ESP_PARTITION_TYPE_DATA, ESP_PARTITION_SUBTYPE_ANY, NULL);
   while (it != NULL) 
   {
     part = esp_partition_get(it);
-    Serial.printf("DATA: %s, Offset: 0x%06x, Size: 0x%06x\n", part->label, part->address, part->size);
+    Serial.printf("DATA: %s, Offset: 0x%06x, Size: %.2f MB\n", 
+                  part->label, part->address, part->size / 1024.0 / 1024.0);
     it = esp_partition_next(it);
   }
   esp_partition_iterator_release(it);
-  Serial.println("==============================="); 
+  
+  // Análise de OTA
+  Serial.println("\n=== STATUS DO SISTEMA OTA ===");
+  if (app_count >= 2) {
+    Serial.printf("✅ Sistema OTA configurado (%d partições APP encontradas)\n", app_count);
+    Serial.println("   O sistema pode alternar entre partições para atualizações");
+  } else {
+    Serial.printf("⚠️ Sistema OTA limitado (apenas %d partição APP)\n", app_count);
+    Serial.println("   Atualizações OTA podem não funcionar corretamente");
+  }
+  
+  Serial.println("==============================================="); 
 }
 
 
@@ -142,19 +235,30 @@ void show_partitions()
  */
 void setup_ota(void){
 
-  // Inicialize o OTA
-  ArduinoOTA.setHostname(DISPOSITIVO_ID); // Nome que aparecerá na IDE Arduino
+  // Inicializar mDNS primeiro
+  if (!MDNS.begin(DISPOSITIVO_ID)) {
+    Serial.println("OTA: Erro ao inicializar mDNS!");
+  } else {
+    Serial.println("OTA: mDNS inicializado com sucesso!");
+    Serial.print("OTA: mDNS hostname: ");
+    Serial.print(DISPOSITIVO_ID);
+    Serial.println(".local");
+  }
+
+  // ArduinoOTA setup
+  ArduinoOTA.setPort(3232); 
+  ArduinoOTA.setHostname(DISPOSITIVO_ID); 
   ArduinoOTA.onStart([]() {
-    Serial.println("Iniciando OTA...");
+    Serial.println("Iniciando ArduinoOTA...");
   });
   ArduinoOTA.onEnd([]() {
-    Serial.println("\nOTA finalizada!");
+    Serial.println("\nArduinoOTA finalizada!");
   });
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progresso: %u%%\r", (progress / (total / 100)));
+    Serial.printf("Progresso ArduinoOTA: %u%%\r", (progress / (total / 100)));
   });
   ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Erro[%u]: ", error);
+    Serial.printf("Erro ArduinoOTA[%u]: ", error);
     if (error == OTA_AUTH_ERROR) 
       Serial.println("Falha de autenticação");
     else if (error == OTA_BEGIN_ERROR) 
@@ -166,8 +270,11 @@ void setup_ota(void){
     else if (error == OTA_END_ERROR) 
       Serial.println("Falha ao finalizar");
   });
+  
   ArduinoOTA.begin();
-  Serial.println("OTA: Serviço OTA inicializado!");
+  Serial.println("OTA: ArduinoOTA inicializado!");
+  Serial.print("OTA: ArduinoOTA porta 3232 - IP: ");
+  Serial.println(WiFi.localIP());
   
 }
 
@@ -185,12 +292,21 @@ void loop_ota() {
  */
 void setup_mqtt()
 {
-   delay(2000);  
-   char mqtt_server[32];
-   //read_flash_string(KEY_MQTT_SERVER, mqtt_server, sizeof(mqtt_server));
-   //int port_mqtt = read_flash_int(KEY_MQTT_PORT);   
+   char mqtt_server_tmp[32];
+
+   // Lê mqtt_server e port_mqtt na memoria NVS, se não existir usa os definidos em constants.cpp
+   read_flash_string(KEY_MQTT_SERVER, mqtt_server_tmp, sizeof(mqtt_server_tmp));
+   int port_mqtt = read_flash_int(KEY_MQTT_PORT);
+
+   if (strlen(mqtt_server_tmp) > 0) {
+       strncpy(MQTT_SERVER, mqtt_server_tmp, sizeof(MQTT_SERVER) - 1);
+       MQTT_SERVER[sizeof(MQTT_SERVER) - 1] = '\0'; // Garantir terminação nula
+   }
+
+   if (port_mqtt > 0) {
+       PORT_MQTT = port_mqtt;
+   }
    
-   //client.setServer(mqtt_server, port_mqtt);
    client.setServer(MQTT_SERVER, PORT_MQTT);
    client.setCallback(callback); 
    Serial.println("MQTT: Serviço MQTT inicializado!    Servidor: " + String(MQTT_SERVER) + " Porta: " + String(PORT_MQTT));
@@ -227,45 +343,150 @@ void callback(char* topic, byte* payload, unsigned int length)
    } 
    Serial.println(message); 
 
-   
-  if (String(topic) == "Reboot_") {
-    Serial.println("Reiniciando o sistema conforme comando recebido...");
+   //Reiniciar dispositivo
+  if (String(topic) == String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO) + "/" + String(ID_EQUIPAMENTO) + "/Reboot_") {  
+    Serial.println("Reiniciando o sistema Tópico MQTT Reboot_...");
     delay(1000);
     ESP.restart(); // Reinicia o ESP32
   }
 
-  if (String(topic) == "info") {
+  //Forçar reconexão WiFi
+  if (String(topic) == String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO) + "/" + String(ID_EQUIPAMENTO) + "/Reconnect_WiFi_") {  
+    Serial.println("Forçando reconexão WiFi... Tópico MQTT Reconnect_WiFi_");
+    WiFi.disconnect();
+    delay(1000);
+    setup_wifi(); // Reconecta com as novas configurações
+  }
+
+  //Forçar reconexão MQTT
+  if (String(topic) == String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO) + "/" + String(ID_EQUIPAMENTO) + "/Reconnect_MQTT_") {
+    Serial.println("Forçando reconexão MQTT... Tópico MQTT Reconnect_MQTT_");
+    client.disconnect();
+    delay(1000);
+    setup_mqtt(); // Reconecta com as novas configurações
+  }
+
+  // Envia leitura do sistema
+  if (String(topic) == String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO) + "/" + String(ID_EQUIPAMENTO) + "/info") {
     Serial.println("Enviando informações do sistema conforme... Resposta topico INFO");
     bool result = mqtt_send_info();  
   }
 
-   if (String(topic) == "settings") {
-        DynamicJsonDocument doc(256);
+  // Atualiza configurações via MQTT
+  if (String(topic) == String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO) + "/" + String(ID_EQUIPAMENTO) + "/settings") {
+        DynamicJsonDocument doc(1024); // Aumentei o tamanho para comportar mais campos
         DeserializationError error = deserializeJson(doc, message);
         if (!error) {
             prefs.begin("settings", false);
+            bool mqtt_changed = false;
+            bool wifi_changed = false;
+              
+         /*   { "level_max", 20
+                "level_min", 10
+                "sample_time_s", 30
+                "wifi_ssid", "meu_wifi"
+                "wifi_password", "minha_senha"
+                "mqtt_server", "mqtt.exemplo.com",
+                "mqtt_port", 1883,
+                "mqtt_user", "usuario",
+                "mqtt_password", "senha"
+              }
+          */
 
-            // Salva apenas os campos que vieram no JSON
-     /*       if (doc.containsKey("level_max")) {
+            // === CONFIGURAÇÕES DE NÍVEL DO RESERVATÓRIO ===
+            if (doc.containsKey("level_max")) {
                 float level_max_tmp = doc["level_max"];
-                prefs.putFloat("KEY_LEVEL_MAX", level_max_tmp);
-                Serial.println("Salvo level_max: " + String(level_max_tmp));
+                prefs.putFloat(KEY_LEVEL_MAX, level_max_tmp);
+                level_max = level_max_tmp; // Atualiza a variável global imediatamente
+                Serial.println("✅ Salvo level_max: " + String(level_max_tmp) + " cm");
             }
             if (doc.containsKey("level_min")) {
                 float level_min_tmp = doc["level_min"];
-                prefs.putFloat("KEY_LEVEL_MIN", level_min_tmp);
-                Serial.println("Salvo level_min: " + String(level_min_tmp));
+                prefs.putFloat(KEY_LEVEL_MIN, level_min_tmp);
+                level_min = level_min_tmp; // Atualiza a variável global imediatamente
+                Serial.println("✅ Salvo level_min: " + String(level_min_tmp) + " cm");
             }
             if (doc.containsKey("sample_time_s")) {
                 int sample_time_tmp = doc["sample_time_s"];
-                prefs.putInt("KEY_SAMPLE_TIME_S", sample_time_tmp);
-                Serial.println("Salvo sample_time_s: " + String(sample_time_tmp));
+                prefs.putInt(KEY_SAMPLE_TIME_S, sample_time_tmp);
+                SAMPLE_INTERVAL = sample_time_tmp; // Atualiza a variável global imediatamente
+                Serial.println("✅ Salvo sample_time_s: " + String(sample_time_tmp) + " segundos");
             }
-            // Adicionar outros campos conforme necessário
-*/            
+
+            // === CONFIGURAÇÕES DE WIFI ===
+            if (doc.containsKey("wifi_ssid")) {
+                String wifi_ssid_tmp = doc["wifi_ssid"];
+                prefs.putString(KEY_WIFI_SSID, wifi_ssid_tmp);
+                Serial.println("✅ Salvo WiFi SSID: " + wifi_ssid_tmp);
+                wifi_changed = true;
+            }
+            if (doc.containsKey("wifi_password")) {
+                String wifi_pass_tmp = doc["wifi_password"];
+                prefs.putString(KEY_WIFI_PASS, wifi_pass_tmp);
+                Serial.println("✅ Salvo WiFi Password: [HIDDEN]");
+                wifi_changed = true;
+            }
+
+            // === CONFIGURAÇÕES DE MQTT ===
+            if (doc.containsKey("mqtt_server")) {
+                String mqtt_server_tmp = doc["mqtt_server"];
+                prefs.putString(KEY_MQTT_SERVER, mqtt_server_tmp);
+                strncpy(MQTT_SERVER, mqtt_server_tmp.c_str(), sizeof(MQTT_SERVER) - 1);
+                MQTT_SERVER[sizeof(MQTT_SERVER) - 1] = '\0'; // Garantir terminação nula
+                Serial.println("✅ Salvo MQTT Server: " + mqtt_server_tmp);
+                mqtt_changed = true;
+            }
+            if (doc.containsKey("mqtt_port")) {
+                int mqtt_port_tmp = doc["mqtt_port"];
+                prefs.putInt(KEY_MQTT_PORT, mqtt_port_tmp);
+                PORT_MQTT = mqtt_port_tmp;
+                Serial.println("✅ Salvo MQTT Port: " + String(mqtt_port_tmp));
+                mqtt_changed = true;
+            }
+            if (doc.containsKey("mqtt_user")) {
+                String mqtt_user_tmp = doc["mqtt_user"];
+                prefs.putString(KEY_MQTT_USER, mqtt_user_tmp);
+                strncpy(MQTT_USERNAME, mqtt_user_tmp.c_str(), sizeof(MQTT_USERNAME) - 1);
+                MQTT_USERNAME[sizeof(MQTT_USERNAME) - 1] = '\0';
+                Serial.println("✅ Salvo MQTT User: " + mqtt_user_tmp);
+                mqtt_changed = true;
+            }
+            if (doc.containsKey("mqtt_password")) {
+                String mqtt_pass_tmp = doc["mqtt_password"];
+                prefs.putString(KEY_MQTT_PASS, mqtt_pass_tmp);
+                strncpy(MQTT_PASSWORD, mqtt_pass_tmp.c_str(), sizeof(MQTT_PASSWORD) - 1);
+                MQTT_PASSWORD[sizeof(MQTT_PASSWORD) - 1] = '\0';
+                Serial.println("✅ Salvo MQTT Password: [HIDDEN]");
+                mqtt_changed = true;
+            }
+            
             prefs.end();
+            
+            // === APLICAÇÃO DAS MUDANÇAS ===
+            
+            // Recarrega configurações e reseta o filtro percentual se necessário
+            #ifdef SENSOR_WATER_LEVEL
+                if (doc.containsKey("level_max") || doc.containsKey("level_min")) {
+                    reset_percentual_filter(); // Reseta filtro para aplicar novos limites
+                    Serial.println("🔄 Filtro percentual resetado para aplicar novos limites");
+                }
+            #endif
+            
+            // Envia confirmação via MQTT
+            mqtt_send_settings_confirmation();
+            
+            // Informa sobre necessidade de reconexão
+            if (mqtt_changed) {
+                Serial.println("⚠️  MQTT configurações alteradas - Reconexão necessária");
+                Serial.println("   Use o comando 'reconnect_mqtt' ou reinicie o dispositivo");
+            }
+            if (wifi_changed) {
+                Serial.println("⚠️  WiFi configurações alteradas - Reconexão necessária");
+                Serial.println("   Use o comando 'reconnect_wifi' ou reinicie o dispositivo");
+            }
+            
         } else {
-            Serial.println("Erro ao analisar a mensagem de configurações.");
+            Serial.println("❌ Erro ao analisar a mensagem de configurações JSON.");
         }
     }
 
@@ -406,6 +627,8 @@ bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_l
 
     return result;
 }
+
+// Versão anterior removida - mantendo apenas a versão corrigida no final do arquivo
 
 /**********************************************************************************************
 *     ENVIA e SALVA AS INFORMAÇÕES DE SETTINGS PARA O PROTOCOLO MQTT
@@ -564,50 +787,196 @@ bool mqtt_send_info(){//const char* nome_equipamento, const char* horario, long 
     doc["notes"] = OBSERVACAO_READINGS;
     
 
+    -/* Exemplo de JSON enviado:
+-{
+-    "table" = "device_readings";
+-    "device_id" = "presto-plh-l01-rsv-001";
+-    "timestamp" = 1759253363;
+-    "wifi_rssi_dbm" = -67;
+-    "zigbee_rssi_dbm" = 0;
+-    "wifi_rssi_%" = 33;
+-    "zigbee_rssi_%" = 0;
+-    "takt_time_id" = 34564;
+-    "temp_c" =  23.45;
+-    "temp_f" = 74.21;
+-    "humidity_%" = 65.50;
+-    "level_h_cm" = 150.25;
+-    "level_usage_%" = 75.50;
+-    "level_usage_cm" = 0.0;
+-    "level_usage_l" = 0.0;
+-    "level_usage_m3" = 0.0;
+-    "pressure_psi" = 33.5;
+-    "pressure_kpa" = 231.0;
+-    "pressure_bar" = 2.31;
+-    "pressure_mca" = 23.5;
+-    "flow_l_min" = 0.0;
+-    "flow_m3_h" = 0.0;
+-    "voltage_v" = 0;
+-    "voltage_bat_v" = 0;
+-    "current_a" = 0;
+-    "power_w" = 0;
+-    "energy_wh" = 0;
+-    "energy_kwh" = 0;
+-    "frequency_hz" = 0;
+-    "power_factor" = 0;
+-    "rpm" = 0;
+-    "vibration_mm_s" = 0;
+-    "vibration_g" = 0;
+-    "status" = "OK";
+-    "error_code" = 0;
+-    "notes" = "Nenhuma observação"
+-}  */
+
     char jsonBuffer[512] = {0};
     size_t jsonLen = serializeJson(doc, jsonBuffer);
     bool result = client.publish(topico, (const uint8_t*)jsonBuffer, jsonLen, false); // QoS 0
     Serial.println("MQTT: device_readings enviado.. Topico:  " + String(topico));            
     return result;
+}
 
-/* Exemplo de JSON enviado: 
-{
-    "table" = "device_readings";
-    "device_id" = "presto-plh-l01-rsv-001";
-    "timestamp" = 1759253363;
-    "wifi_rssi_dbm" = -67;
-    "zigbee_rssi_dbm" = 0;
-    "wifi_rssi_%" = 33;
-    "zigbee_rssi_%" = 0;
-    "takt_time_id" = 34564;
-    "temp_c" =  23.45;
-    "temp_f" = 74.21;
-    "humidity_%" = 65.50;
-    "level_h_cm" = 150.25;
-    "level_usage_%" = 75.50;
-    "level_usage_cm" = 0.0;
-    "level_usage_l" = 0.0;
-    "level_usage_m3" = 0.0;
-    "pressure_psi" = 33.5;
-    "pressure_kpa" = 231.0;
-    "pressure_bar" = 2.31;
-    "pressure_mca" = 23.5;
-    "flow_l_min" = 0.0;
-    "flow_m3_h" = 0.0;
-    "voltage_v" = 0;
-    "voltage_bat_v" = 0;
-    "current_a" = 0;
-    "power_w" = 0;
-    "energy_wh" = 0;
-    "energy_kwh" = 0;
-    "frequency_hz" = 0;
-    "power_factor" = 0;
-    "rpm" = 0;
-    "vibration_mm_s" = 0;
-    "vibration_g" = 0;
-    "status" = "OK";
-    "error_code" = 0;
-    "notes" = "Nenhuma observação"    
-}  */ 
-
+/**************************************************************
+ * MOSTRAR INFORMAÇÕES DAS PARTIÇÕES OTA
+ */
+void show_ota_info() {
+  Serial.println("=== INFORMAÇÕES DETALHADAS DAS PARTIÇÕES OTA ===");
+  
+  const esp_partition_t* running = esp_ota_get_running_partition();
+  const esp_partition_t* boot_partition = esp_ota_get_boot_partition();
+  const esp_partition_t* next_update = esp_ota_get_next_update_partition(NULL);
+  
+  // Informações da partição atual (em execução)
+  if (running) {
+    Serial.printf("🟢 PARTIÇÃO EM EXECUÇÃO: %s\n", running->label);
+    Serial.printf("   Endereço: 0x%06x\n", running->address);
+    Serial.printf("   Tamanho: %u bytes (%.2f MB)\n", running->size, running->size / 1024.0 / 1024.0);
+    Serial.printf("   Tipo: %d, Subtipo: %d\n", running->type, running->subtype);
+  } else {
+    Serial.println("❌ ERRO: Não foi possível obter a partição em execução!");
   }
+  
+  // Informações da partição de boot
+  if (boot_partition) {
+    Serial.printf("🔵 PARTIÇÃO DE BOOT: %s\n", boot_partition->label);
+    Serial.printf("   Endereço: 0x%06x\n", boot_partition->address);
+    Serial.printf("   Tamanho: %u bytes (%.2f MB)\n", boot_partition->size, boot_partition->size / 1024.0 / 1024.0);
+    Serial.printf("   Tipo: %d, Subtipo: %d\n", boot_partition->type, boot_partition->subtype);
+  } else {
+    Serial.println("❌ ERRO: Não foi possível obter a partição de boot!");
+  }
+  
+  // Informações da próxima partição OTA
+  if (next_update) {
+    Serial.printf("🟡 PRÓXIMA PARTIÇÃO OTA: %s\n", next_update->label);
+    Serial.printf("   Endereço: 0x%06x\n", next_update->address);
+    Serial.printf("   Tamanho: %u bytes (%.2f MB)\n", next_update->size, next_update->size / 1024.0 / 1024.0);
+    Serial.printf("   Tipo: %d, Subtipo: %d\n", next_update->type, next_update->subtype);
+  } else {
+    Serial.println("❌ ERRO: Não foi possível obter a próxima partição OTA!");
+  }
+  
+  // Análise de consistência
+  Serial.println("\n=== ANÁLISE DE CONSISTÊNCIA ===");
+  if (running && boot_partition) {
+    if (running->address == boot_partition->address) {
+      Serial.println("✅ ESTADO NORMAL: Partições running e boot são idênticas");
+      Serial.println("   O sistema está executando da partição correta");
+    } else {
+      Serial.println("⚠️ INCONSISTÊNCIA DETECTADA!");
+      Serial.println("   A partição em execução é diferente da partição de boot");
+      Serial.println("   Possíveis causas:");
+      Serial.println("   - Último OTA não foi ativado corretamente");
+      Serial.println("   - Falha na gravação da nova partição de boot");
+      Serial.println("   - Sistema reverteu para partição anterior por erro");
+    }
+  }
+  
+  // Informações adicionais do sistema
+  Serial.println("\n=== INFORMAÇÕES DO SISTEMA ===");
+  Serial.printf("Versão do Firmware: %s\n", VERSION);
+  Serial.printf("Espaço livre na Flash: %u bytes (%.2f MB)\n", 
+                ESP.getFreeSketchSpace(), ESP.getFreeSketchSpace() / 1024.0 / 1024.0);
+  Serial.printf("Tamanho do Sketch atual: %u bytes (%.2f MB)\n", 
+                ESP.getSketchSize(), ESP.getSketchSize() / 1024.0 / 1024.0);
+  Serial.printf("MD5 do Firmware atual: %s\n", ESP.getSketchMD5().c_str());
+  
+  // Verificar se há espaço suficiente para OTA
+  if (ESP.getFreeSketchSpace() > ESP.getSketchSize()) {
+    Serial.println("✅ Espaço suficiente para OTA");
+  } else {
+    Serial.println("❌ AVISO: Espaço insuficiente para OTA!");
+  }
+  
+  Serial.println("===============================================");
+}
+
+/**************************************************************
+ * ENVIO DE CONFIRMAÇÃO DE CONFIGURAÇÕES VIA MQTT
+ */
+bool mqtt_send_settings_confirmation() {
+    if (!client.connected()) {
+       return false;
+    }
+    
+    client.loop();
+    char time_str_buffer[16];
+    char* timestamp = get_time_str(time_str_buffer, sizeof(time_str_buffer));
+
+    StaticJsonDocument<1024> doc; // Aumentei para comportar mais campos
+
+    doc["table"] = "settings_confirmation";
+    doc["device_id"] = DISPOSITIVO_ID;
+    doc["timestamp"] = atol(time_str_buffer);
+    
+    // Configurações do reservatório
+    doc["level_max_cm"] = level_max;
+    doc["level_min_cm"] = level_min;
+    doc["level_effective_cm"] = roundf((level_min - level_max) * 100) / 100.0; // altura útil
+    doc["sample_time_s"] = SAMPLE_INTERVAL;
+    
+    // Configurações de conectividade (sem senhas por segurança)
+    doc["wifi_ssid"] = WiFi.SSID(); // SSID atual conectado
+    doc["wifi_status"] = WiFi.status() == WL_CONNECTED ? "connected" : "disconnected";
+    doc["wifi_rssi"] = WiFi.RSSI();
+    doc["wifi_ip"] = WiFi.localIP().toString();
+    
+    doc["mqtt_server"] = MQTT_SERVER;
+    doc["mqtt_port"] = PORT_MQTT;
+    doc["mqtt_user"] = MQTT_USERNAME;
+    doc["mqtt_status"] = client.connected() ? "connected" : "disconnected";
+    
+    doc["status"] = "settings_updated";
+    doc["message"] = "Configurações atualizadas com sucesso";
+
+    char json_string[1024]; // Aumentei o buffer
+    serializeJson(doc, json_string);
+
+    Serial.println("📤 Enviando confirmação de configurações via MQTT...");
+    bool result = client.publish(topico, json_string);
+    
+    if (result) {
+        Serial.println("✅ Confirmação de configurações enviada com sucesso!");
+        Serial.println("📋 Configurações atuais:");
+        Serial.println("   🏠 RESERVATÓRIO:");
+        Serial.println("      • Level Max: " + String(level_max) + " cm");
+        Serial.println("      • Level Min: " + String(level_min) + " cm");
+        Serial.println("      • Altura Útil: " + String(level_min - level_max) + " cm");
+        Serial.println("      • Intervalo: " + String(SAMPLE_INTERVAL) + " segundos");
+        Serial.println("   📶 WIFI:");
+        Serial.println("      • SSID: " + WiFi.SSID());
+        Serial.println("      • Status: " + String(WiFi.status() == WL_CONNECTED ? "Conectado" : "Desconectado"));
+        Serial.println("      • IP: " + WiFi.localIP().toString());
+        Serial.println("   📡 MQTT:");
+        Serial.println("      • Servidor: " + String(MQTT_SERVER));
+        Serial.println("      • Porta: " + String(PORT_MQTT));
+        Serial.println("      • Usuário: " + String(MQTT_USERNAME));
+        Serial.println("      • Status: " + String(client.connected() ? "Conectado" : "Desconectado"));
+    } else {
+        Serial.println("❌ Falha ao enviar confirmação de configurações!");
+    }
+    
+    return result;
+}
+
+/**************************************************************
+ * FIM DO ARQUIVO wifi_mqtt.cpp
+ */
