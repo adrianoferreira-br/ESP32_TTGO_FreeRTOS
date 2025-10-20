@@ -229,7 +229,7 @@ void load_all_settings_from_flash() {
         Serial.println("✅ MQTT Password carregado: [HIDDEN]");
     }
     
-    // ============================================================== CONFIGURAÇÕES ADICIONAIS ===
+    // ============================================================== CONFIGURAÇÕES DE DISPOSITIVO ===
     // DISPOSITIVO_ID
     char dispositivo_id_tmp[64];
     read_flash_string(KEY_DISPOSITIVO_ID, dispositivo_id_tmp, sizeof(dispositivo_id_tmp));
@@ -306,6 +306,72 @@ void load_all_settings_from_flash() {
         save_flash_string(KEY_OBSERVACAO_READINGS, OBSERVACAO_READINGS);
         Serial.println("⚠️ OBSERVACAO_READINGS vazio, usando padrão: " + String(OBSERVACAO_READINGS));
     }
+
+    // LINHA
+    char linha_tmp[32];
+    read_flash_string(KEY_LINHA, linha_tmp, sizeof(linha_tmp));
+    if (strlen(linha_tmp) > 0) {
+        strcpy(LINHA, linha_tmp);
+        Serial.println("✅ LINHA carregado da flash: " + String(LINHA));
+    } else {
+        save_flash_string(KEY_LINHA, LINHA);
+        Serial.println("⚠️ LINHA vazio, usando padrão: " + String(LINHA));
+    }
+
+    // PLACA_SOC
+    char placa_soc_tmp[64];
+    read_flash_string(KEY_PLACA_SOC, placa_soc_tmp, sizeof(placa_soc_tmp));
+    if (strlen(placa_soc_tmp) > 0) {
+        strcpy(PLACA_SOC, placa_soc_tmp);
+        Serial.println("✅ PLACA_SOC carregado da flash: " + String(PLACA_SOC));
+    } else {
+        save_flash_string(KEY_PLACA_SOC, PLACA_SOC);
+        Serial.println("⚠️ PLACA_SOC vazio, usando padrão: " + String(PLACA_SOC));
+    }
+
+    // FABRICANTE_SENSOR
+    char fabricante_sensor_tmp[32];
+    read_flash_string(KEY_FABRICANTE_SENSOR, fabricante_sensor_tmp, sizeof(fabricante_sensor_tmp));
+    if (strlen(fabricante_sensor_tmp) > 0) {
+        strcpy(FABRICANTE_SENSOR, fabricante_sensor_tmp);
+        Serial.println("✅ FABRICANTE_SENSOR carregado da flash: " + String(FABRICANTE_SENSOR));
+    } else {
+        save_flash_string(KEY_FABRICANTE_SENSOR, FABRICANTE_SENSOR);
+        Serial.println("⚠️ FABRICANTE_SENSOR vazio, usando padrão: " + String(FABRICANTE_SENSOR));
+    }
+
+    // MODELO_SENSOR
+    char modelo_sensor_tmp[32];
+    read_flash_string(KEY_MODELO_SENSOR, modelo_sensor_tmp, sizeof(modelo_sensor_tmp));
+    if (strlen(modelo_sensor_tmp) > 0) {
+        strcpy(MODELO_SENSOR, modelo_sensor_tmp);
+        Serial.println("✅ MODELO_SENSOR carregado da flash: " + String(MODELO_SENSOR));
+    } else {
+        save_flash_string(KEY_MODELO_SENSOR, MODELO_SENSOR);
+        Serial.println("⚠️ MODELO_SENSOR vazio, usando padrão: " + String(MODELO_SENSOR));
+    }
+
+    // VERSAO_HARDWARE
+    char versao_hardware_tmp[32];
+    read_flash_string(KEY_VERSAO_HARDWARE, versao_hardware_tmp, sizeof(versao_hardware_tmp));
+    if (strlen(versao_hardware_tmp) > 0) {
+        strcpy(VERSAO_HARDWARE, versao_hardware_tmp);
+        Serial.println("✅ VERSAO_HARDWARE carregado da flash: " + String(VERSAO_HARDWARE));
+    } else {
+        save_flash_string(KEY_VERSAO_HARDWARE, VERSAO_HARDWARE);
+        Serial.println("⚠️ VERSAO_HARDWARE vazio, usando padrão: " + String(VERSAO_HARDWARE));
+    }
+
+    // DATA_INSTALACAO
+    char data_instalacao_tmp[32];
+    read_flash_string(KEY_DATA_INSTALACAO, data_instalacao_tmp, sizeof(data_instalacao_tmp));
+    if (strlen(data_instalacao_tmp) > 0) {
+        strcpy(DATA_INSTALACAO, data_instalacao_tmp);
+        Serial.println("✅ DATA_INSTALACAO carregado da flash: " + String(DATA_INSTALACAO));
+    } else {
+        save_flash_string(KEY_DATA_INSTALACAO, DATA_INSTALACAO);
+        Serial.println("⚠️ DATA_INSTALACAO vazio, usando padrão: " + String(DATA_INSTALACAO));
+    }
     
     Serial.println("📂 Carregamento de configurações concluído!");
 }
@@ -331,63 +397,3 @@ int mqtt_port = read_flash_int("mqtt_port");
 read_flash_string("mqtt_user", mqtt_user, 32);
 read_flash_string("mqtt_pass", mqtt_pass, 32);
 */
-
-// ============================================================================
-// FUNÇÕES ESPECÍFICAS PARA CONFIGURAÇÕES DO DISPOSITIVO
-// ============================================================================
-
-void save_dispositivo_id(const char* value) {
-    save_flash_string(KEY_DISPOSITIVO_ID, value);
-}
-
-void save_fabricante_maquina(const char* value) {
-    save_flash_string(KEY_FABRICANTE_MAQUINA, value);
-}
-
-void save_modelo_maquina(const char* value) {
-    save_flash_string(KEY_MODELO_MAQUINA, value);
-}
-
-void save_tipo_sensor(const char* value) {
-    save_flash_string(KEY_TIPO_SENSOR, value);
-}
-
-void save_observacao_device_info(const char* value) {
-    save_flash_string(KEY_OBSERVACAO_DEVICE_INFO, value);
-}
-
-void save_observacao_settings(const char* value) {
-    save_flash_string(KEY_OBSERVACAO_SETTINGS, value);
-}
-
-void save_observacao_readings(const char* value) {
-    save_flash_string(KEY_OBSERVACAO_READINGS, value);
-}
-
-void read_dispositivo_id(char* buffer, int maxLen) {
-    read_flash_string(KEY_DISPOSITIVO_ID, buffer, maxLen);
-}
-
-void read_fabricante_maquina(char* buffer, int maxLen) {
-    read_flash_string(KEY_FABRICANTE_MAQUINA, buffer, maxLen);
-}
-
-void read_modelo_maquina(char* buffer, int maxLen) {
-    read_flash_string(KEY_MODELO_MAQUINA, buffer, maxLen);
-}
-
-void read_tipo_sensor(char* buffer, int maxLen) {
-    read_flash_string(KEY_TIPO_SENSOR, buffer, maxLen);
-}
-
-void read_observacao_device_info(char* buffer, int maxLen) {
-    read_flash_string(KEY_OBSERVACAO_DEVICE_INFO, buffer, maxLen);
-}
-
-void read_observacao_settings(char* buffer, int maxLen) {
-    read_flash_string(KEY_OBSERVACAO_SETTINGS, buffer, maxLen);
-}
-
-void read_observacao_readings(char* buffer, int maxLen) {
-    read_flash_string(KEY_OBSERVACAO_READINGS, buffer, maxLen);
-}

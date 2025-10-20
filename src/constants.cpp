@@ -11,11 +11,11 @@
 //#define EQUIP_RESERVATORIO // EQUIP_PRENSA | EQUIP_PROCESSAMENTO | EQUIP_LINEA | EQUIP_RESERVATORIO | EQUIP_OUTRO
 
 // Informações do equipamento 
-char CLIENTE[32] = "adriano"; // presto | adriano
+char CLIENTE[32] = "indx4"; // presto | adriano
 char LOCAL[32] = "floripa";      // palhoca | floripa | 
 char TIPO_EQUIPAMENTO[32] = "reservatorio"; // prensa | processamento | linea | reservatorio | teste
 char ID_EQUIPAMENTO[32] = "002"; // Identificação do equipamento (deve ser único para cada equipamento)
-char DISPOSITIVO_ID[64] = "adriano-fln-l01-tst-001"; // Identificação do dispositivo (deve ser único para cada equipamento, usa no mqtt client ID
+char DISPOSITIVO_ID[64] = "indx4-fln-l01-tst-001"; // Identificação do dispositivo (deve ser único para cada equipamento, usa no mqtt client ID
 
 char NOME_EQUIPAMENTO[32] = "cx_agua";   // prensa_1 | prensa_2 | prensa_3 | prc_1  | linea_1 | linea_2 | teste | cx_agua
 char LINHA[32] = "L01"; // Linha de produção onde o equipamento está instalado: L01 | L02 | L03 | etc
@@ -31,6 +31,7 @@ char OBSERVACAO_SETTINGS[64] = "Testes dev"; // Observação para as configuraç
 const String VERSION_TTGO = "V1.1";
 char* VERSION = "v25.10.09";                             // Versão atual de uso. ex. "v25.4.15"
 char PLACA[64] = "TTGO T-Display V1.1"; // TTGO T-Display | Heltec WiFi Kit 32 | M5Stack Core2
+char PLACA_SOC[64] = "TTGO T-Display V1.1"; // TTGO T-Display | Heltec WiFi Kit 32 | M5Stack Core2 | LILYGO S3 T-display
 char* FIREBASE_HOST = "seu_projeto.firebaseio.com"; // Host do Firebase
 char* FIREBASE_AUTH = "sua_chave_de_autenticacao"; // Chave
 char MODELO_SENSOR[32] = ""; // Modelo do sensor
@@ -80,7 +81,49 @@ char topico[64];
 
 #endif // Presto
 
+/*
 
+// Exemplo de JSON para atualização de configurações do reservatório via mqtt
+{
+  "level_max": 25.0,
+  "level_min": 2.0,
+  "sample_time_s": 60
+}
+
+// Exemplo de JSON para atualização de informações do dispositivo via mqtt
+{  
+  "dispositivo_id": "presto-poa-l02-rsv-001",
+  "cliente": "presto",
+  "local": "porto_alegre",
+  "linha": "L02",
+  "nome_equip": "reservatorio_principal"
+}
+
+// Exemplo de JSON para atualização de configurações de conectividade via mqtt
+{
+  "wifi_ssid": "Nova_Rede",
+  "wifi_password": "nova_senha",
+  "mqtt_server": "novo.servidor.com",
+  "mqtt_port": 8883,
+  "mqtt_user": "novo_usuario",
+  "mqtt_password": "nova_senha_mqtt"
+}
+
+
+// Exemplo de JSON para atualização de informações do dispositivo via mqtt
+{
+  "fabricante_maquina": "Schuler",
+  "modelo_maquina": "Prensa Hidraulica SH-2000",
+  "tipo_sensor": "Pressao",
+  "fabricante_sensor": "Danfoss", 
+  "modelo_sensor": "MBS-3000",
+  "versao_hardware": "v2.1",
+  "data_instalacao": "2025-10-20",
+  "observacao_device_info": "Instalado na linha de produção principal"
+}
+
+
+*/
 
 
 

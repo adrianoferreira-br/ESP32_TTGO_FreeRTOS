@@ -39,16 +39,22 @@
 // prefs - settings_device
 #define KEY_CLIENTE      "cliente"
 #define KEY_LOCAL        "local"
+#define KEY_LINHA        "linha"
 #define KEY_TIPO_EQUIP   "tipo_equip"
 #define KEY_ID_EQUIP     "id_equip"
 #define KEY_NOME_EQUIP   "nome_equip"
 #define KEY_DISPOSITIVO_ID "dispositivo_id"
+#define KEY_PLACA_SOC    "placa_soc"
 #define KEY_FABRICANTE_MAQUINA "fab_maquina"
 #define KEY_MODELO_MAQUINA "modelo_maq"
 #define KEY_TIPO_SENSOR  "tipo_sensor"
 #define KEY_OBSERVACAO_DEVICE_INFO "obs_dev_info"
 #define KEY_OBSERVACAO_SETTINGS "obs_settings"
 #define KEY_OBSERVACAO_READINGS "obs_readings"
+#define KEY_FABRICANTE_SENSOR "fab_sensor"
+#define KEY_MODELO_SENSOR "modelo_sensor"
+#define KEY_VERSAO_HARDWARE "versao_hw"
+#define KEY_DATA_INSTALACAO "data_instal"
 
 // prefs - settings_sensor
 #define KEY_LEVEL_MAX    "level_max"
@@ -106,7 +112,7 @@ extern char MODELO_MAQUINA[64];
 extern char ID_EQUIPAMENTO[32];
 extern char TIPO_EQUIPAMENTO[32];
 // informação do sensor indx4
-extern char PLACA[64]; // TTGO T-Display | Heltec WiFi Kit 32 | M5Stack Core2
+extern char PLACA_SOC[64]; // TTGO T-Display | Heltec WiFi Kit 32 | M5Stack Core2 | LILYGO S3 T-display
 extern char MODELO_SENSOR[32]; // Modelo do sensor:  "JSN-SR04T", "DHT22", "Batida", "TensãoBateria"
 extern char FABRICANTE_SENSOR[32]; // Fabricante do sensor: "JSN", "Aosong", "Outros"
 //extern char* SERIAL_SENSOR; // Número de série do sensor

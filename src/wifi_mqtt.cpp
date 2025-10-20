@@ -463,7 +463,7 @@ void callback(char* topic, byte* payload, unsigned int length)
             // DISPOSITIVO_ID
             if (doc.containsKey("dispositivo_id")) {
                 String dispositivo_id_tmp = doc["dispositivo_id"];
-                save_dispositivo_id(dispositivo_id_tmp.c_str());
+                save_flash_string(KEY_DISPOSITIVO_ID, dispositivo_id_tmp.c_str());
                 strcpy(DISPOSITIVO_ID, dispositivo_id_tmp.c_str());
                 Serial.println("✅ Salvo dispositivo_id: " + dispositivo_id_tmp);
             }
@@ -471,7 +471,7 @@ void callback(char* topic, byte* payload, unsigned int length)
             // FABRICANTE MAQUINA
             if (doc.containsKey("fabricante_maquina")) {
                 String fabricante_maquina_tmp = doc["fabricante_maquina"];
-                save_fabricante_maquina(fabricante_maquina_tmp.c_str());
+                save_flash_string(KEY_FABRICANTE_MAQUINA, fabricante_maquina_tmp.c_str());
                 strcpy(FABRICANTE_MAQUINA, fabricante_maquina_tmp.c_str());
                 Serial.println("✅ Salvo fabricante_maquina: " + fabricante_maquina_tmp);
             }
@@ -479,7 +479,7 @@ void callback(char* topic, byte* payload, unsigned int length)
             // MODELO MAQUINA
             if (doc.containsKey("modelo_maquina")) {
                 String modelo_maquina_tmp = doc["modelo_maquina"];
-                save_modelo_maquina(modelo_maquina_tmp.c_str());
+                save_flash_string(KEY_MODELO_MAQUINA, modelo_maquina_tmp.c_str());
                 strcpy(MODELO_MAQUINA, modelo_maquina_tmp.c_str());
                 Serial.println("✅ Salvo modelo_maquina: " + modelo_maquina_tmp);
             }
@@ -487,7 +487,7 @@ void callback(char* topic, byte* payload, unsigned int length)
             // TIPO SENSOR
             if (doc.containsKey("tipo_sensor")) {
                 String tipo_sensor_tmp = doc["tipo_sensor"];
-                save_tipo_sensor(tipo_sensor_tmp.c_str());
+                save_flash_string(KEY_TIPO_SENSOR, tipo_sensor_tmp.c_str());
                 strcpy(TIPO_SENSOR, tipo_sensor_tmp.c_str());
                 Serial.println("✅ Salvo tipo_sensor: " + tipo_sensor_tmp);
             }
@@ -495,7 +495,7 @@ void callback(char* topic, byte* payload, unsigned int length)
             // OBSERVACAO DEVICE INFO
             if (doc.containsKey("observacao_device_info")) {
                 String observacao_device_info_tmp = doc["observacao_device_info"];
-                save_observacao_device_info(observacao_device_info_tmp.c_str());
+                save_flash_string(KEY_OBSERVACAO_DEVICE_INFO, observacao_device_info_tmp.c_str());
                 strcpy(OBSERVACAO_DEVICE_INFO, observacao_device_info_tmp.c_str());
                 Serial.println("✅ Salvo observacao_device_info: " + observacao_device_info_tmp);
             }
@@ -503,7 +503,7 @@ void callback(char* topic, byte* payload, unsigned int length)
             // OBSERVACAO SETTINGS
             if (doc.containsKey("observacao_settings")) {
                 String observacao_settings_tmp = doc["observacao_settings"];
-                save_observacao_settings(observacao_settings_tmp.c_str());
+                save_flash_string(KEY_OBSERVACAO_SETTINGS, observacao_settings_tmp.c_str());
                 strcpy(OBSERVACAO_SETTINGS, observacao_settings_tmp.c_str());
                 Serial.println("✅ Salvo observacao_settings: " + observacao_settings_tmp);
             }
@@ -511,9 +511,57 @@ void callback(char* topic, byte* payload, unsigned int length)
             // OBSERVACAO READINGS
             if (doc.containsKey("observacao_readings")) {
                 String observacao_readings_tmp = doc["observacao_readings"];
-                save_observacao_readings(observacao_readings_tmp.c_str());
+                save_flash_string(KEY_OBSERVACAO_READINGS, observacao_readings_tmp.c_str());
                 strcpy(OBSERVACAO_READINGS, observacao_readings_tmp.c_str());
                 Serial.println("✅ Salvo observacao_readings: " + observacao_readings_tmp);
+            }
+
+            // LINHA
+            if (doc.containsKey("linha")) {
+                String linha_tmp = doc["linha"];
+                save_flash_string(KEY_LINHA, linha_tmp.c_str());
+                strcpy(LINHA, linha_tmp.c_str());
+                Serial.println("✅ Salvo linha: " + linha_tmp);
+            }
+
+            // PLACA_SOC
+            if (doc.containsKey("placa_soc")) {
+                String placa_soc_tmp = doc["placa_soc"];
+                save_flash_string(KEY_PLACA_SOC, placa_soc_tmp.c_str());
+                strcpy(PLACA_SOC, placa_soc_tmp.c_str());
+                Serial.println("✅ Salvo placa_soc: " + placa_soc_tmp);
+            }
+
+            // FABRICANTE_SENSOR
+            if (doc.containsKey("fabricante_sensor")) {
+                String fabricante_sensor_tmp = doc["fabricante_sensor"];
+                save_flash_string(KEY_FABRICANTE_SENSOR, fabricante_sensor_tmp.c_str());
+                strcpy(FABRICANTE_SENSOR, fabricante_sensor_tmp.c_str());
+                Serial.println("✅ Salvo fabricante_sensor: " + fabricante_sensor_tmp);
+            }
+
+            // MODELO_SENSOR
+            if (doc.containsKey("modelo_sensor")) {
+                String modelo_sensor_tmp = doc["modelo_sensor"];
+                save_flash_string(KEY_MODELO_SENSOR, modelo_sensor_tmp.c_str());
+                strcpy(MODELO_SENSOR, modelo_sensor_tmp.c_str());
+                Serial.println("✅ Salvo modelo_sensor: " + modelo_sensor_tmp);
+            }
+
+            // VERSAO_HARDWARE
+            if (doc.containsKey("versao_hardware")) {
+                String versao_hardware_tmp = doc["versao_hardware"];
+                save_flash_string(KEY_VERSAO_HARDWARE, versao_hardware_tmp.c_str());
+                strcpy(VERSAO_HARDWARE, versao_hardware_tmp.c_str());
+                Serial.println("✅ Salvo versao_hardware: " + versao_hardware_tmp);
+            }
+
+            // DATA_INSTALACAO
+            if (doc.containsKey("data_instalacao")) {
+                String data_instalacao_tmp = doc["data_instalacao"];
+                save_flash_string(KEY_DATA_INSTALACAO, data_instalacao_tmp.c_str());
+                strcpy(DATA_INSTALACAO, data_instalacao_tmp.c_str());
+                Serial.println("✅ Salvo data_instalacao: " + data_instalacao_tmp);
             }
 
 
@@ -1069,21 +1117,41 @@ bool mqtt_send_settings_confirmation() {
     
     if (result) {
         Serial.println("✅ Confirmação de configurações enviada com sucesso!");
-        Serial.println("📋 Configurações atuais:");
-        Serial.println("   🏠 RESERVATÓRIO:");
-        Serial.println("      • Level Max: " + String(level_max) + " cm");
-        Serial.println("      • Level Min: " + String(level_min) + " cm");
-        Serial.println("      • Altura Útil: " + String(level_min - level_max) + " cm");
-        Serial.println("      • Intervalo: " + String(SAMPLE_INTERVAL) + " segundos");
+        Serial.println("📋 Configurações atuais:");        
         Serial.println("   📶 WIFI:");
-        Serial.println("      • SSID: " + WiFi.SSID());
+        Serial.println("      • SSID:   " + WiFi.SSID());
         Serial.println("      • Status: " + String(WiFi.status() == WL_CONNECTED ? "Conectado" : "Desconectado"));
-        Serial.println("      • IP: " + WiFi.localIP().toString());
+        Serial.println("      • IP:     " + WiFi.localIP().toString());
         Serial.println("   📡 MQTT:");
         Serial.println("      • Servidor: " + String(MQTT_SERVER));
-        Serial.println("      • Porta: " + String(PORT_MQTT));
-        Serial.println("      • Usuário: " + String(MQTT_USERNAME));
-        Serial.println("      • Status: " + String(client.connected() ? "Conectado" : "Desconectado"));
+        Serial.println("      • Porta:    " + String(PORT_MQTT));
+        Serial.println("      • Usuário:  " + String(MQTT_USERNAME));
+        Serial.println("      • Status:   " + String(client.connected() ? "Conectado" : "Desconectado"));
+        Serial.println("      EMPRESA: ");
+        Serial.println("      • Cliente:    " + String(CLIENTE));
+        Serial.println("      • Local:      " + String(LOCAL));
+        Serial.println("      • Linha:      " + String(LINHA));
+        Serial.println("      • ID:         " + String(ID_EQUIPAMENTO));
+        Serial.println("      • Fabricante: " + String(FABRICANTE_MAQUINA));
+        Serial.println("      • Modelo:     " + String(MODELO_MAQUINA));
+        Serial.println("      • Tipo:       " + String(TIPO_SENSOR));
+        Serial.println("      DEVICE: ");
+        Serial.println("      • Id_dispositivo:     " + String(DISPOSITIVO_ID));                
+        Serial.println("      • Tipo Sensor:        " + String(TIPO_SENSOR));
+        Serial.println("      • Fabricante Sensor:  " + String(FABRICANTE_SENSOR));
+        Serial.println("      • Placa SoC:          " + String(PLACA_SOC));
+        Serial.println("      • Modelo Sensor:      " + String(MODELO_SENSOR));        
+        Serial.println("      • Versão Hardware:    " + String(VERSAO_HARDWARE));        
+        Serial.println("      • Data Instalação:    " + String(DATA_INSTALACAO));        
+        Serial.println("      • Obs. (Device Info): " + String(OBSERVACAO_DEVICE_INFO));
+        Serial.println("      • Obs. (Settings):    " + String(OBSERVACAO_SETTINGS));
+        Serial.println("      • Obs. (Readings):    " + String(OBSERVACAO_READINGS));
+        Serial.println("   🏠 RESERVATÓRIO:");
+        Serial.println("      • Level Max: " + String(level_max) + " cm");
+        Serial.println("      • Level Min: " + String(level_min) + " cm");        
+        Serial.println("      • Intervalo: " + String(SAMPLE_INTERVAL) + " segundos");        
+        
+
     } else {
         Serial.println("❌ Falha ao enviar confirmação de configurações!");
     }
