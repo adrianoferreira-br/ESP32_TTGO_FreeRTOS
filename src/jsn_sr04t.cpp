@@ -13,16 +13,20 @@
 
 class PercentualFilter {
 private:
-    static const int BUFFER_SIZE = 10;  // Buffer pequeno para resposta rápida
+    static const int BUFFER_SIZE = 5;  // Buffer pequeno para resposta rápida
     float buffer[BUFFER_SIZE];
     int currentIndex;
     int validCount;
     bool bufferFull;
     float lastValue;
+    int consecutiveRejects;     // Contador de rejeições consecutivas
+    int totalReadings;          // Total de leituras desde o início
+    float adaptiveThreshold;    // Threshold que se adapta com o tempo
     
 public:
-    PercentualFilter() : currentIndex(0), validCount(0), bufferFull(false), lastValue(-1) {
-        for(int i = 0; i < BUFFER_SIZE; i++) {
+    PercentualFilter() : currentIndex(0), validCount(0), bufferFull(false), lastValue(-1),
+                        consecutiveRejects(0), totalReadings(0), adaptiveThreshold(0) {
+        for (int i = 0; i < BUFFER_SIZE; i++) {
             buffer[i] = 0.0;
         }
     }
@@ -40,9 +44,25 @@ public:
         return sum / count;
     }
     
-    // FUNÇÃO PRINCIPAL: Adiciona valor e retorna resultado suavizado
+    // FUNÇÃO PRINCIPAL: Adiciona valor e retorna resultado filtrado
     float addValue(float newValue) {
-        Serial.printf("📥 LEITURA: %.1f%%\n", newValue);
+        extern float filter_threshold;  // Usa threshold configurável
+        totalReadings++;
+        
+        // Calcular threshold adaptativo baseado no histórico
+        if (totalReadings <= 10) {
+            // Primeiras 10 leituras: threshold mais permissivo para calibração inicial
+            adaptiveThreshold = filter_threshold * 3.0;
+        } else if (totalReadings <= 30) {
+            // Leituras 11-30: threshold gradualmente mais restritivo
+            adaptiveThreshold = filter_threshold * (2.0 - (totalReadings - 10) / 20.0);
+        } else {
+            // Após 30 leituras: threshold normal
+            adaptiveThreshold = filter_threshold;
+        }
+        
+        Serial.printf("📥 LEITURA #%d: %.1f%% (threshold: %.1f%% → adaptativo: %.1f%%)\n", 
+                     totalReadings, newValue, filter_threshold, adaptiveThreshold);
         
         // Verificar range básico apenas (0-100%)
         if (newValue < 0.0 || newValue > 100.0) {
@@ -50,30 +70,110 @@ public:
             return lastValue > 0 ? lastValue : 0.0;
         }
         
-        // SEMPRE aceitar valores válidos - sem bloqueios
-        buffer[currentIndex] = newValue;
-        currentIndex = (currentIndex + 1) % BUFFER_SIZE;
-        
-        if (!bufferFull && validCount < BUFFER_SIZE) {
+        // Se é o primeiro valor válido
+        if (lastValue < 0) {
+            buffer[currentIndex] = newValue;
+            currentIndex = (currentIndex + 1) % BUFFER_SIZE;
             validCount++;
-        } else {
-            bufferFull = true;
+            lastValue = newValue;
+            Serial.printf("✅ PRIMEIRO VALOR: %.1f%% (será validado pelas próximas leituras)\n", newValue);
+            return newValue;
         }
         
-        lastValue = newValue;
+        // Calcula diferença percentual
+        float diff = abs(newValue - lastValue);
         
-        // Resultado: 60% valor atual + 40% média do buffer (suavização leve)
-        float average = calculateAverage();
-        float result = (newValue * 0.6) + (average * 0.4);
+        // Se mudança é menor que threshold adaptativo, aceita direto
+        if (diff <= adaptiveThreshold) {
+            buffer[currentIndex] = newValue;
+            currentIndex = (currentIndex + 1) % BUFFER_SIZE;
+            
+            if (!bufferFull && validCount < BUFFER_SIZE) {
+                validCount++;
+            } else {
+                bufferFull = true;
+            }
+            
+            lastValue = newValue;
+            consecutiveRejects = 0;  // Reset contador de rejeições
+            
+            // Suavização leve: 70% novo valor + 30% anterior
+            float result = (newValue * 0.7) + (lastValue * 0.3);
+            Serial.printf("✅ ACEITO (diff: %.1f%% ≤ %.1f%%) → %.1f%%\n", diff, adaptiveThreshold, result);
+            return result;
+        }
         
-        Serial.printf("✅ RESULTADO: %.1f%% (60%% atual + 40%% média)\n", result);
-        return result;
+        // Para mudanças grandes, aplicar lógica adaptativa
+        consecutiveRejects++;
+        
+        // MODO EMERGÊNCIA: Se muitas rejeições consecutivas, forçar recalibração
+        if (consecutiveRejects >= 8) {
+            Serial.printf("🚨 MODO EMERGÊNCIA: %d rejeições consecutivas - FORÇANDO RECALIBRAÇÃO\n", consecutiveRejects);
+            
+            // Reset do sistema
+            for (int i = 0; i < BUFFER_SIZE; i++) {
+                buffer[i] = newValue;  // Preenche buffer com novo valor
+            }
+            currentIndex = 0;
+            validCount = BUFFER_SIZE;
+            bufferFull = true;
+            lastValue = newValue;
+            consecutiveRejects = 0;
+            totalReadings = 1;  // Reinicia contagem para nova calibração
+            
+            Serial.printf("🔄 SISTEMA RECALIBRADO para %.1f%%\n", newValue);
+            return newValue;
+        }
+        
+        // Para mudanças grandes, precisa de confirmação no buffer
+        if (validCount < 2) {
+            Serial.printf("⏳ MUDANÇA GRANDE (%.1f%%) sem confirmação → mantendo %.1f%% (rejeição #%d)\n", 
+                         diff, lastValue, consecutiveRejects);
+            return lastValue;
+        }
+        
+        // Verifica se há valores similares no buffer para confirmar a tendência
+        int confirmations = 0;
+        int count = bufferFull ? BUFFER_SIZE : validCount;
+        
+        for (int i = 0; i < count; i++) {
+            if (abs(buffer[i] - newValue) <= adaptiveThreshold * 1.5) {
+                confirmations++;
+            }
+        }
+        
+        // Critério de confirmação mais permissivo no início
+        float confirmationRatio = (totalReadings <= 20) ? 0.2 : 0.4;  // 20% inicial, 40% depois
+        
+        // Se confirmações suficientes, aceita mudança
+        if (confirmations >= (count * confirmationRatio)) {
+            buffer[currentIndex] = newValue;
+            currentIndex = (currentIndex + 1) % BUFFER_SIZE;
+            
+            if (!bufferFull && validCount < BUFFER_SIZE) {
+                validCount++;
+            } else {
+                bufferFull = true;
+            }
+            
+            lastValue = newValue;
+            consecutiveRejects = 0;  // Reset contador
+            
+            Serial.printf("✅ CONFIRMADO (%.1f%% diff, %d/%d confirmações, ratio=%.1f%%) → %.1f%%\n", 
+                         diff, confirmations, count, confirmationRatio * 100, newValue);
+            return newValue;
+        }
+        
+        // Mudança não confirmada - mantém valor anterior
+        Serial.printf("❌ REJEITADO (%.1f%% diff, só %d/%d confirmações, ratio=%.1f%%) → mantendo %.1f%% (rejeição #%d)\n", 
+                     diff, confirmations, count, confirmationRatio * 100, lastValue, consecutiveRejects);
+        return lastValue;
     }
     
-    // Estatísticas simples
+    // Estatísticas detalhadas
     void printStats() {
-        Serial.printf("📊 FILTRO: Média=%.1f%%, Último=%.1f%%\n", 
-                     calculateAverage(), lastValue);
+        Serial.printf("📊 FILTRO: Última=%.1f%%, Média=%.1f%%, Leituras=%d, Rejeições=%d, Threshold=%.1f%%\n", 
+                     lastValue, calculateAverage(), totalReadings, consecutiveRejects, adaptiveThreshold);
     }
     
     // Mostra buffer

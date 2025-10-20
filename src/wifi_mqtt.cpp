@@ -421,6 +421,12 @@ void callback(char* topic, byte* payload, unsigned int length)
                 SAMPLE_INTERVAL = sample_time_tmp; // Atualiza a variável global imediatamente
                 Serial.println("✅ Salvo sample_time_s: " + String(sample_time_tmp) + " segundos");
             }
+            if (doc.containsKey("filter_threshold")) {
+                float filter_threshold_tmp = doc["filter_threshold"];
+                save_flash_float(KEY_FILTER_THRESHOLD, filter_threshold_tmp);  // Usa função centralizada
+                filter_threshold = filter_threshold_tmp; // Atualiza a variável global imediatamente
+                Serial.println("✅ Salvo filter_threshold: " + String(filter_threshold_tmp) + "%");
+            }
 
             // =============================== CONFIGURAÇÕES DE DISPOSITIVO ===
             
@@ -821,7 +827,8 @@ bool mqtt_send_settings(){//const char* nome_equipamento, const char* horario, l
     doc["timestamp"] = timestamp2;    
     doc["level_min_cm"] = level_min;
     doc["level_max_cm"] = level_max;    
-    doc["sample_time_s"] = SAMPLE_INTERVAL;    
+    doc["sample_time_s"] = SAMPLE_INTERVAL;
+    doc["filter_threshold_pct"] = filter_threshold;    
     doc["notes"] = OBSERVACAO_SETTINGS;
 
     char jsonBuffer[512] = {0};
@@ -1094,6 +1101,7 @@ bool mqtt_send_settings_confirmation() {
     doc["level_min_cm"] = level_min;
     doc["level_effective_cm"] = roundf((level_min - level_max) * 100) / 100.0; // altura útil
     doc["sample_time_s"] = SAMPLE_INTERVAL;
+    doc["filter_threshold_pct"] = filter_threshold;
     
     // Configurações de conectividade (sem senhas por segurança)
     doc["wifi_ssid"] = WiFi.SSID(); // SSID atual conectado

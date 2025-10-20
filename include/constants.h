@@ -60,6 +60,7 @@
 #define KEY_LEVEL_MAX    "level_max"
 #define KEY_LEVEL_MIN    "level_min"
 #define KEY_SAMPLE_TIME_S "sample_time_s"
+#define KEY_FILTER_THRESHOLD "filter_threshold"
 
 
 // tipos de sensores
@@ -87,6 +88,7 @@ extern char topico[64];
 // Definições de constantes para o projeto
 extern float level_max;
 extern float level_min;
+extern float filter_threshold; // Threshold do filtro em % (padrão 10%)
 extern int SAMPLE_INTERVAL; // em segundos - Intervalo de amostragem em segundos (padrão 5 minutos)
 
 // informações do sensor ultrassônico

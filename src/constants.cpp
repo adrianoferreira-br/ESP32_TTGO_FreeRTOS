@@ -88,6 +88,7 @@ char topico[64];
   "level_max": 25.0,
   "level_min": 2.0,
   "sample_time_s": 60
+  "filter_threshold": 15.0
 }
 
 // Exemplo de JSON para atualização de informações do dispositivo via mqtt
@@ -96,7 +97,7 @@ char topico[64];
   "cliente": "presto",
   "local": "porto_alegre",
   "linha": "L02",
-  "nome_equip": "reservatorio_principal"
+  "nome_equip": "reservatorio_principal"    
 }
 
 // Exemplo de JSON para atualização de configurações de conectividade via mqtt

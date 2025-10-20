@@ -39,6 +39,7 @@ volatile bool reflexSensorTriggered = false;
 const int BUTTON_35 = 35;
 float level_max = 20;   //cx d´agua
 float level_min = 100;  //cx d´agua
+float filter_threshold = 10.0; // Threshold do filtro em % (padrão 10%)
 
 
 // Variáveis para sincronização NTP

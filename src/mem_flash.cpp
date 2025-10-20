@@ -113,6 +113,16 @@ void load_all_settings_from_flash() {
         Serial.println("✅ Sample_interval: " + String(SAMPLE_INTERVAL) + " segundos");
     }
     
+    // ▶ FILTER THRESHOLD
+    filter_threshold = read_flash_float(KEY_FILTER_THRESHOLD);
+    if (filter_threshold <= 0.0 || filter_threshold > 50.0 || isnan(filter_threshold)) {
+        filter_threshold = 10.0; // padrão 10%
+        save_flash_float(KEY_FILTER_THRESHOLD, filter_threshold);
+        Serial.println("⚠️ Filter_threshold inválido, usando padrão: " + String(filter_threshold) + "%");
+    } else {
+        Serial.println("✅ Filter_threshold: " + String(filter_threshold) + "%");
+    }
+    
     // ================================== CONFIGURAÇÕES DO DISPOSITIVO ===
 
     
