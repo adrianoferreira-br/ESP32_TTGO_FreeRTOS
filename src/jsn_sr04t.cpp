@@ -8,30 +8,28 @@
 #include "display.h"
 
 // =====================================================
-// FILTRO INTELIGENTE DE PERCENTUAL COM DETECÇÃO DE OUTLIERS
+// FILTRO SIMPLES PARA RESERVATÓRIO - SEM BLOQUEIOS
 // =====================================================
 
 class PercentualFilter {
 private:
-    static const int BUFFER_SIZE = 10;
-    static constexpr float OUTLIER_THRESHOLD = 5.0; // 5% de tolerância
-    
+    static const int BUFFER_SIZE = 10;  // Buffer pequeno para resposta rápida
     float buffer[BUFFER_SIZE];
     int currentIndex;
     int validCount;
     bool bufferFull;
+    float lastValue;
     
 public:
-    PercentualFilter() : currentIndex(0), validCount(0), bufferFull(false) {
-        // Inicializar buffer com zeros
+    PercentualFilter() : currentIndex(0), validCount(0), bufferFull(false), lastValue(-1) {
         for(int i = 0; i < BUFFER_SIZE; i++) {
             buffer[i] = 0.0;
         }
     }
     
-    // Calcula a média dos valores válidos no buffer
+    // Calcula média simples do buffer
     float calculateAverage() {
-        if (validCount == 0) return 0.0;
+        if (validCount == 0) return lastValue;
         
         float sum = 0.0;
         int count = bufferFull ? BUFFER_SIZE : validCount;
@@ -42,68 +40,18 @@ public:
         return sum / count;
     }
     
-    // Calcula a tendência (regressão linear simples) dos últimos valores
-    float calculateTrend() {
-        int count = bufferFull ? BUFFER_SIZE : validCount;
-        if (count < 3) return calculateAverage(); // Mínimo 3 pontos para tendência
-        
-        float sumX = 0, sumY = 0, sumXY = 0, sumX2 = 0;
-        
-        for(int i = 0; i < count; i++) {
-            float x = i + 1; // Posição temporal
-            float y = buffer[i];
-            
-            sumX += x;
-            sumY += y;
-            sumXY += x * y;
-            sumX2 += x * x;
-        }
-        
-        // Calcular coeficiente angular (slope)
-        float denominator = count * sumX2 - sumX * sumX;
-        if (abs(denominator) < 0.0001) return calculateAverage(); // Evitar divisão por zero
-        
-        float slope = (count * sumXY - sumX * sumY) / denominator;
-        float intercept = (sumY - slope * sumX) / count;
-        
-        // Projetar próximo valor baseado na tendência
-        float nextValue = slope * (count + 1) + intercept;
-        
-        // Limitar entre 0 e 100
-        nextValue = (nextValue < 0.0) ? 0.0 : nextValue;
-        nextValue = (nextValue > 100.0) ? 100.0 : nextValue;
-        
-        return nextValue;
-    }
-    
-    // Detecta se um valor é outlier comparado com a média atual
-    bool isOutlier(float newValue) {
-        if (validCount < 3) return false; // Primeiras leituras sempre aceitas
-        
-        float average = calculateAverage();
-        float deviation = abs(newValue - average);
-        
-        return (deviation > OUTLIER_THRESHOLD);
-    }
-    
-    // Adiciona um novo valor ao buffer com filtragem inteligente
+    // FUNÇÃO PRINCIPAL: Adiciona valor e retorna resultado suavizado
     float addValue(float newValue) {
-        float filteredValue = newValue;
+        Serial.printf("📥 LEITURA: %.1f%%\n", newValue);
         
-        // Verificar se é outlier
-        if (isOutlier(newValue)) {
-            // Usar tendência em vez do valor outlier
-            filteredValue = calculateTrend();
-            
-            Serial.printf("🚨 OUTLIER DETECTADO! Valor lido: %.1f%%, Média: %.1f%%, Usando tendência: %.1f%%\n", 
-                         newValue, calculateAverage(), filteredValue);
-        } else {
-            Serial.printf("✅ Valor aceito: %.1f%% (Média atual: %.1f%%)\n", 
-                         newValue, calculateAverage());
+        // Verificar range básico apenas (0-100%)
+        if (newValue < 0.0 || newValue > 100.0) {
+            Serial.printf("❌ Fora do range 0-100%% → usando último valor\n");
+            return lastValue > 0 ? lastValue : 0.0;
         }
         
-        // Adicionar valor filtrado ao buffer
-        buffer[currentIndex] = filteredValue;
+        // SEMPRE aceitar valores válidos - sem bloqueios
+        buffer[currentIndex] = newValue;
         currentIndex = (currentIndex + 1) % BUFFER_SIZE;
         
         if (!bufferFull && validCount < BUFFER_SIZE) {
@@ -112,13 +60,31 @@ public:
             bufferFull = true;
         }
         
-        return filteredValue;
+        lastValue = newValue;
+        
+        // Resultado: 60% valor atual + 40% média do buffer (suavização leve)
+        float average = calculateAverage();
+        float result = (newValue * 0.6) + (average * 0.4);
+        
+        Serial.printf("✅ RESULTADO: %.1f%% (60%% atual + 40%% média)\n", result);
+        return result;
     }
     
-    // Obtém estatísticas do filtro para debug
+    // Estatísticas simples
     void printStats() {
-        Serial.printf("📊 Filtro - Média: %.1f%%, Tendência: %.1f%%, Valores: %d\n", 
-                     calculateAverage(), calculateTrend(), bufferFull ? BUFFER_SIZE : validCount);
+        Serial.printf("📊 FILTRO: Média=%.1f%%, Último=%.1f%%\n", 
+                     calculateAverage(), lastValue);
+    }
+    
+    // Mostra buffer
+    void printBuffer() {
+        Serial.print("📝 Buffer: [");
+        int count = bufferFull ? BUFFER_SIZE : validCount;
+        for(int i = 0; i < count; i++) {
+            Serial.printf("%.1f", buffer[i]);
+            if(i < count-1) Serial.print(", ");
+        }
+        Serial.printf("]\n");
     }
 };
 
@@ -128,24 +94,22 @@ PercentualFilter percentualFilter;
 struct UltrasonicResult resultado;
 float altura_medida = 0.0; // altura medida pelo sensor
 
-
 /*  SETUP */
 void setup_ultrasonic() {  
   digitalWrite(ULTRASONIC_TRIG, LOW);  
-  Serial.println("Ultrassônico inicializado com filtro inteligente!");
-  Serial.println("Filtro: Últimos 10 valores, detecção de outliers ±5%, correção por tendência");
+  Serial.println("🌊 SENSOR ULTRASSÔNICO PARA RESERVATÓRIO");
+  Serial.printf("📐 Configuração: Min=%.1fcm, Max=%.1fcm\n", level_max, level_min);
+  Serial.println("🔧 Filtro: Aceita todas mudanças, suavização leve 60%/40%");
 }
 
 // Função para resetar o filtro (útil para debugging ou recalibração)
 void reset_percentual_filter() {
     percentualFilter = PercentualFilter();
-    Serial.println("🔄 Filtro de percentual resetado!");
+    Serial.println("🔄 Filtro resetado!");
 }
-
 
 /* LOOP */
 void loop_ultrasonic() {
-
    UltrasonicResult res = ultrasonic_read();
    if (res.valido) {  
        Serial.print("Distância: ");
@@ -160,8 +124,6 @@ void loop_ultrasonic() {
        Serial.println("Falha na leitura do ultrassônico!");
    }
 }
-
-
 
 UltrasonicResult ultrasonic_read() {
     UltrasonicResult result;
@@ -195,18 +157,19 @@ UltrasonicResult ultrasonic_read() {
     percentual_bruto = (percentual_bruto < 0) ? 0 : percentual_bruto;
     percentual_bruto = (percentual_bruto > 100) ? 100 : percentual_bruto;
     
-    // ===== APLICAR FILTRO INTELIGENTE =====
+    // ===== APLICAR FILTRO SIMPLES =====
     float percentual_filtrado = percentualFilter.addValue(percentual_bruto);
     
-    // Debug detalhado
-    Serial.printf("📏 Distância: %.1fcm | Bruto: %.1f%% → Filtrado: %.1f%%\n", 
+    // Log principal da leitura
+    Serial.printf("🌊 RESERVATÓRIO: %.1fcm → %.1f%% bruto → %.1f%% filtrado\n", 
                  distance_cm, percentual_bruto, percentual_filtrado);
     
-    // Mostrar estatísticas do filtro a cada 5 leituras
-    static int debugCounter = 0;
-    if (++debugCounter >= 5) {
+    // Mostrar estatísticas periodicamente
+    static int statCounter = 0;
+    if (++statCounter >= 5) {
         percentualFilter.printStats();
-        debugCounter = 0;
+        percentualFilter.printBuffer();
+        statCounter = 0;
     }
 
     // Usar valor filtrado como resultado final
