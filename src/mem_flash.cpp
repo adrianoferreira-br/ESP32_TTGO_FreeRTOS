@@ -1,5 +1,6 @@
 #include "mem_flash.h"
 #include <Preferences.h>
+#include <string.h>
 #include "constants.h"
 
 Preferences prefs;
@@ -72,6 +73,242 @@ int read_flash_int(const char* key) {
     return value;
 }
 
+
+
+
+/*
+ * Carrega todas as configurações básicas da flash
+ * Deve ser chamada no início do programa (setup)
+ */
+void load_all_settings_from_flash() {
+    Serial.println("📂 Carregando configurações da flash...");
+    
+    // ============================================ CONFIGURAÇÕES DO RESERVATÓRIO ===
+    level_max = read_flash_float(KEY_LEVEL_MAX);
+    level_min = read_flash_float(KEY_LEVEL_MIN);
+    SAMPLE_INTERVAL = read_flash_int(KEY_SAMPLE_TIME_S);
+    
+    // Validação e valores padrão para reservatório
+    if (level_max <= 0.0 || level_max > 400 || isnan(level_max)) {
+        level_max = 20.0; // padrão
+        save_flash_float(KEY_LEVEL_MAX, level_max);
+        Serial.println("⚠️ Level_max inválido, usando padrão: " + String(level_max) + " cm");
+    } else {
+        Serial.println("✅ Level_max: " + String(level_max) + " cm");
+    }
+    
+    if (level_min <= 0.0 || level_min > 400 || isnan(level_min)) {
+        level_min = 400.0; // padrão
+        save_flash_float(KEY_LEVEL_MIN, level_min);
+        Serial.println("⚠️ Level_min inválido, usando padrão: " + String(level_min) + " cm");
+    } else {
+        Serial.println("✅ Level_min: " + String(level_min) + " cm");
+    }
+    
+    if (SAMPLE_INTERVAL <= 0 || SAMPLE_INTERVAL > 3600) {
+        SAMPLE_INTERVAL = 300; // padrão 300 segundos (5 minutos)
+        save_flash_int(KEY_SAMPLE_TIME_S, SAMPLE_INTERVAL);
+        Serial.println("⚠️ Sample_interval inválido, usando padrão: " + String(SAMPLE_INTERVAL) + " segundos");
+    } else {
+        Serial.println("✅ Sample_interval: " + String(SAMPLE_INTERVAL) + " segundos");
+    }
+    
+    // ================================== CONFIGURAÇÕES DO DISPOSITIVO ===
+
+    
+    // CLIENTE
+    char client_tmp[32];
+    read_flash_string(KEY_CLIENTE, client_tmp, sizeof(client_tmp));
+    if (strlen(client_tmp) > 0) {
+        // ✅ ATUALIZA a variável global com o valor da flash
+        strcpy(CLIENTE, client_tmp);  
+        Serial.println("✅ CLIENTE carregado da flash: " + String(CLIENTE));
+    } else {
+        // ✅ Salva o valor padrão na flash para próximas vezes
+        save_flash_string(KEY_CLIENTE, CLIENTE);
+        Serial.println("⚠️ CLIENTE vazio, usando padrão: " + String(CLIENTE));
+    }
+
+    // LOCALIZAÇÃO
+    char location_tmp[32];
+    read_flash_string(KEY_LOCAL, location_tmp, sizeof(location_tmp));
+    if (strlen(location_tmp) > 0) {
+        // ✅ ATUALIZA a variável global com o valor da flash
+        strcpy(LOCAL, location_tmp);
+        Serial.println("✅ LOCAL carregado da flash: " + String(LOCAL));
+    } else {
+        // ✅ Salva o valor padrão na flash para próximas vezes
+        save_flash_string(KEY_LOCAL, LOCAL);
+        Serial.println("⚠️ LOCAL vazio, usando padrão: " + String(LOCAL));
+    }
+
+    // TIPO DO DISPOSITIVO
+    char device_type_tmp[32];
+    read_flash_string(KEY_TIPO_EQUIP, device_type_tmp, sizeof(device_type_tmp));
+    if (strlen(device_type_tmp) > 0) {
+        // ✅ ATUALIZA a variável global com o valor da flash
+        strcpy(TIPO_EQUIPAMENTO, device_type_tmp);
+        Serial.println("✅ TIPO_EQUIPAMENTO carregado da flash: " + String(TIPO_EQUIPAMENTO));
+    } else {
+        // ✅ Salva o valor padrão na flash para próximas vezes
+        save_flash_string(KEY_TIPO_EQUIP, TIPO_EQUIPAMENTO);
+        Serial.println("⚠️ TIPO_EQUIPAMENTO vazio, usando padrão: " + String(TIPO_EQUIPAMENTO));
+    }
+    
+    // ID DO EQUIPAMENTO
+    char equipment_id_tmp[32];
+    read_flash_string(KEY_ID_EQUIP, equipment_id_tmp, sizeof(equipment_id_tmp));
+    if (strlen(equipment_id_tmp) > 0) {
+        // ✅ ATUALIZA a variável global com o valor da flash
+        strcpy(ID_EQUIPAMENTO, equipment_id_tmp);
+        Serial.println("✅ ID_EQUIPAMENTO carregado da flash: " + String(ID_EQUIPAMENTO));
+    } else {
+        // ✅ Salva o valor padrão na flash para próximas vezes
+        save_flash_string(KEY_ID_EQUIP, ID_EQUIPAMENTO);
+        Serial.println("⚠️ ID_EQUIPAMENTO vazio, usando padrão: " + String(ID_EQUIPAMENTO));
+    }
+
+    //NOME DO DISPOSITIVO
+    char device_name_tmp[32];
+    read_flash_string(KEY_NOME_EQUIP, device_name_tmp, sizeof(device_name_tmp));
+    if (strlen(device_name_tmp) > 0) {
+        // ✅ ATUALIZA a variável global com o valor da flash
+        strcpy(NOME_EQUIPAMENTO, device_name_tmp);
+        Serial.println("✅ NOME_EQUIPAMENTO carregado da flash: " + String(NOME_EQUIPAMENTO));
+    } else {
+        // ✅ Salva o valor padrão na flash para próximas vezes
+        save_flash_string(KEY_NOME_EQUIP, NOME_EQUIPAMENTO);
+        Serial.println("⚠️ NOME_EQUIPAMENTO vazio, usando padrão: " + String(NOME_EQUIPAMENTO));
+    }
+
+
+
+    // ============================================================== CONFIGURAÇÕES DE REDE ===
+    char ssid_tmp[32], password_tmp[64];
+    read_flash_string(KEY_WIFI_SSID, ssid_tmp, sizeof(ssid_tmp));
+    read_flash_string(KEY_WIFI_PASS, password_tmp, sizeof(password_tmp));
+    
+    if (strlen(ssid_tmp) > 0) {
+        Serial.println("✅ WiFi SSID carregado: " + String(ssid_tmp));
+    } else {
+        Serial.println("⚠️ WiFi SSID vazio, usando padrão do constants.h");
+    }
+    
+    // ======================================================== CONFIGURAÇÕES MQTT ===
+
+    char mqtt_server_tmp[32], mqtt_user_tmp[32], mqtt_pass_tmp[32];
+    read_flash_string(KEY_MQTT_SERVER, mqtt_server_tmp, sizeof(mqtt_server_tmp));
+    read_flash_string(KEY_MQTT_USER, mqtt_user_tmp, sizeof(mqtt_user_tmp));
+    read_flash_string(KEY_MQTT_PASS, mqtt_pass_tmp, sizeof(mqtt_pass_tmp));
+    int mqtt_port_tmp = read_flash_int(KEY_MQTT_PORT);    
+
+    if (strlen(mqtt_server_tmp) > 0) {
+        strncpy(MQTT_SERVER, mqtt_server_tmp, sizeof(MQTT_SERVER) - 1);
+        MQTT_SERVER[sizeof(MQTT_SERVER) - 1] = '\0';
+        Serial.println("✅ MQTT Server carregado: " + String(MQTT_SERVER));
+    } else {
+        Serial.println("⚠️ MQTT Server vazio, usando padrão do constants.h");
+    }
+    
+    if (mqtt_port_tmp > 0) {
+        PORT_MQTT = mqtt_port_tmp;
+        Serial.println("✅ MQTT Port carregado: " + String(PORT_MQTT));
+    } else {
+        Serial.println("⚠️ MQTT Port inválido, usando padrão do constants.h");
+    }
+    
+    if (strlen(mqtt_user_tmp) > 0) {
+        strncpy(MQTT_USERNAME, mqtt_user_tmp, sizeof(MQTT_USERNAME) - 1);
+        MQTT_USERNAME[sizeof(MQTT_USERNAME) - 1] = '\0';
+        Serial.println("✅ MQTT User carregado: " + String(MQTT_USERNAME));
+    }
+    
+    if (strlen(mqtt_pass_tmp) > 0) {
+        strncpy(MQTT_PASSWORD, mqtt_pass_tmp, sizeof(MQTT_PASSWORD) - 1);
+        MQTT_PASSWORD[sizeof(MQTT_PASSWORD) - 1] = '\0';
+        Serial.println("✅ MQTT Password carregado: [HIDDEN]");
+    }
+    
+    // ============================================================== CONFIGURAÇÕES ADICIONAIS ===
+    // DISPOSITIVO_ID
+    char dispositivo_id_tmp[64];
+    read_flash_string(KEY_DISPOSITIVO_ID, dispositivo_id_tmp, sizeof(dispositivo_id_tmp));
+    if (strlen(dispositivo_id_tmp) > 0) {
+        strcpy(DISPOSITIVO_ID, dispositivo_id_tmp);
+        Serial.println("✅ DISPOSITIVO_ID carregado da flash: " + String(DISPOSITIVO_ID));
+    } else {
+        save_flash_string(KEY_DISPOSITIVO_ID, DISPOSITIVO_ID);
+        Serial.println("⚠️ DISPOSITIVO_ID vazio, usando padrão: " + String(DISPOSITIVO_ID));
+    }
+
+    // FABRICANTE_MAQUINA
+    char fabricante_maquina_tmp[64];
+    read_flash_string(KEY_FABRICANTE_MAQUINA, fabricante_maquina_tmp, sizeof(fabricante_maquina_tmp));
+    if (strlen(fabricante_maquina_tmp) > 0) {
+        strcpy(FABRICANTE_MAQUINA, fabricante_maquina_tmp);
+        Serial.println("✅ FABRICANTE_MAQUINA carregado da flash: " + String(FABRICANTE_MAQUINA));
+    } else {
+        save_flash_string(KEY_FABRICANTE_MAQUINA, FABRICANTE_MAQUINA);
+        Serial.println("⚠️ FABRICANTE_MAQUINA vazio, usando padrão: " + String(FABRICANTE_MAQUINA));
+    }
+
+    // MODELO_MAQUINA
+    char modelo_maquina_tmp[64];
+    read_flash_string(KEY_MODELO_MAQUINA, modelo_maquina_tmp, sizeof(modelo_maquina_tmp));
+    if (strlen(modelo_maquina_tmp) > 0) {
+        strcpy(MODELO_MAQUINA, modelo_maquina_tmp);
+        Serial.println("✅ MODELO_MAQUINA carregado da flash: " + String(MODELO_MAQUINA));
+    } else {
+        save_flash_string(KEY_MODELO_MAQUINA, MODELO_MAQUINA);
+        Serial.println("⚠️ MODELO_MAQUINA vazio, usando padrão: " + String(MODELO_MAQUINA));
+    }
+
+    // TIPO_SENSOR
+    char tipo_sensor_tmp[32];
+    read_flash_string(KEY_TIPO_SENSOR, tipo_sensor_tmp, sizeof(tipo_sensor_tmp));
+    if (strlen(tipo_sensor_tmp) > 0) {
+        strcpy(TIPO_SENSOR, tipo_sensor_tmp);
+        Serial.println("✅ TIPO_SENSOR carregado da flash: " + String(TIPO_SENSOR));
+    } else {
+        save_flash_string(KEY_TIPO_SENSOR, TIPO_SENSOR);
+        Serial.println("⚠️ TIPO_SENSOR vazio, usando padrão: " + String(TIPO_SENSOR));
+    }
+
+    // OBSERVACAO_DEVICE_INFO
+    char observacao_device_info_tmp[64];
+    read_flash_string(KEY_OBSERVACAO_DEVICE_INFO, observacao_device_info_tmp, sizeof(observacao_device_info_tmp));
+    if (strlen(observacao_device_info_tmp) > 0) {
+        strcpy(OBSERVACAO_DEVICE_INFO, observacao_device_info_tmp);
+        Serial.println("✅ OBSERVACAO_DEVICE_INFO carregado da flash: " + String(OBSERVACAO_DEVICE_INFO));
+    } else {
+        save_flash_string(KEY_OBSERVACAO_DEVICE_INFO, OBSERVACAO_DEVICE_INFO);
+        Serial.println("⚠️ OBSERVACAO_DEVICE_INFO vazio, usando padrão: " + String(OBSERVACAO_DEVICE_INFO));
+    }
+
+    // OBSERVACAO_SETTINGS
+    char observacao_settings_tmp[64];
+    read_flash_string(KEY_OBSERVACAO_SETTINGS, observacao_settings_tmp, sizeof(observacao_settings_tmp));
+    if (strlen(observacao_settings_tmp) > 0) {
+        strcpy(OBSERVACAO_SETTINGS, observacao_settings_tmp);
+        Serial.println("✅ OBSERVACAO_SETTINGS carregado da flash: " + String(OBSERVACAO_SETTINGS));
+    } else {
+        save_flash_string(KEY_OBSERVACAO_SETTINGS, OBSERVACAO_SETTINGS);
+        Serial.println("⚠️ OBSERVACAO_SETTINGS vazio, usando padrão: " + String(OBSERVACAO_SETTINGS));
+    }
+
+    // OBSERVACAO_READINGS
+    char observacao_readings_tmp[64];
+    read_flash_string(KEY_OBSERVACAO_READINGS, observacao_readings_tmp, sizeof(observacao_readings_tmp));
+    if (strlen(observacao_readings_tmp) > 0) {
+        strcpy(OBSERVACAO_READINGS, observacao_readings_tmp);
+        Serial.println("✅ OBSERVACAO_READINGS carregado da flash: " + String(OBSERVACAO_READINGS));
+    } else {
+        save_flash_string(KEY_OBSERVACAO_READINGS, OBSERVACAO_READINGS);
+        Serial.println("⚠️ OBSERVACAO_READINGS vazio, usando padrão: " + String(OBSERVACAO_READINGS));
+    }
+    
+    Serial.println("📂 Carregamento de configurações concluído!");
+}
 /*
 // Exemplo de uso:
 
@@ -94,3 +331,63 @@ int mqtt_port = read_flash_int("mqtt_port");
 read_flash_string("mqtt_user", mqtt_user, 32);
 read_flash_string("mqtt_pass", mqtt_pass, 32);
 */
+
+// ============================================================================
+// FUNÇÕES ESPECÍFICAS PARA CONFIGURAÇÕES DO DISPOSITIVO
+// ============================================================================
+
+void save_dispositivo_id(const char* value) {
+    save_flash_string(KEY_DISPOSITIVO_ID, value);
+}
+
+void save_fabricante_maquina(const char* value) {
+    save_flash_string(KEY_FABRICANTE_MAQUINA, value);
+}
+
+void save_modelo_maquina(const char* value) {
+    save_flash_string(KEY_MODELO_MAQUINA, value);
+}
+
+void save_tipo_sensor(const char* value) {
+    save_flash_string(KEY_TIPO_SENSOR, value);
+}
+
+void save_observacao_device_info(const char* value) {
+    save_flash_string(KEY_OBSERVACAO_DEVICE_INFO, value);
+}
+
+void save_observacao_settings(const char* value) {
+    save_flash_string(KEY_OBSERVACAO_SETTINGS, value);
+}
+
+void save_observacao_readings(const char* value) {
+    save_flash_string(KEY_OBSERVACAO_READINGS, value);
+}
+
+void read_dispositivo_id(char* buffer, int maxLen) {
+    read_flash_string(KEY_DISPOSITIVO_ID, buffer, maxLen);
+}
+
+void read_fabricante_maquina(char* buffer, int maxLen) {
+    read_flash_string(KEY_FABRICANTE_MAQUINA, buffer, maxLen);
+}
+
+void read_modelo_maquina(char* buffer, int maxLen) {
+    read_flash_string(KEY_MODELO_MAQUINA, buffer, maxLen);
+}
+
+void read_tipo_sensor(char* buffer, int maxLen) {
+    read_flash_string(KEY_TIPO_SENSOR, buffer, maxLen);
+}
+
+void read_observacao_device_info(char* buffer, int maxLen) {
+    read_flash_string(KEY_OBSERVACAO_DEVICE_INFO, buffer, maxLen);
+}
+
+void read_observacao_settings(char* buffer, int maxLen) {
+    read_flash_string(KEY_OBSERVACAO_SETTINGS, buffer, maxLen);
+}
+
+void read_observacao_readings(char* buffer, int maxLen) {
+    read_flash_string(KEY_OBSERVACAO_READINGS, buffer, maxLen);
+}

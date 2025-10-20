@@ -14,8 +14,6 @@
 #include "wifi_mqtt.h"
 #include "mem_flash.h"
 
-
-
 // Pino do sensor reflexivo
 #define BATIDA_PIN 12 
 int qnt_batidas_prensa = 0;
@@ -403,26 +401,13 @@ void set_reservatorio(){
       delay(3000);
   }
   else {
-      //lê variavel em memoria não volátil          
-      level_max = read_flash_float(KEY_LEVEL_MAX);
-      if (level_max < 20 || level_max > 400 || isnan(level_max)){
-          level_max = 20; //padrão
-          Serial.println("Altura máxima do reservatório inválida, usando padrão: " + String(level_max) + " cm");
-      }
-
-      level_min = read_flash_float(KEY_LEVEL_MIN);
-      if (level_min < 20 || level_min > 400 || isnan(level_min)){
-          level_min = 400; //padrão
-          Serial.println("Altura mínima do reservatório inválida, usando padrão: " + String(level_min) + " cm");
-      }
-
-      Serial.println("Altura mínima do reservatório (lido da EEPROM): " + String(level_min) + " cm");
-      altura_reservatorio = level_min;
-      Serial.println("Altura máxima do reservatório (lido da EEPROM): " + String(level_max) + " cm");
-        if (level_max < 20 || level_max > 400){
-            level_max = 100; //padrão
-            Serial.println("Altura máxima do reservatório inválida, usando padrão: " + String(level_max) + " cm");
-        }    
+      // As configurações já foram carregadas em load_all_settings_from_flash()
+      // chamada no main.cpp durante o setup
+      Serial.println("📋 Usando configurações já carregadas da flash:");
+      Serial.println("   Level_max: " + String(level_max) + " cm");
+      Serial.println("   Level_min: " + String(level_min) + " cm");
+      
+      altura_reservatorio = level_min;      
       delay(4000);  
       return;
   }  

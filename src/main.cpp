@@ -59,6 +59,7 @@ void setup() {
   define_hardware();   
   setup_mem_flash(); 
   show_partitions();
+  load_all_settings_from_flash(); // 📂 Carrega todas as configurações da flash
   show_ota_info();      // Adicionar info sobre partições OTA
   setup_timer();
 

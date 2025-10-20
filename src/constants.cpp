@@ -11,32 +11,32 @@
 //#define EQUIP_RESERVATORIO // EQUIP_PRENSA | EQUIP_PROCESSAMENTO | EQUIP_LINEA | EQUIP_RESERVATORIO | EQUIP_OUTRO
 
 // Informações do equipamento 
-char* CLIENTE = "adriano"; // presto | adriano
-char* LOCAL = "floripa";      // palhoca | floripa | 
-char* TIPO_EQUIPAMENTO = "reservatorio"; // prensa | processamento | linea | reservatorio | teste
-char* ID_EQUIPAMENTO = "002"; // Identificação do equipamento (deve ser único para cada equipamento)
-char* DISPOSITIVO_ID = "adriano-fln-l01-tst-001"; // Identificação do dispositivo (deve ser único para cada equipamento, usa no mqtt client ID
+char CLIENTE[32] = "adriano"; // presto | adriano
+char LOCAL[32] = "floripa";      // palhoca | floripa | 
+char TIPO_EQUIPAMENTO[32] = "reservatorio"; // prensa | processamento | linea | reservatorio | teste
+char ID_EQUIPAMENTO[32] = "002"; // Identificação do equipamento (deve ser único para cada equipamento)
+char DISPOSITIVO_ID[64] = "adriano-fln-l01-tst-001"; // Identificação do dispositivo (deve ser único para cada equipamento, usa no mqtt client ID
 
-char* NOME_EQUIPAMENTO = "cx_agua";   // prensa_1 | prensa_2 | prensa_3 | prc_1  | linea_1 | linea_2 | teste | cx_agua
-char* LINHA = "L01"; // Linha de produção onde o equipamento está instalado: L01 | L02 | L03 | etc
-char* FABRICANTE_MAQUINA = ""; //Panitec | Schuler | Komatsu | etc
-char* MODELO_MAQUINA = ""; // Prensa X1000 | Forno Y2000 | etc
-char* TIPO_SENSOR = "Ultrassonico"; // Ultrassonico | DHT22 | Batida | TensãoBateria
-char* OBSERVACAO_READINGS = "Testes dev"; // Observação para as leituras enviadas via MQTT
-char* OBSERVACAO_DEVICE_INFO = "Testes dev"; // Observação para as informações do dispositivo enviadas via MQTT
-char* OBSERVACAO_SETTINGS = "Testes dev"; // Observação para as configurações do dispositivo enviadas via MQTT
+char NOME_EQUIPAMENTO[32] = "cx_agua";   // prensa_1 | prensa_2 | prensa_3 | prc_1  | linea_1 | linea_2 | teste | cx_agua
+char LINHA[32] = "L01"; // Linha de produção onde o equipamento está instalado: L01 | L02 | L03 | etc
+char FABRICANTE_MAQUINA[64] = ""; //Panitec | Schuler | Komatsu | etc
+char MODELO_MAQUINA[64] = ""; // Prensa X1000 | Forno Y2000 | etc
+char TIPO_SENSOR[32] = "Ultrassonico"; // Ultrassonico | DHT22 | Batida | TensãoBateria
+char OBSERVACAO_READINGS[64] = "Testes dev"; // Observação para as leituras enviadas via MQTT
+char OBSERVACAO_DEVICE_INFO[64] = "Testes dev"; // Observação para as informações do dispositivo enviadas via MQTT
+char OBSERVACAO_SETTINGS[64] = "Testes dev"; // Observação para as configurações do dispositivo enviadas via MQTT
 
 
 // Informação do coletor de dados
 const String VERSION_TTGO = "V1.1";
 char* VERSION = "v25.10.09";                             // Versão atual de uso. ex. "v25.4.15"
-char* PLACA = "TTGO T-Display V1.1"; // TTGO T-Display | Heltec WiFi Kit 32 | M5Stack Core2
+char PLACA[64] = "TTGO T-Display V1.1"; // TTGO T-Display | Heltec WiFi Kit 32 | M5Stack Core2
 char* FIREBASE_HOST = "seu_projeto.firebaseio.com"; // Host do Firebase
 char* FIREBASE_AUTH = "sua_chave_de_autenticacao"; // Chave
-char* MODELO_SENSOR = ""; // Modelo do sensor
-char* FABRICANTE_SENSOR = ""; // Fabricante do sensor
-char* VERSAO_HARDWARE = "v1.0"; // Versão do hardware
-char* DATA_INSTALACAO = "2025-10-02"; // Data de instalação do equipamento no local 
+char MODELO_SENSOR[32] = ""; // Modelo do sensor
+char FABRICANTE_SENSOR[32] = ""; // Fabricante do sensor
+char VERSAO_HARDWARE[32] = "v1.0"; // Versão do hardware
+char DATA_INSTALACAO[32] = "2025-10-02"; // Data de instalação do equipamento no local 
 int   SAMPLE_INTERVAL = 30; //em segundos - Intervalo de amostragem em segundos (padrão 30 minutos)
 
 

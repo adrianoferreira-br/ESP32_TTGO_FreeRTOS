@@ -377,7 +377,6 @@ void callback(char* topic, byte* payload, unsigned int length)
         DynamicJsonDocument doc(1024); // Aumentei o tamanho para comportar mais campos
         DeserializationError error = deserializeJson(doc, message);
         if (!error) {
-            prefs.begin("settings", false);
             bool mqtt_changed = false;
             bool wifi_changed = false;
               
@@ -391,46 +390,151 @@ void callback(char* topic, byte* payload, unsigned int length)
                 "mqtt_user", "usuario",
                 "mqtt_password", "senha"
               }
+
+            adriano/floripa/reservatorio/002/settings
+              {
+                "cliente":"adrianoo",
+                "local":"floripaa",
+                "tipo_equip":"reservatorioo",
+                "id_equip":"0022",
+                "nome_equip":"cx_aguaa"
+              }
+
           */
 
-            // === CONFIGURAÇÕES DE NÍVEL DO RESERVATÓRIO ===
+            // =============================== CONFIGURAÇÕES DE NÍVEL DO RESERVATÓRIO ===
             if (doc.containsKey("level_max")) {
                 float level_max_tmp = doc["level_max"];
-                prefs.putFloat(KEY_LEVEL_MAX, level_max_tmp);
+                save_flash_float(KEY_LEVEL_MAX, level_max_tmp);  // Usa função centralizada
                 level_max = level_max_tmp; // Atualiza a variável global imediatamente
                 Serial.println("✅ Salvo level_max: " + String(level_max_tmp) + " cm");
             }
             if (doc.containsKey("level_min")) {
                 float level_min_tmp = doc["level_min"];
-                prefs.putFloat(KEY_LEVEL_MIN, level_min_tmp);
+                save_flash_float(KEY_LEVEL_MIN, level_min_tmp);  // Usa função centralizada
                 level_min = level_min_tmp; // Atualiza a variável global imediatamente
                 Serial.println("✅ Salvo level_min: " + String(level_min_tmp) + " cm");
             }
             if (doc.containsKey("sample_time_s")) {
                 int sample_time_tmp = doc["sample_time_s"];
-                prefs.putInt(KEY_SAMPLE_TIME_S, sample_time_tmp);
+                save_flash_int(KEY_SAMPLE_TIME_S, sample_time_tmp);  // Usa função centralizada
                 SAMPLE_INTERVAL = sample_time_tmp; // Atualiza a variável global imediatamente
                 Serial.println("✅ Salvo sample_time_s: " + String(sample_time_tmp) + " segundos");
             }
 
-            // === CONFIGURAÇÕES DE WIFI ===
+            // =============================== CONFIGURAÇÕES DE DISPOSITIVO ===
+            
+            //CLIENTE
+            if (doc.containsKey("cliente")) {
+                String cliente_tmp = doc["cliente"];
+                save_flash_string(KEY_CLIENTE, cliente_tmp.c_str());  // Salva na flash
+                // ✅ Não podemos alterar char* diretamente - valor será carregado no próximo boot
+                Serial.println("✅ Salvo CLIENTE: " + cliente_tmp + " (ativo no próximo boot)");
+            }
+            // LOCAL
+            if (doc.containsKey("local")) {
+                String local_tmp = doc["local"];
+                save_flash_string(KEY_LOCAL, local_tmp.c_str());  // Salva na flash
+                // ✅ Não podemos alterar char* diretamente - valor será carregado no próximo boot
+                Serial.println("✅ Salvo LOCAL: " + local_tmp + " (ativo no próximo boot)");
+            }
+            // TIPO EQUIPAMENTO
+            if (doc.containsKey("tipo_equip")) {
+                String tipo_equip_tmp = doc["tipo_equip"];
+                save_flash_string(KEY_TIPO_EQUIP, tipo_equip_tmp.c_str());  // Salva na flash
+                // ✅ Não podemos alterar char* diretamente - valor será carregado no próximo boot
+                Serial.println("✅ Salvo TIPO_EQUIPAMENTO: " + tipo_equip_tmp + " (ativo no próximo boot)");
+            }
+            // ID EQUIPAMENTO
+            if (doc.containsKey("id_equip")) {
+                String id_equip_tmp = doc["id_equip"];
+                save_flash_string(KEY_ID_EQUIP, id_equip_tmp.c_str());  // Salva na flash
+                // ✅ Não podemos alterar char* diretamente - valor será carregado no próximo boot
+                Serial.println("✅ Salvo ID_EQUIPAMENTO: " + id_equip_tmp + " (ativo no próximo boot)");
+            }
+            // NOME EQUIPAMENTO
+            if (doc.containsKey("nome_equip")) {
+                String nome_equip_tmp = doc["nome_equip"];
+                save_flash_string(KEY_NOME_EQUIP, nome_equip_tmp.c_str());  // Usa função centralizada
+                strcpy(NOME_EQUIPAMENTO, nome_equip_tmp.c_str()); // Atualiza variável global
+                Serial.println("✅ Salvo nome_equip: " + nome_equip_tmp);
+            }
+
+            // DISPOSITIVO_ID
+            if (doc.containsKey("dispositivo_id")) {
+                String dispositivo_id_tmp = doc["dispositivo_id"];
+                save_dispositivo_id(dispositivo_id_tmp.c_str());
+                strcpy(DISPOSITIVO_ID, dispositivo_id_tmp.c_str());
+                Serial.println("✅ Salvo dispositivo_id: " + dispositivo_id_tmp);
+            }
+
+            // FABRICANTE MAQUINA
+            if (doc.containsKey("fabricante_maquina")) {
+                String fabricante_maquina_tmp = doc["fabricante_maquina"];
+                save_fabricante_maquina(fabricante_maquina_tmp.c_str());
+                strcpy(FABRICANTE_MAQUINA, fabricante_maquina_tmp.c_str());
+                Serial.println("✅ Salvo fabricante_maquina: " + fabricante_maquina_tmp);
+            }
+
+            // MODELO MAQUINA
+            if (doc.containsKey("modelo_maquina")) {
+                String modelo_maquina_tmp = doc["modelo_maquina"];
+                save_modelo_maquina(modelo_maquina_tmp.c_str());
+                strcpy(MODELO_MAQUINA, modelo_maquina_tmp.c_str());
+                Serial.println("✅ Salvo modelo_maquina: " + modelo_maquina_tmp);
+            }
+
+            // TIPO SENSOR
+            if (doc.containsKey("tipo_sensor")) {
+                String tipo_sensor_tmp = doc["tipo_sensor"];
+                save_tipo_sensor(tipo_sensor_tmp.c_str());
+                strcpy(TIPO_SENSOR, tipo_sensor_tmp.c_str());
+                Serial.println("✅ Salvo tipo_sensor: " + tipo_sensor_tmp);
+            }
+
+            // OBSERVACAO DEVICE INFO
+            if (doc.containsKey("observacao_device_info")) {
+                String observacao_device_info_tmp = doc["observacao_device_info"];
+                save_observacao_device_info(observacao_device_info_tmp.c_str());
+                strcpy(OBSERVACAO_DEVICE_INFO, observacao_device_info_tmp.c_str());
+                Serial.println("✅ Salvo observacao_device_info: " + observacao_device_info_tmp);
+            }
+
+            // OBSERVACAO SETTINGS
+            if (doc.containsKey("observacao_settings")) {
+                String observacao_settings_tmp = doc["observacao_settings"];
+                save_observacao_settings(observacao_settings_tmp.c_str());
+                strcpy(OBSERVACAO_SETTINGS, observacao_settings_tmp.c_str());
+                Serial.println("✅ Salvo observacao_settings: " + observacao_settings_tmp);
+            }
+
+            // OBSERVACAO READINGS
+            if (doc.containsKey("observacao_readings")) {
+                String observacao_readings_tmp = doc["observacao_readings"];
+                save_observacao_readings(observacao_readings_tmp.c_str());
+                strcpy(OBSERVACAO_READINGS, observacao_readings_tmp.c_str());
+                Serial.println("✅ Salvo observacao_readings: " + observacao_readings_tmp);
+            }
+
+
+            // ==================================== CONFIGURAÇÕES DE WIFI ===
             if (doc.containsKey("wifi_ssid")) {
                 String wifi_ssid_tmp = doc["wifi_ssid"];
-                prefs.putString(KEY_WIFI_SSID, wifi_ssid_tmp);
+                save_flash_string(KEY_WIFI_SSID, wifi_ssid_tmp.c_str());  // Usa função centralizada
                 Serial.println("✅ Salvo WiFi SSID: " + wifi_ssid_tmp);
                 wifi_changed = true;
             }
             if (doc.containsKey("wifi_password")) {
                 String wifi_pass_tmp = doc["wifi_password"];
-                prefs.putString(KEY_WIFI_PASS, wifi_pass_tmp);
+                save_flash_string(KEY_WIFI_PASS, wifi_pass_tmp.c_str());  // Usa função centralizada
                 Serial.println("✅ Salvo WiFi Password: [HIDDEN]");
                 wifi_changed = true;
             }
 
-            // === CONFIGURAÇÕES DE MQTT ===
+            // ===================================== CONFIGURAÇÕES DE MQTT ===
             if (doc.containsKey("mqtt_server")) {
                 String mqtt_server_tmp = doc["mqtt_server"];
-                prefs.putString(KEY_MQTT_SERVER, mqtt_server_tmp);
+                save_flash_string(KEY_MQTT_SERVER, mqtt_server_tmp.c_str());  // Usa função centralizada
                 strncpy(MQTT_SERVER, mqtt_server_tmp.c_str(), sizeof(MQTT_SERVER) - 1);
                 MQTT_SERVER[sizeof(MQTT_SERVER) - 1] = '\0'; // Garantir terminação nula
                 Serial.println("✅ Salvo MQTT Server: " + mqtt_server_tmp);
@@ -438,14 +542,14 @@ void callback(char* topic, byte* payload, unsigned int length)
             }
             if (doc.containsKey("mqtt_port")) {
                 int mqtt_port_tmp = doc["mqtt_port"];
-                prefs.putInt(KEY_MQTT_PORT, mqtt_port_tmp);
+                save_flash_int(KEY_MQTT_PORT, mqtt_port_tmp);  // Usa função centralizada
                 PORT_MQTT = mqtt_port_tmp;
                 Serial.println("✅ Salvo MQTT Port: " + String(mqtt_port_tmp));
                 mqtt_changed = true;
             }
             if (doc.containsKey("mqtt_user")) {
                 String mqtt_user_tmp = doc["mqtt_user"];
-                prefs.putString(KEY_MQTT_USER, mqtt_user_tmp);
+                save_flash_string(KEY_MQTT_USER, mqtt_user_tmp.c_str());  // Usa função centralizada
                 strncpy(MQTT_USERNAME, mqtt_user_tmp.c_str(), sizeof(MQTT_USERNAME) - 1);
                 MQTT_USERNAME[sizeof(MQTT_USERNAME) - 1] = '\0';
                 Serial.println("✅ Salvo MQTT User: " + mqtt_user_tmp);
@@ -453,14 +557,12 @@ void callback(char* topic, byte* payload, unsigned int length)
             }
             if (doc.containsKey("mqtt_password")) {
                 String mqtt_pass_tmp = doc["mqtt_password"];
-                prefs.putString(KEY_MQTT_PASS, mqtt_pass_tmp);
+                save_flash_string(KEY_MQTT_PASS, mqtt_pass_tmp.c_str());  // Usa função centralizada
                 strncpy(MQTT_PASSWORD, mqtt_pass_tmp.c_str(), sizeof(MQTT_PASSWORD) - 1);
                 MQTT_PASSWORD[sizeof(MQTT_PASSWORD) - 1] = '\0';
                 Serial.println("✅ Salvo MQTT Password: [HIDDEN]");
                 mqtt_changed = true;
             }
-            
-            prefs.end();
             
             // === APLICAÇÃO DAS MUDANÇAS ===
             
@@ -513,13 +615,11 @@ void callback(char* topic, byte* payload, unsigned int length)
         Serial.println("Porta: " + String(PORT_MQTT));
         Serial.println("Usuário: " + String(MQTT_USERNAME));
         Serial.println("Senha: " + String(MQTT_PASSWORD));
-          // Salve na NVS se quiser persistência após reboot
-        prefs.begin("mqtt", false);
-        prefs.putString("server", MQTT_SERVER);
-        prefs.putInt("port", PORT_MQTT);
-        prefs.putString("username", MQTT_USERNAME);
-        prefs.putString("password", MQTT_PASSWORD);
-        prefs.end();
+    // Salve na NVS usando funções centralizadas
+    save_flash_string(KEY_MQTT_SERVER, MQTT_SERVER);
+    save_flash_int(KEY_MQTT_PORT, PORT_MQTT);
+    save_flash_string(KEY_MQTT_USER, MQTT_USERNAME);
+    save_flash_string(KEY_MQTT_PASS, MQTT_PASSWORD);
     } else {
         Serial.println("Erro ao analisar a mensagem de configuração do MQTT.");
     }
@@ -569,13 +669,27 @@ void reconnect()
       client.subscribe("config_mqtt",1);
       client.subscribe("config_ip",1);
       
+      // Construir tópicos específicos hierárquicos
+      String topico_local = String(CLIENTE) + "/" + String(LOCAL);
+      String topico_tipo = String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO);
+      String topico_dispositivo = String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO) + "/" + String(ID_EQUIPAMENTO);
+      String topico_settings = topico_dispositivo + "/settings";
+      
       //client.subscribe("presto/floripa/forno/001")      
       client.subscribe(topico,1); // Inscreve-se no tópico geral do equipamento
       client.subscribe(CLIENTE,1); // Inscreve-se no tópico do cliente específico      
-     // client.subscribe(CLIENTE + "/" + LOCAL , 1); // Inscreve-se no tópico do local específico
-     // client.subscribe(CLIENTE + "/" + LOCAL + "/" + TIPO_EQUIPAMENTO, 1); // Inscreve-se no tópico do tipo de equipamento específico
-     // client.subscribe(CLIENTE + "/" + LOCAL + "/" + TIPO_EQUIPAMENTO + "/" + String(DISPOSITIVO_ID), 1); // Inscreve-se no tópico do dispositivo específico
+      client.subscribe(topico_local.c_str(), 1); // Inscreve-se no tópico do local específico
+      client.subscribe(topico_tipo.c_str(), 1); // Inscreve-se no tópico do tipo de equipamento específico
+      client.subscribe(topico_dispositivo.c_str(), 1); // Inscreve-se no tópico do dispositivo específico
+      client.subscribe(topico_settings.c_str(), 1); // ✅ TÓPICO SETTINGS ESPECÍFICO
+      
       Serial.println("Inscrito nos tópicos com sucesso!");
+      Serial.println("✅ Tópicos hierárquicos subscritos:");
+      Serial.println("  • " + String(CLIENTE));
+      Serial.println("  • " + topico_local);
+      Serial.println("  • " + topico_tipo);
+      Serial.println("  • " + topico_dispositivo);
+      Serial.println("  • " + topico_settings + " ← SETTINGS ESPECÍFICO");
       
     } 
     else 
@@ -787,7 +901,7 @@ bool mqtt_send_info(){//const char* nome_equipamento, const char* horario, long 
     doc["notes"] = OBSERVACAO_READINGS;
     
 
-    -/* Exemplo de JSON enviado:
+    /* Exemplo de JSON enviado:
 -{
 -    "table" = "device_readings";
 -    "device_id" = "presto-plh-l01-rsv-001";

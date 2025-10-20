@@ -43,6 +43,12 @@
 #define KEY_ID_EQUIP     "id_equip"
 #define KEY_NOME_EQUIP   "nome_equip"
 #define KEY_DISPOSITIVO_ID "dispositivo_id"
+#define KEY_FABRICANTE_MAQUINA "fab_maquina"
+#define KEY_MODELO_MAQUINA "modelo_maq"
+#define KEY_TIPO_SENSOR  "tipo_sensor"
+#define KEY_OBSERVACAO_DEVICE_INFO "obs_dev_info"
+#define KEY_OBSERVACAO_SETTINGS "obs_settings"
+#define KEY_OBSERVACAO_READINGS "obs_readings"
 
 // prefs - settings_sensor
 #define KEY_LEVEL_MAX    "level_max"
@@ -72,28 +78,10 @@ extern char MQTT_PASSWORD[32];                       // TODO: criptografar a sen
 // topico
 extern char topico[64];
 
-// Informações referente a aplicação
-extern char* NOME_EQUIPAMENTO;                    // Nome do equipamento   ex. "prensa_1"
-extern char* VERSION;                             // Versão atual de uso. ex. "v25.4.14"
-//extern bool SENSOR_TEMPERATURE;                   // true | false
-//extern bool SENSOR_WATER_LEVEL;                   // true | false
-//extern bool SENSOR_BATIDA;                        // true | false
-//extern bool SENSOR_BATTERY_VOLTAGE;            // true | false
-
 // Definições de constantes para o projeto
 extern float level_max;
 extern float level_min;
 extern int SAMPLE_INTERVAL; // em segundos - Intervalo de amostragem em segundos (padrão 5 minutos)
-
-
-// Informações para acesso ao Firebase
-extern char* FIREBASE_HOST;                       // Host do Firebase
-extern char* FIREBASE_AUTH;                       // Chave de autenticação do Firebase   TODO: Criptografar a chave de autenticação
-
-// Versão
-//extern char* VERSION;                             // Versão atual de uso. ex. "v25.4.15"
-
-
 
 // informações do sensor ultrassônico
 extern float percentual_reservatorio;   // percentual do reservatório
@@ -108,33 +96,37 @@ extern long idBatida;      // id da última batida registrada
 // informações do sensor de tensão da bateria
 extern float tensao_bateria;       // tensão da bateria em volts
 
-
-
 // Informações do equipamento 
-extern char* CLIENTE;
-extern char* LOCAL;
-extern char* LINHA;
-extern char* FABRICANTE_MAQUINA;
-extern char* NOME_EQUIPAMENTO;    
-extern char* MODELO_MAQUINA;
-extern char* ID_EQUIPAMENTO;
-extern char* TIPO_EQUIPAMENTO;
+extern char CLIENTE[32];
+extern char LOCAL[32];
+extern char LINHA[32];
+extern char FABRICANTE_MAQUINA[64];
+extern char NOME_EQUIPAMENTO[32];    
+extern char MODELO_MAQUINA[64];
+extern char ID_EQUIPAMENTO[32];
+extern char TIPO_EQUIPAMENTO[32];
 // informação do sensor indx4
-extern char* PLACA; // TTGO T-Display | Heltec WiFi Kit 32 | M5Stack Core2
-extern char* MODELO_SENSOR; // Modelo do sensor:  "JSN-SR04T", "DHT22", "Batida", "TensãoBateria"
-extern char* FABRICANTE_SENSOR; // Fabricante do sensor: "JSN", "Aosong", "Outros"
+extern char PLACA[64]; // TTGO T-Display | Heltec WiFi Kit 32 | M5Stack Core2
+extern char MODELO_SENSOR[32]; // Modelo do sensor:  "JSN-SR04T", "DHT22", "Batida", "TensãoBateria"
+extern char FABRICANTE_SENSOR[32]; // Fabricante do sensor: "JSN", "Aosong", "Outros"
 //extern char* SERIAL_SENSOR; // Número de série do sensor
-extern char* DATA_INSTALACAO; // Data de instalação do sensor
-extern char* TIPO_SENSOR;
-extern char* DISPOSITIVO_ID;
-extern char* VERSAO_HARDWARE;
+extern char DATA_INSTALACAO[32]; // Data de instalação do sensor
+extern char TIPO_SENSOR[32];
+extern char DISPOSITIVO_ID[64];
+extern char VERSAO_HARDWARE[32];
+
+// Informações referente a aplicação e versão
+extern char* VERSION;                             // Versão atual de uso. ex. "v25.4.15"
+
+// Informações para acesso ao Firebase
+extern char* FIREBASE_HOST;                       // Host do Firebase
+extern char* FIREBASE_AUTH;                       // Chave de autenticação do Firebase   TODO: Criptografar a chave de autenticação
+
 // informações extras
-extern int SAMPLE_INTERVAL; // em segundos - Intervalo de amostragem em segundos (padrão 5 minutos)
-extern char* DATA_INSTALACAO; // Data de instalação do sensor
-extern char* OBSERVACAO_READINGS; // Observação para as leituras enviadas via MQTT
+extern char OBSERVACAO_READINGS[64]; // Observação para as leituras enviadas via MQTT
 // Informação do coletor de dados
-extern char* OBSERVACAO_DEVICE_INFO; // Observação para as informações do dispositivo enviadas via MQTT
-extern char* OBSERVACAO_SETTINGS; // Observação para as configurações do dispositivo enviadas via MQTT
+extern char OBSERVACAO_DEVICE_INFO[64]; // Observação para as informações do dispositivo enviadas via MQTT
+extern char OBSERVACAO_SETTINGS[64]; // Observação para as configurações do dispositivo enviadas via MQTT
 
 
 
