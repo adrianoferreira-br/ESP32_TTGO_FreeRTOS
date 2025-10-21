@@ -28,9 +28,7 @@ char OBSERVACAO_SETTINGS[64] = "Testes dev"; // Observação para as configuraç
 
 
 // Informação do coletor de dados
-const String VERSION_TTGO = "V1.1";
-char* VERSION = "v25.10.09";                             // Versão atual de uso. ex. "v25.4.15"
-char PLACA[64] = "TTGO T-Display V1.1"; // TTGO T-Display | Heltec WiFi Kit 32 | M5Stack Core2
+char* VERSION = "v25.10.20";                             // Versão atual de uso. ex. "v25.4.15"
 char PLACA_SOC[64] = "TTGO T-Display V1.1"; // TTGO T-Display | Heltec WiFi Kit 32 | M5Stack Core2 | LILYGO S3 T-display
 char* FIREBASE_HOST = "seu_projeto.firebaseio.com"; // Host do Firebase
 char* FIREBASE_AUTH = "sua_chave_de_autenticacao"; // Chave
@@ -38,7 +36,7 @@ char MODELO_SENSOR[32] = ""; // Modelo do sensor
 char FABRICANTE_SENSOR[32] = ""; // Fabricante do sensor
 char VERSAO_HARDWARE[32] = "v1.0"; // Versão do hardware
 char DATA_INSTALACAO[32] = "2025-10-02"; // Data de instalação do equipamento no local 
-int   SAMPLE_INTERVAL = 30; //em segundos - Intervalo de amostragem em segundos (padrão 30 minutos)
+int  SAMPLE_INTERVAL = 60; //em segundos - Intervalo de envio MQTT do reservatório
 
 
 

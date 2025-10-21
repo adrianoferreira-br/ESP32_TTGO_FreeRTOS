@@ -144,7 +144,7 @@ void loop()
 
   // Ultrassônico 
   #ifdef SENSOR_WATER_LEVEL
-    loop_ultrasonic();
+    loop_ultrasonic(); // ToDo: Poderia colocar isso dentro do timer e fazer sincrono
     verifica_timer();
   #endif
 

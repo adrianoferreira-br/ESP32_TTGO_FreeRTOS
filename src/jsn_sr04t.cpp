@@ -13,7 +13,7 @@
 
 class PercentualFilter {
 private:
-    static const int BUFFER_SIZE = 5;  // Buffer pequeno para resposta rápida
+    static const int BUFFER_SIZE = 15;  // Buffer pequeno para resposta rápida
     float buffer[BUFFER_SIZE];
     int currentIndex;
     int validCount;
@@ -61,8 +61,8 @@ public:
             adaptiveThreshold = filter_threshold;
         }
         
-        Serial.printf("📥 LEITURA #%d: %.1f%% (threshold: %.1f%% → adaptativo: %.1f%%)\n", 
-                     totalReadings, newValue, filter_threshold, adaptiveThreshold);
+      //  Serial.printf("📥 LEITURA #%d: %.1f%% (threshold: %.1f%% → adaptativo: %.1f%%)\n", 
+      //               totalReadings, newValue, filter_threshold, adaptiveThreshold);
         
         // Verificar range básico apenas (0-100%)
         if (newValue < 0.0 || newValue > 100.0) {
@@ -99,7 +99,7 @@ public:
             
             // Suavização leve: 70% novo valor + 30% anterior
             float result = (newValue * 0.7) + (lastValue * 0.3);
-            Serial.printf("✅ ACEITO (diff: %.1f%% ≤ %.1f%%) → %.1f%%\n", diff, adaptiveThreshold, result);
+           // Serial.printf("✅ ACEITO (diff: %.1f%% ≤ %.1f%%) → %.1f%%\n", diff, adaptiveThreshold, result);
             return result;
         }
         
@@ -212,11 +212,11 @@ void reset_percentual_filter() {
 void loop_ultrasonic() {
    UltrasonicResult res = ultrasonic_read();
    if (res.valido) {  
-       Serial.print("Distância: ");
+     /*  Serial.print("Distância: ");
        Serial.print(res.distance_cm);
        Serial.print(" cm | Percentual: ");
        Serial.print(res.percentual);
-       Serial.println(" %");
+       Serial.println(" %"); */
        show_distancia(res.distance_cm);
        show_percentual_reservatorio(res.percentual);
        altura_medida = altura_reservatorio - res.distance_cm;
@@ -234,7 +234,7 @@ UltrasonicResult ultrasonic_read() {
     digitalWrite(ULTRASONIC_TRIG, LOW);
     delayMicroseconds(200);
     digitalWrite(ULTRASONIC_TRIG, HIGH);
-    delayMicroseconds(15);
+    delayMicroseconds(50);
     digitalWrite(ULTRASONIC_TRIG, LOW);
 
     long duration = pulseIn(ULTRASONIC_ECHO, HIGH, 30000);
@@ -261,12 +261,12 @@ UltrasonicResult ultrasonic_read() {
     float percentual_filtrado = percentualFilter.addValue(percentual_bruto);
     
     // Log principal da leitura
-    Serial.printf("🌊 RESERVATÓRIO: %.1fcm → %.1f%% bruto → %.1f%% filtrado\n", 
+    Serial.printf("🌊 RESERVATÓRIO: distancia: %.1fcm → %.1f%% bruto → %.1f%% filtrado\n", 
                  distance_cm, percentual_bruto, percentual_filtrado);
     
     // Mostrar estatísticas periodicamente
     static int statCounter = 0;
-    if (++statCounter >= 5) {
+    if (++statCounter >= 15) {
         percentualFilter.printStats();
         percentualFilter.printBuffer();
         statCounter = 0;
