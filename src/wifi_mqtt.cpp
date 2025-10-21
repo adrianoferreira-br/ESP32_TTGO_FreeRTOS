@@ -344,14 +344,14 @@ void callback(char* topic, byte* payload, unsigned int length)
    Serial.println(message); 
 
    //Reiniciar dispositivo
-  if (String(topic) == String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO) + "/" + String(ID_EQUIPAMENTO) + "/Reboot_") {  
+  if (String(topic) == String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO) + "/" + String(ID_EQUIPAMENTO) + "/reboot_") {  
     Serial.println("Reiniciando o sistema Tópico MQTT Reboot_...");
     delay(1000);
     ESP.restart(); // Reinicia o ESP32
   }
 
   //Forçar reconexão WiFi
-  if (String(topic) == String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO) + "/" + String(ID_EQUIPAMENTO) + "/Reconnect_WiFi_") {  
+  if (String(topic) == String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO) + "/" + String(ID_EQUIPAMENTO) + "/reconnect_wifi_") {  
     Serial.println("Forçando reconexão WiFi... Tópico MQTT Reconnect_WiFi_");
     WiFi.disconnect();
     delay(1000);
@@ -359,7 +359,7 @@ void callback(char* topic, byte* payload, unsigned int length)
   }
 
   //Forçar reconexão MQTT
-  if (String(topic) == String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO) + "/" + String(ID_EQUIPAMENTO) + "/Reconnect_MQTT_") {
+  if (String(topic) == String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO) + "/" + String(ID_EQUIPAMENTO) + "/reconnect_mqtt_") {
     Serial.println("Forçando reconexão MQTT... Tópico MQTT Reconnect_MQTT_");
     client.disconnect();
     delay(1000);
@@ -370,6 +370,24 @@ void callback(char* topic, byte* payload, unsigned int length)
   if (String(topic) == String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO) + "/" + String(ID_EQUIPAMENTO) + "/info") {
     Serial.println("Enviando informações do sistema conforme... Resposta topico INFO");
     bool result = mqtt_send_info();  
+  }
+
+  // Envia informações do dispositivo
+  if (String(topic) == String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO) + "/" + String(ID_EQUIPAMENTO) + "/settings_device") {
+    Serial.println("Enviando informações do dispositivo... Resposta tópico settings_device");
+    bool result = mqtt_send_settings_device();    
+  }
+
+  // Envia configurações do equipamento
+  if (String(topic) == String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO) + "/" + String(ID_EQUIPAMENTO) + "/settings_equip") {
+    Serial.println("Enviando configurações do equipamento... Resposta tópico settings_equip");
+    bool result = mqtt_send_settings_equip();    
+  }
+
+  // Envia configurações do cliente
+  if (String(topic) == String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO) + "/" + String(ID_EQUIPAMENTO) + "/settings_client") {
+    Serial.println("Enviando configurações do cliente... Resposta tópico settings_client");
+    bool result = mqtt_send_settings_client();    
   }
 
   // Atualiza configurações via MQTT
@@ -716,35 +734,45 @@ void reconnect()
     Serial.print("Tentando conectar ao MQTT..."); 
     if (client.connect(DISPOSITIVO_ID)) //Nome do MQTT na rede
     {       
-      Serial.println("Conectado no MQTT com nome: " + String(DISPOSITIVO_ID));      
-      client.subscribe("Reboot_",1);      
+      Serial.println("Conectado no MQTT com nome: " + String(DISPOSITIVO_ID));   
       client.subscribe("info",1);
       client.subscribe("settings",1);
       client.subscribe("config_mqtt",1);
       client.subscribe("config_ip",1);
       
-      // Construir tópicos específicos hierárquicos
-      String topico_local = String(CLIENTE) + "/" + String(LOCAL);
-      String topico_tipo = String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO);
+      // Construir tópicos específicos hierárquicos      
       String topico_dispositivo = String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO) + "/" + String(ID_EQUIPAMENTO);
       String topico_settings = topico_dispositivo + "/settings";
+      String topico_reboot = topico_dispositivo + "/reboot_";
+      String topico_info = topico_dispositivo + "/info";      
+      String topico_settings_device = topico_dispositivo + "/settings_device";
+      String topico_settings_client = topico_dispositivo + "/settings_client";
+      String topico_settings_equip = topico_dispositivo + "/settings_equip";
+      String topico_local = String(CLIENTE) + "/" + String(LOCAL);
+      String topico_tipo = String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO);
+      
       
       //client.subscribe("presto/floripa/forno/001")      
       client.subscribe(topico,1); // Inscreve-se no tópico geral do equipamento
       client.subscribe(CLIENTE,1); // Inscreve-se no tópico do cliente específico      
       client.subscribe(topico_local.c_str(), 1); // Inscreve-se no tópico do local específico
       client.subscribe(topico_tipo.c_str(), 1); // Inscreve-se no tópico do tipo de equipamento específico
-      client.subscribe(topico_dispositivo.c_str(), 1); // Inscreve-se no tópico do dispositivo específico
       client.subscribe(topico_settings.c_str(), 1); // ✅ TÓPICO SETTINGS ESPECÍFICO
+      client.subscribe(topico_reboot.c_str(), 1); // ✅ TÓPICO REBOOT ESPECÍFICO
+      client.subscribe(topico_info.c_str(), 1); // ✅ TÓPICO INFO
+      client.subscribe(topico_settings_device.c_str(), 1); // ✅ TÓPICO SETTINGS DEVICE
+      client.subscribe(topico_settings_client.c_str(), 1); // ✅ TÓPICO
+      client.subscribe(topico_settings_equip.c_str(), 1); // ✅ TÓPICO SETTINGS EQUIP
       
-      Serial.println("Inscrito nos tópicos com sucesso!");
-      Serial.println("✅ Tópicos hierárquicos subscritos:");
-      Serial.println("  • " + String(CLIENTE));
-      Serial.println("  • " + topico_local);
-      Serial.println("  • " + topico_tipo);
-      Serial.println("  • " + topico_dispositivo);
-      Serial.println("  • " + topico_settings + " ← SETTINGS ESPECÍFICO");
-      
+      Serial.println("Inscrito nos tópicos com sucesso!");      
+      Serial.println("Tópico geral: " + String(topico));
+      Serial.println("Tópico settings: " + topico_settings);
+      Serial.println("Tópico reboot: " + topico_reboot);
+      Serial.println("Tópico info: " + topico_info);
+      Serial.println("Tópico settings device: " + topico_settings_device);
+      Serial.println("Tópico settings client: " + topico_settings_client);
+      Serial.println("Tópico settings equip: " + topico_settings_equip);
+
     } 
     else 
     { 
@@ -834,7 +862,8 @@ bool mqtt_send_settings(){//const char* nome_equipamento, const char* horario, l
     char jsonBuffer[512] = {0};
     size_t jsonLen = serializeJson(doc, jsonBuffer);
     bool result = client.publish(topico, (const uint8_t*)jsonBuffer, jsonLen, false); // QoS 0
-    Serial.println("MQTT: Dados settings enviados.." + String(topico)); 
+    Serial.println("MQTT: Dados settings enviados.." + String(topico));
+    Serial.println("JSON enviado: " + String(jsonBuffer)); 
     return result;
 
 }
@@ -885,7 +914,8 @@ bool mqtt_send_info(){//const char* nome_equipamento, const char* horario, long 
     char jsonBuffer[1024] = {0};
     size_t jsonLen = serializeJson(doc, jsonBuffer);
     bool result = client.publish(topico, (const uint8_t*)jsonBuffer, jsonLen, false); // QoS 0
-    Serial.println("MQTT: Dados info enviados.." + String(topico)); 
+    Serial.println("MQTT: Dados info enviados.." + String(topico));
+    Serial.println("JSON enviado: " + String(jsonBuffer)); 
     return result;
 
 /* Exemplo de JSON enviado: 
@@ -930,8 +960,103 @@ bool mqtt_send_info(){//const char* nome_equipamento, const char* horario, long 
     "notes" = "Teste adriano"
 
 */
-
 }
+
+/*
+*    Retorna a Informação do dispositivo
+*/
+bool mqtt_send_settings_device() {
+    if (!client.connected()) {
+       return false;
+    }
+    client.loop();
+    char time_str_buffer[16];           char* timestamp = get_time_str(time_str_buffer, sizeof(time_str_buffer));    
+    long timestamp2 = atol(time_str_buffer); // Converte string para long
+
+    StaticJsonDocument<512> doc;
+
+    doc["device_id"] = DISPOSITIVO_ID;
+    doc["timestamp"] = timestamp2;
+    doc["sensor"] = TIPO_SENSOR;
+    doc["manufacturer_sensor"] = FABRICANTE_SENSOR;
+    doc["sensor_model"] = MODELO_SENSOR;
+    doc["board_soc"] = PLACA_SOC;
+    doc["hardware_version"] = VERSAO_HARDWARE;
+    doc["firmware_version"] = VERSION;
+    doc["installation_date"] = DATA_INSTALACAO;
+
+
+    char jsonBuffer[512] = {0};
+    size_t jsonLen = serializeJson(doc, jsonBuffer);
+    bool result = client.publish(topico, (const uint8_t*)jsonBuffer, jsonLen, false); // QoS 0
+    Serial.println("MQTT: settings_device enviado.. Topico:  " + String(topico));   
+    Serial.println("JSON enviado: " + String(jsonBuffer));          
+    return result;
+}
+
+
+/*
+*  Retorna a Informação do cliente
+*/
+bool mqtt_send_settings_client() {
+    if (!client.connected()) {
+       return false;
+    }
+    client.loop();
+    char time_str_buffer[16];           char* timestamp = get_time_str(time_str_buffer, sizeof(time_str_buffer));    
+    long timestamp2 = atol(time_str_buffer); // Converte string para long
+
+    StaticJsonDocument<512> doc;
+
+    doc["device_id"] = DISPOSITIVO_ID;
+    doc["timestamp"] = timestamp2;
+    doc["client"] = CLIENTE;
+    doc["location"] = LOCAL;
+    doc["line"] = LINHA;
+    
+    
+
+    char jsonBuffer[512] = {0};
+    size_t jsonLen = serializeJson(doc, jsonBuffer);
+    bool result = client.publish(topico, (const uint8_t*)jsonBuffer, jsonLen, false); // QoS 0
+    Serial.println("MQTT: settings_cliente enviado.. Topico:  " + String(topico));         
+    Serial.println("JSON enviado: " + String(jsonBuffer));    
+    return result;
+  }
+
+
+/*
+* Retorna a Informação do equipamento
+*/
+bool mqtt_send_settings_equip() {
+    if (!client.connected()) {
+       return false;
+    }
+    client.loop();
+    char time_str_buffer[16];           char* timestamp = get_time_str(time_str_buffer, sizeof(time_str_buffer));    
+    long timestamp2 = atol(time_str_buffer); // Converte string para long
+
+    StaticJsonDocument<512> doc;
+
+    doc["device_id"] = DISPOSITIVO_ID;
+    doc["timestamp"] = timestamp2;
+    doc["equipment_type"] = TIPO_EQUIPAMENTO;
+    doc["equipment_id"] = ID_EQUIPAMENTO;
+    doc["equipment_name"] = NOME_EQUIPAMENTO;    
+    doc["machine_manufacturer"] = FABRICANTE_MAQUINA;
+    doc["machine_model"] = MODELO_MAQUINA; 
+
+
+
+    char jsonBuffer[512] = {0};
+    size_t jsonLen = serializeJson(doc, jsonBuffer);
+    bool result = client.publish(topico, (const uint8_t*)jsonBuffer, jsonLen, false); // QoS 0
+    Serial.println("MQTT: settings_equip enviado.. Topico:  " + String(topico));           
+    Serial.println("JSON enviado: " + String(jsonBuffer));  
+    return result;
+  }
+
+
 
  
  bool mqtt_send_readings() {
@@ -999,7 +1124,8 @@ bool mqtt_send_info(){//const char* nome_equipamento, const char* horario, long 
     char jsonBuffer[512] = {0};
     size_t jsonLen = serializeJson(doc, jsonBuffer);
     bool result = client.publish(topico, (const uint8_t*)jsonBuffer, jsonLen, false); // QoS 0
-    Serial.println("MQTT: device_readings enviado.. Topico:  " + String(topico));            
+    Serial.println("MQTT: device_readings enviado.. Topico:  " + String(topico));
+    Serial.println("JSON enviado: " + String(jsonBuffer));            
     return result;
 }
 

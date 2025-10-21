@@ -34,6 +34,9 @@ bool mqtt_send_readings();
 bool mqtt_send_info();
 bool mqtt_send_settings();
 bool mqtt_send_settings_confirmation();
+bool mqtt_send_settings_device();
+bool mqtt_send_settings_equip();
+bool mqtt_send_settings_client();
 
 
 

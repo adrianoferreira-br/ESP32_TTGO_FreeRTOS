@@ -27,7 +27,13 @@ void save_flash_float(const char* key, float value) {
  */
 float read_flash_float(const char* key) {
     prefs.begin("flash", true);
-    float value = prefs.getFloat(key, 0.0);
+    
+    // Verifica se a chave existe antes de tentar ler para evitar mensagens de erro
+    float value = 0.0;
+    if (prefs.isKey(key)) {
+        value = prefs.getFloat(key, 0.0);
+    }
+    
     prefs.end();
     return value;
 }
@@ -47,10 +53,18 @@ void save_flash_string(const char* key, const char* value) {
  */
 void read_flash_string(const char* key, char* buffer, int maxLen) {
     prefs.begin("flash", true);
-    String val = prefs.getString(key, "");
+    
+    // Verifica se a chave existe antes de tentar ler para evitar mensagens de erro
+    if (prefs.isKey(key)) {
+        String val = prefs.getString(key, "");
+        strncpy(buffer, val.c_str(), maxLen);
+        buffer[maxLen - 1] = '\0'; // Garante terminação
+    } else {
+        // Chave não existe, retorna string vazia
+        buffer[0] = '\0';
+    }
+    
     prefs.end();
-    strncpy(buffer, val.c_str(), maxLen);
-    buffer[maxLen - 1] = '\0'; // Garante terminação
 }
 
 /*
@@ -68,7 +82,13 @@ void save_flash_int(const char* key, int value) {
  */
 int read_flash_int(const char* key) {
     prefs.begin("flash", true);
-    int value = prefs.getInt(key, 0);
+    
+    // Verifica se a chave existe antes de tentar ler para evitar mensagens de erro
+    int value = 0;
+    if (prefs.isKey(key)) {
+        value = prefs.getInt(key, 0);
+    }
+    
     prefs.end();
     return value;
 }
@@ -217,26 +237,34 @@ void load_all_settings_from_flash() {
         MQTT_SERVER[sizeof(MQTT_SERVER) - 1] = '\0';
         Serial.println("✅ MQTT Server carregado: " + String(MQTT_SERVER));
     } else {
-        Serial.println("⚠️ MQTT Server vazio, usando padrão do constants.h");
+        // ✅ APLICA o valor padrão que já está em MQTT_SERVER (constants.h)
+        Serial.println("⚠️ MQTT Server vazio, usando padrão: " + String(MQTT_SERVER));
     }
     
     if (mqtt_port_tmp > 0) {
         PORT_MQTT = mqtt_port_tmp;
         Serial.println("✅ MQTT Port carregado: " + String(PORT_MQTT));
     } else {
-        Serial.println("⚠️ MQTT Port inválido, usando padrão do constants.h");
+        // ✅ APLICA o valor padrão que já está em PORT_MQTT (constants.h)
+        Serial.println("⚠️ MQTT Port inválido, usando padrão: " + String(PORT_MQTT));
     }
     
     if (strlen(mqtt_user_tmp) > 0) {
         strncpy(MQTT_USERNAME, mqtt_user_tmp, sizeof(MQTT_USERNAME) - 1);
         MQTT_USERNAME[sizeof(MQTT_USERNAME) - 1] = '\0';
         Serial.println("✅ MQTT User carregado: " + String(MQTT_USERNAME));
+    } else {
+        // ✅ APLICA o valor padrão que já está em MQTT_USERNAME (constants.h)
+        Serial.println("⚠️ MQTT User vazio, usando padrão: " + String(MQTT_USERNAME));
     }
     
     if (strlen(mqtt_pass_tmp) > 0) {
         strncpy(MQTT_PASSWORD, mqtt_pass_tmp, sizeof(MQTT_PASSWORD) - 1);
         MQTT_PASSWORD[sizeof(MQTT_PASSWORD) - 1] = '\0';
         Serial.println("✅ MQTT Password carregado: [HIDDEN]");
+    } else {
+        // ✅ APLICA o valor padrão que já está em MQTT_PASSWORD (constants.h)
+        Serial.println("⚠️ MQTT Password vazio, usando padrão: [HIDDEN]");
     }
     
     // ============================================================== CONFIGURAÇÕES DE DISPOSITIVO ===
