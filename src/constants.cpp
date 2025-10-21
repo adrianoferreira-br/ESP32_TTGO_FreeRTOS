@@ -7,7 +7,7 @@
 
 
 //Definir em constant.h
-//#define Adriano // Presto | Adriano
+#define Presto // Presto | Adriano
 //#define EQUIP_RESERVATORIO // EQUIP_PRENSA | EQUIP_PROCESSAMENTO | EQUIP_LINEA | EQUIP_RESERVATORIO | EQUIP_OUTRO
 
 // Informações do equipamento 
@@ -28,7 +28,7 @@ char OBSERVACAO_SETTINGS[64] = "Testes dev"; // Observação para as configuraç
 
 
 // Informação do coletor de dados
-char* VERSION = "v25.10.20";                             // Versão atual de uso. ex. "v25.4.15"
+char* VERSION = "v25.10.21";                             // Versão atual de uso. ex. "v25.4.15"
 char PLACA_SOC[64] = "TTGO T-Display V1.1"; // TTGO T-Display | Heltec WiFi Kit 32 | M5Stack Core2 | LILYGO S3 T-display
 char* FIREBASE_HOST = "seu_projeto.firebaseio.com"; // Host do Firebase
 char* FIREBASE_AUTH = "sua_chave_de_autenticacao"; // Chave
