@@ -973,20 +973,21 @@ bool mqtt_send_settings_device() {
     char time_str_buffer[16];           char* timestamp = get_time_str(time_str_buffer, sizeof(time_str_buffer));    
     long timestamp2 = atol(time_str_buffer); // Converte string para long
 
-    StaticJsonDocument<512> doc;
+    StaticJsonDocument<1024> doc;
 
     doc["device_id"] = DISPOSITIVO_ID;
     doc["timestamp"] = timestamp2;
-    doc["sensor"] = TIPO_SENSOR;
+    doc["type_sensor"] = TIPO_SENSOR;
     doc["manufacturer_sensor"] = FABRICANTE_SENSOR;
     doc["sensor_model"] = MODELO_SENSOR;
     doc["board_soc"] = PLACA_SOC;
+    doc["temperature_cpu_c"] = roundf(temperatureRead() * 100) / 100.0;
     doc["hardware_version"] = VERSAO_HARDWARE;
     doc["firmware_version"] = VERSION;
     doc["installation_date"] = DATA_INSTALACAO;
 
 
-    char jsonBuffer[512] = {0};
+    char jsonBuffer[1024] = {0};
     size_t jsonLen = serializeJson(doc, jsonBuffer);
     bool result = client.publish(topico, (const uint8_t*)jsonBuffer, jsonLen, false); // QoS 0
     Serial.println("MQTT: settings_device enviado.. Topico:  " + String(topico));   
