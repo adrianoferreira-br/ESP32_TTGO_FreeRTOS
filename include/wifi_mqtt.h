@@ -16,6 +16,7 @@ void setup_mqtt(void);
 void reconnect(void);
 void callback(char*, byte*, unsigned int);
 void loop_mqqt(void);
+String getMqttErrorMessage(int errorCode);
 
 //partitions
 void show_partitions();

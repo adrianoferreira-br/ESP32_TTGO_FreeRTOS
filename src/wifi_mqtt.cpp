@@ -307,8 +307,17 @@ void setup_mqtt()
        PORT_MQTT = port_mqtt;
    }
    
-   client.setServer(MQTT_SERVER, PORT_MQTT);
+   client.setServer(MQTT_SERVER, PORT_MQTT);   
    client.setCallback(callback); 
+   
+   // Debug: Mostra valores atuais das credenciais MQTT
+   Serial.println("=== DEBUG MQTT SETUP ===");
+   Serial.println("MQTT_USERNAME: '" + String(MQTT_USERNAME) + "' (len: " + String(strlen(MQTT_USERNAME)) + ")");
+   Serial.println("MQTT_PASSWORD: '" + String(MQTT_PASSWORD) + "' (len: " + String(strlen(MQTT_PASSWORD)) + ")");
+   Serial.println("MQTT_SERVER: '" + String(MQTT_SERVER) + "'");
+   Serial.println("PORT_MQTT: " + String(PORT_MQTT));
+   Serial.println("========================");
+   
    Serial.println("MQTT: Serviço MQTT inicializado!    Servidor: " + String(MQTT_SERVER) + " Porta: " + String(PORT_MQTT));
    snprintf(topico, sizeof(topico), "%s/%s/%s/%s", CLIENTE, LOCAL, TIPO_EQUIPAMENTO, ID_EQUIPAMENTO);//  "presto/palhoca/prensa/001";
    Serial.println("Tópico MQTT: " + String(topico));
@@ -723,6 +732,25 @@ void callback(char* topic, byte* payload, unsigned int length)
 
 
 /**************************************************************
+ * FUNÇÃO AUXILIAR PARA DECODIFICAR ERROS MQTT
+ */
+String getMqttErrorMessage(int errorCode) {
+  switch(errorCode) {
+    case -4: return "MQTT_CONNECTION_TIMEOUT";
+    case -3: return "MQTT_CONNECTION_LOST";
+    case -2: return "MQTT_CONNECT_FAILED";
+    case -1: return "MQTT_DISCONNECTED";
+    case 0:  return "MQTT_CONNECTED";
+    case 1:  return "MQTT_CONNECT_BAD_PROTOCOL";
+    case 2:  return "MQTT_CONNECT_BAD_CLIENT_ID";
+    case 3:  return "MQTT_CONNECT_UNAVAILABLE";
+    case 4:  return "MQTT_CONNECT_BAD_CREDENTIALS";
+    case 5:  return "MQTT_CONNECT_UNAUTHORIZED";
+    default: return "CÓDIGO_DESCONHECIDO_" + String(errorCode);
+  }
+}
+
+/**************************************************************
  *  RECONEXÃO DO MQTT COM SEUS RESPECTIVOS TÓPICOS
  */
 void reconnect() 
@@ -731,9 +759,42 @@ void reconnect()
   while (!client.connected() && qnt > 1) 
   { 
     qnt--;
-    Serial.print("Tentando conectar ao MQTT..."); 
-    if (client.connect(DISPOSITIVO_ID)) //Nome do MQTT na rede
-    {       
+    Serial.println("=== TENTATIVA CONEXÃO MQTT ===");
+    Serial.println("Device ID: '" + String(DISPOSITIVO_ID) + "'");
+    Serial.println("Username: '" + String(MQTT_USERNAME) + "' (len: " + String(strlen(MQTT_USERNAME)) + ")");
+    Serial.println("Password: '" + String(MQTT_PASSWORD) + "' (len: " + String(strlen(MQTT_PASSWORD)) + ")");
+    Serial.println("Servidor: " + String(MQTT_SERVER) + ":" + String(PORT_MQTT));
+    
+    bool connected = false;
+    
+    // Estratégia 1: Tentar com as credenciais configuradas
+    if (strlen(MQTT_USERNAME) > 0 && strlen(MQTT_PASSWORD) > 0) {
+      Serial.print("Tentativa 1: Conectando com credenciais...");
+      connected = client.connect(DISPOSITIVO_ID, MQTT_USERNAME, MQTT_PASSWORD);
+      
+      if (connected) {
+        Serial.println(" ✅ SUCESSO COM CREDENCIAIS!");
+      } else {
+        Serial.println(" ❌ FALHOU COM CREDENCIAIS!");
+        int errorCode = client.state();
+        Serial.println("Erro: " + String(errorCode) + " - " + getMqttErrorMessage(errorCode));
+      }
+    }
+    
+    // Estratégia 2: Se falhou com credenciais, tentar sem autenticação
+    if (!connected) {
+      Serial.print("Tentativa 2: Conectando sem autenticação...");
+      connected = client.connect(DISPOSITIVO_ID);
+      
+      if (connected) {
+        Serial.println(" ✅ SUCESSO SEM AUTENTICAÇÃO!");
+        Serial.println("⚠️ ATENÇÃO: Conectado sem autenticação - broker permite acesso anônimo");
+      } else {
+        Serial.println(" ❌ FALHOU SEM AUTENTICAÇÃO!");
+      }
+    }
+    
+    if (connected) {       
       Serial.println("Conectado no MQTT com nome: " + String(DISPOSITIVO_ID));   
       client.subscribe("info",1);
       client.subscribe("settings",1);
@@ -776,10 +837,28 @@ void reconnect()
     } 
     else 
     { 
-      Serial.print("falhou, rc="); 
-      Serial.print(client.state()); 
-      Serial.println(" tentando novamente 500 mseg"); 
-      delay(500); 
+      int errorCode = client.state();
+      Serial.println("❌ TODAS AS TENTATIVAS FALHARAM!");
+      Serial.println("Último erro: " + String(errorCode) + " - " + getMqttErrorMessage(errorCode));
+      
+      // Mensagens específicas para problemas comuns
+      if (errorCode == 5) {
+        Serial.println("🔐 PROBLEMA DE AUTENTICAÇÃO:");
+        Serial.println("   • Verifique se o usuário '" + String(MQTT_USERNAME) + "' existe no broker");
+        Serial.println("   • Verifique se a senha está correta");
+        Serial.println("   • Verifique se o broker requer autenticação");
+      } else if (errorCode == 4) {
+        Serial.println("🔑 CREDENCIAIS INCORRETAS:");
+        Serial.println("   • Username: '" + String(MQTT_USERNAME) + "'");
+        Serial.println("   • Password: '" + String(MQTT_PASSWORD) + "'");
+      } else if (errorCode == 3) {
+        Serial.println("🌐 PROBLEMA DE CONECTIVIDADE:");
+        Serial.println("   • Servidor: " + String(MQTT_SERVER) + ":" + String(PORT_MQTT));
+        Serial.println("   • Verifique se o broker está online");
+      }
+      
+      Serial.println("Tentando novamente em 2 segundos..."); 
+      delay(2000); 
     } 
   } 
 }
