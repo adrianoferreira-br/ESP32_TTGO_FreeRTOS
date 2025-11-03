@@ -1,36 +1,27 @@
-#ifndef WIFI_MQTT_H_
-#define WIFI_MQTT_H_
+#ifndef TOPICOS_H_
+#define TOPICOS_H_
 
 // Bibliotecas necessárias
+#include <Arduino.h>
 #include <WiFi.h>
 #include <PubSubClient.h>
+#include <ArduinoJson.h>
 #include "constants.h"
 
-// Declaração dos objetos globais
+// Declaração dos objetos externos (definidos em wifi_mqtt.cpp)
 extern WiFiClient espClient;
 extern PubSubClient client;
 
-// Wifi
-void setup_wifi(void);
-void loop_wifi(void);
+// Declaração das funções externas (definidas em wifi_mqtt.cpp)
+extern void setup_wifi(void);
+extern void setup_mqtt(void);
 
-//mqtt
-void setup_mqtt(void);
+//mqtt - Callback e utilitários
+void callback(char*, byte*, unsigned int);
 void reconnect(void);
-void loop_mqqt(void);
+String getMqttErrorMessage(int errorCode);
 
-//partitions
-void show_partitions();
-void show_ota_info();
-
-//Ota
-void setup_ota();
-void loop_ota();  
-
-//NTP
-void setup_ntp(void);
-
-//void mqtt_send_data(String, String);
+//mqtt - Funções de envio de dados
 bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_leitura, const char* observacao);
 bool mqtt_send_readings();
 bool mqtt_send_info();
@@ -42,5 +33,4 @@ bool mqtt_send_settings_client();
 
 
 
-#endif // WIFI_MQTT_H_
-
+#endif // TOPICOS_H_
