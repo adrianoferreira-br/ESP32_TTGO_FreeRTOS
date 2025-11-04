@@ -973,10 +973,10 @@ bool mqtt_send_datas_readings() {
     // se habilitado = reservatório incluir na lista leitura do reservatório
     if (enabled_send_level_readings) {        
         JsonObject reading = readings.createNestedObject();
-        reading["sensor_type"] = "level";
+        reading["sensor_type"] = "ultrasonic";
         reading["metric_name"] = "level";
         reading["value"] = roundf(percentual_reservatorio * 100) / 100.0;
-        reading["unit"] = "%";
+        reading["unit"] = "percent";
         reading["quality_flag"] = 0;        
         enabled_send_level_readings = false;
     }
@@ -984,7 +984,7 @@ bool mqtt_send_datas_readings() {
     // se habilitado = temperatura incluir na lista leitura da temperatura
     if (enabled_send_temperature_readings) {        
         JsonObject reading = readings.createNestedObject();
-        reading["sensor_type"] = "temperature";
+        reading["sensor_type"] = "";
         reading["metric_name"] = "temperature";
         reading["value"] = roundf(temperatura * 100) / 100.0;        
         reading["unit"] = "celsius";
@@ -992,7 +992,7 @@ bool mqtt_send_datas_readings() {
         enabled_send_temperature_readings = false;
     }
     
-    // se habilitado = umidade incluir na lista leitura da umidade
+    // se habilitado = humidade incluir na lista leitura de humidade
     if (enabled_send_humidity_readings) {        
         JsonObject reading = readings.createNestedObject();
         reading["sensor_type"] = "humidity";
@@ -1008,7 +1008,7 @@ bool mqtt_send_datas_readings() {
         JsonObject reading = readings.createNestedObject();
         reading["sensor_type"] = "pulse";
         reading["metric_name"] = "takt_time";
-        reading["value"] = 23;//current_ticket;        
+        reading["value"] = qtd_batidas_intervalo;//current_ticket;        
         reading["unit"] = "units";
         reading["quality_flag"] = 0;     
         enabled_send_ticket_readings = false;

@@ -62,6 +62,7 @@ void setup() {
   load_all_settings_from_flash(); // 📂 Carrega todas as configurações da flash
   show_ota_info();      // Adicionar info sobre partições OTA
   setup_timer();
+  setup_timer_send_takt_time();
 
   /*    WIFI    */
   setup_wifi();       
@@ -134,7 +135,8 @@ void loop()
   //    APPLICATION_2    
 
   #ifdef SENSOR_BATIDA
-      verifica_interrupcao();
+      verifica_interrupcao();      
+      check_timer_interrupt_tosend_MqttDataReadings();
   #endif
 
   //  DHT Sensor  

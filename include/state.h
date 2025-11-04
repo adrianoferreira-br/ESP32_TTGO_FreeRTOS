@@ -12,8 +12,11 @@ void InterruptionPino35(void);
 void InterruptionPino38(void);
 void InterruptionPino12(void);
 void setup_timer();
+void setup_timer_send_takt_time();
 void onTimer();
+void onTimerSendMqtt();
 void verifica_timer();
+void check_timer_interrupt_tosend_MqttDataReadings();
 void show_time();
 void show_ip ();
 void verifica_batida_prensa(void);
@@ -26,6 +29,7 @@ extern char* get_time_str(char* buffer, size_t bufferSize);
 
 
 extern long idBatida; // Apenas declaração, sem inicialização
+extern int qtd_batidas_intervalo;
 
 
 #endif // STATE_H_

@@ -21,6 +21,7 @@
 int qnt_batidas_prensa = 0;
 volatile bool batida_prensa = false;
 long idBatida = 0; // Variável global para armazenar o ID da batida
+int qtd_batidas_intervalo = 0;
 float distance_max = 100; // distância máxima do sensor ultrassônico em cm (padrão 400cm para o JSN-SR04T)
 float percentual_reservatorio = 0.0; // percentual do reservatório
 float altura_reservatorio = 100.0; // distância máxima do sensor ultrassônico em cm (padrão max. 400cm para o JSN-SR04T)
@@ -32,6 +33,7 @@ float altura_reservatorio = 100.0; // distância máxima do sensor ultrassônico
 hw_timer_t * timer = NULL;
 portMUX_TYPE timerMux = portMUX_INITIALIZER_UNLOCKED;
 bool timerToSendReadings = false;
+bool timerToSendDataReadings = false;
 time_t timestamp_global = 0; // Variável global para armazenar o timestamp
 
 //Verificação de reflexo
@@ -94,9 +96,29 @@ void setup_batidas_prensa() {
 }
 
 
+/**********************************************************************************************
+*   Função de setup para o timer que envia via MQTT a somatoria de batidas
+*/
+
+void setup_timer_send_takt_time() {
+  
+  timer = timerBegin(1, 80, true); // Timer 1, prescaler 80 (1us por tick)
+  timerAttachInterrupt(timer, &onTimerSendMqtt, true);
+  timerAlarmWrite(timer, 1000000 * 30, true); // 1.000.000us * 30 = 30s
+  timerAlarmEnable(timer);
+  
+}
+// Função de interrupção do timer para envio via MQTT
+void IRAM_ATTR onTimerSendMqtt() {
+  portENTER_CRITICAL_ISR(&timerMux);
+  timerToSendDataReadings = true; // Sinaliza para enviar ping MQTT
+  portEXIT_CRITICAL_ISR(&timerMux);
+}
+
+
 
 /**********************************************************************************************
- *     SETUP DO TIMER DO ESP32
+ *     SETUP DO TIMER PARA TRIGGER DO ENVIO DO ULTRASSON E TEMPERATURA
  */
 void setup_timer() {
   
@@ -107,15 +129,9 @@ void setup_timer() {
   
 }
 
-/**
-  *    FUNÇÃO DE INTERRUPÇÃO DO TIMER DO ESP32
-  *    Executa a cada 5 segundos
-  *    Use para tarefas periódicas que não podem esperar o loop principal
-  *    Exemplo: leitura de sensores críticos, atualização de variáveis de estado, etc.
-  *    Lembre-se de manter o código da ISR o mais curto possível para evitar atrasos.
-  *    Use portENTER_CRITICAL_ISR e portEXIT_CRITICAL_ISR para proteger variáveis compartilhadas.
-  *    Evite chamadas de funções demoradas ou bloqueantes dentro da ISR.
-  *    Se precisar fazer algo complexo, defina uma flag e trate no loop principal.
+/*     FUNÇÃO DE INTERRUPÇÃO DO TIMER DO ESP32
+  *    Executa a cada 5 segundos  *   
+  *    Exemplo: leitura de sensores críticos, atualização de variáveis de estado, etc.     
   */
 void IRAM_ATTR onTimer() {
   portENTER_CRITICAL_ISR(&timerMux);
@@ -249,28 +265,13 @@ void verifica_batida_prensa(){
      
 
       id_leitura++;  // Incrementa o ID da leitura
+      qtd_batidas_intervalo ++; // Incrementa batida no intervalo
       Serial.println(String(digitalRead(BATIDA_PIN)) + "batida: " + String(id_leitura));  // Mostra a leitura do pino 12
 
       //prepara dados para enviar mqtt
       strcpy(nome_equipamento, NOME_EQUIPAMENTO);      
       strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
-
-    // Tenta enviar imediatamente
-    if (WiFi.status() == WL_CONNECTED) {
-        //bool enviado = mqtt_send_data(nome_equipamento, timeStr, id_leitura, "");
-          enabled_send_ticket_readings = true; // Habilita o envio da leitura do ticket
-          bool enviado = mqtt_send_datas_readings();
-        // Se falha do MQTT, armazena no buffer
-        if (!enviado) {            
-            buffer_batida(nome_equipamento, timeStr, id_leitura, "Retransmitido - falha MQTT");
-            Serial.println("Falha MQTT - Add info in buffer");
-        }
-    } else {
-        // Se falha do WiFi, armazena no buffer        
-        buffer_batida(nome_equipamento, timeStr, id_leitura, "Retransmitido - Falha WiFi");
-        Serial.println("Falha WiFi - Add info in buffer");
-    }
-
+    
       // Mostra quantidade de batida no display
       Serial.println(String(digitalRead(BATIDA_PIN)) + "Incrementa e mostra no display");
       qnt_batidas_prensa++;      
@@ -286,6 +287,39 @@ void verifica_batida_prensa(){
 
  
 }
+
+
+
+// Envia via MQTT quando chegar o timer correto
+  void check_timer_interrupt_tosend_MqttDataReadings() {
+      if (timerToSendDataReadings == true) {
+          if (qtd_batidas_intervalo > 0) {
+                if (WiFi.status() == WL_CONNECTED ) {
+
+
+                      enabled_send_ticket_readings = true; // Habilita o envio da leitura do ticket
+                      bool enviado = mqtt_send_datas_readings();
+
+                    // Se falha do MQTT, armazena no buffer
+                    if (!enviado) {            
+                      // buffer_batida(nome_equipamento, timeStr, id_leitura, "Retransmitido - falha MQTT");
+                        Serial.println("Falha MQTT - Add info in buffer");
+                    }              
+                    
+                } else {
+                  
+                    // Se falha do WiFi, armazena no buffer        
+                  // buffer_batida(nome_equipamento, timeStr, id_leitura, "Retransmitido - Falha WiFi");
+                    Serial.println("Falha WiFi - Add info in buffer");
+                }
+          }
+          
+          timerToSendDataReadings = false; // Reseta a flag após envio
+          Serial.printf("Timer MQTT batidas verificado. qntd: %d\n", qtd_batidas_intervalo);
+          qtd_batidas_intervalo = 0;
+      }        
+  }
+
 
 
 /**********************************************************************************************
