@@ -312,14 +312,14 @@ void load_all_settings_from_flash() {
         Serial.println("⚠️ TIPO_SENSOR vazio, usando padrão: " + String(TIPO_SENSOR));
     }
 
-    // OBSERVACAO_DEVICE_INFO
+    // OBSERVACAO_DEVICE_INFO -> KEY_DEVICE_INFO
     char observacao_device_info_tmp[64];
-    read_flash_string(KEY_OBSERVACAO_DEVICE_INFO, observacao_device_info_tmp, sizeof(observacao_device_info_tmp));
+    read_flash_string(KEY_DEVICE_INFO, observacao_device_info_tmp, sizeof(observacao_device_info_tmp));
     if (strlen(observacao_device_info_tmp) > 0) {
         strcpy(OBSERVACAO_DEVICE_INFO, observacao_device_info_tmp);
         Serial.println("✅ OBSERVACAO_DEVICE_INFO carregado da flash: " + String(OBSERVACAO_DEVICE_INFO));
     } else {
-        save_flash_string(KEY_OBSERVACAO_DEVICE_INFO, OBSERVACAO_DEVICE_INFO);
+        save_flash_string(KEY_DEVICE_INFO, OBSERVACAO_DEVICE_INFO);
         Serial.println("⚠️ OBSERVACAO_DEVICE_INFO vazio, usando padrão: " + String(OBSERVACAO_DEVICE_INFO));
     }
 

@@ -17,6 +17,14 @@ extern void reset_percentual_filter();
 #endif
 
 
+// ============ VARIÁVEIS GLOBAIS PARA CONTROLE DE ENVIO DE LEITURAS ============
+bool enabled_send_level_readings = false;        // Habilita envio de leituras de nível
+bool enabled_send_temperature_readings = false;  // Habilita envio de leituras de temperatura
+bool enabled_send_ticket_readings = false;      // Habilita envio de leituras de ticket
+bool enabled_send_humidity_readings = false;     // Habilita envio de leituras de umidade
+
+
+
 /**************************************************************
  *  Callback do MQTT  
  */
@@ -58,7 +66,8 @@ void callback(char* topic, byte* payload, unsigned int length)
   // Envia leitura do sistema
   if (String(topic) == String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO) + "/" + String(ID_EQUIPAMENTO) + "/info") {
     Serial.println("Enviando informações do sistema conforme... Resposta topico INFO");
-    bool result = mqtt_send_info();  
+    //bool result = mqtt_send_info();  
+    bool result = mqtt_send_datas_readings();
   }
 
   // Envia informações do dispositivo
@@ -138,22 +147,22 @@ void callback(char* topic, byte* payload, unsigned int length)
             // =============================== CONFIGURAÇÕES DE DISPOSITIVO ===
             
             //CLIENTE
-            if (doc.containsKey("cliente")) {
-                String cliente_tmp = doc["cliente"];
+            if (doc.containsKey("client")) {
+                String cliente_tmp = doc["client"];
                 save_flash_string(KEY_CLIENTE, cliente_tmp.c_str());  // Salva na flash
                 // ✅ Não podemos alterar char* diretamente - valor será carregado no próximo boot
                 Serial.println("✅ Salvo CLIENTE: " + cliente_tmp + " (ativo no próximo boot)");
             }
             // LOCAL
-            if (doc.containsKey("local")) {
-                String local_tmp = doc["local"];
+            if (doc.containsKey("location")) {
+                String local_tmp = doc["location"];
                 save_flash_string(KEY_LOCAL, local_tmp.c_str());  // Salva na flash
                 // ✅ Não podemos alterar char* diretamente - valor será carregado no próximo boot
                 Serial.println("✅ Salvo LOCAL: " + local_tmp + " (ativo no próximo boot)");
             }
             // TIPO EQUIPAMENTO
-            if (doc.containsKey("tipo_equip")) {
-                String tipo_equip_tmp = doc["tipo_equip"];
+            if (doc.containsKey("type_equip")) {
+                String tipo_equip_tmp = doc["type_equip"];
                 save_flash_string(KEY_TIPO_EQUIP, tipo_equip_tmp.c_str());  // Salva na flash
                 // ✅ Não podemos alterar char* diretamente - valor será carregado no próximo boot
                 Serial.println("✅ Salvo TIPO_EQUIPAMENTO: " + tipo_equip_tmp + " (ativo no próximo boot)");
@@ -166,51 +175,51 @@ void callback(char* topic, byte* payload, unsigned int length)
                 Serial.println("✅ Salvo ID_EQUIPAMENTO: " + id_equip_tmp + " (ativo no próximo boot)");
             }
             // NOME EQUIPAMENTO
-            if (doc.containsKey("nome_equip")) {
-                String nome_equip_tmp = doc["nome_equip"];
+            if (doc.containsKey("name_equip")) {
+                String nome_equip_tmp = doc["name_equip"];
                 save_flash_string(KEY_NOME_EQUIP, nome_equip_tmp.c_str());  // Usa função centralizada
                 strcpy(NOME_EQUIPAMENTO, nome_equip_tmp.c_str()); // Atualiza variável global
-                Serial.println("✅ Salvo nome_equip: " + nome_equip_tmp);
+                Serial.println("✅ Salvo name_equip: " + nome_equip_tmp);
             }
 
             // DISPOSITIVO_ID
-            if (doc.containsKey("dispositivo_id")) {
-                String dispositivo_id_tmp = doc["dispositivo_id"];
+            if (doc.containsKey("device_id")) {
+                String dispositivo_id_tmp = doc["device_id"];
                 save_flash_string(KEY_DISPOSITIVO_ID, dispositivo_id_tmp.c_str());
                 strcpy(DISPOSITIVO_ID, dispositivo_id_tmp.c_str());
                 Serial.println("✅ Salvo dispositivo_id: " + dispositivo_id_tmp);
             }
 
             // FABRICANTE MAQUINA
-            if (doc.containsKey("fabricante_maquina")) {
-                String fabricante_maquina_tmp = doc["fabricante_maquina"];
+            if (doc.containsKey("manufacturer_machine")) {
+                String fabricante_maquina_tmp = doc["manufacturer_machine"];
                 save_flash_string(KEY_FABRICANTE_MAQUINA, fabricante_maquina_tmp.c_str());
                 strcpy(FABRICANTE_MAQUINA, fabricante_maquina_tmp.c_str());
                 Serial.println("✅ Salvo fabricante_maquina: " + fabricante_maquina_tmp);
             }
 
             // MODELO MAQUINA
-            if (doc.containsKey("modelo_maquina")) {
-                String modelo_maquina_tmp = doc["modelo_maquina"];
+            if (doc.containsKey("model_machine")) {
+                String modelo_maquina_tmp = doc["model_machine"];
                 save_flash_string(KEY_MODELO_MAQUINA, modelo_maquina_tmp.c_str());
                 strcpy(MODELO_MAQUINA, modelo_maquina_tmp.c_str());
-                Serial.println("✅ Salvo modelo_maquina: " + modelo_maquina_tmp);
+                Serial.println("✅ Salvo model_machine: " + modelo_maquina_tmp);
             }
 
             // TIPO SENSOR
-            if (doc.containsKey("tipo_sensor")) {
-                String tipo_sensor_tmp = doc["tipo_sensor"];
-                save_flash_string(KEY_TIPO_SENSOR, tipo_sensor_tmp.c_str());
-                strcpy(TIPO_SENSOR, tipo_sensor_tmp.c_str());
-                Serial.println("✅ Salvo tipo_sensor: " + tipo_sensor_tmp);
+            if (doc.containsKey("type_sensor")) {
+                String type_sensor_tmp = doc["type_sensor"];
+                save_flash_string(KEY_TIPO_SENSOR, type_sensor_tmp.c_str());
+                strcpy(TIPO_SENSOR, type_sensor_tmp.c_str());
+                Serial.println("✅ Salvo type_sensor: " + type_sensor_tmp);
             }
 
-            // OBSERVACAO DEVICE INFO
-            if (doc.containsKey("observacao_device_info")) {
-                String observacao_device_info_tmp = doc["observacao_device_info"];
-                save_flash_string(KEY_OBSERVACAO_DEVICE_INFO, observacao_device_info_tmp.c_str());
-                strcpy(OBSERVACAO_DEVICE_INFO, observacao_device_info_tmp.c_str());
-                Serial.println("✅ Salvo observacao_device_info: " + observacao_device_info_tmp);
+            // NOTES DEVICE INFO
+            if (doc.containsKey("notes_device_info")) {
+                String notes_device_info_tmp = doc["notes_device_info"];
+                save_flash_string(KEY_DEVICE_INFO, notes_device_info_tmp.c_str());
+                strcpy(OBSERVACAO_DEVICE_INFO, notes_device_info_tmp.c_str());
+                Serial.println("✅ Salvo notes_device_info: " + notes_device_info_tmp);
             }
 
             // OBSERVACAO SETTINGS
@@ -807,7 +816,6 @@ bool mqtt_send_settings_equip() {
     doc["machine_model"] = MODELO_MAQUINA; 
 
 
-
     char jsonBuffer[512] = {0};
     size_t jsonLen = serializeJson(doc, jsonBuffer);
     bool result = client.publish(topico, (const uint8_t*)jsonBuffer, jsonLen, false); // QoS 0
@@ -818,7 +826,9 @@ bool mqtt_send_settings_equip() {
 
 
 
- 
+ /*
+* envia a informação lida
+*/
  bool mqtt_send_readings() {
     if (!client.connected()) {
         return false;
@@ -832,54 +842,14 @@ bool mqtt_send_settings_equip() {
     doc["table"] = "device_readings";
     doc["device_id"] = DISPOSITIVO_ID;
     doc["timestamp"] = timestamp2;
-    doc["wifi_rssi_dbm"] = WiFi.RSSI();    
+    doc["wifi_rssi_dbm"] = WiFi.RSSI();
     doc["level_effective_cm"] = roundf((level_min - level_max) * 100) / 100.0; // altura útil do reservatório        
     doc["level_available_cm"] = roundf((level_min - altura_medida) * 100) / 100.0; // nível disponível no reservatório
     doc["level_available_%"] = roundf(percentual_reservatorio * 100) / 100.0;		    
     doc["temp_c"] =  roundf(temperatura * 100) / 100.0;
     doc["humidity_%"] = roundf(humidade * 100) / 100.0; 
-    doc["notes"] = OBSERVACAO_READINGS;
+    doc["notes"] = OBSERVACAO_READINGS;   
     
-
-    /* Exemplo de JSON enviado:
--{
--    "table" = "device_readings";
--    "device_id" = "presto-plh-l01-rsv-001";
--    "timestamp" = 1759253363;
--    "wifi_rssi_dbm" = -67;
--    "zigbee_rssi_dbm" = 0;
--    "wifi_rssi_%" = 33;
--    "zigbee_rssi_%" = 0;
--    "takt_time_id" = 34564;
--    "temp_c" =  23.45;
--    "temp_f" = 74.21;
--    "humidity_%" = 65.50;
--    "level_h_cm" = 150.25;
--    "level_usage_%" = 75.50;
--    "level_usage_cm" = 0.0;
--    "level_usage_l" = 0.0;
--    "level_usage_m3" = 0.0;
--    "pressure_psi" = 33.5;
--    "pressure_kpa" = 231.0;
--    "pressure_bar" = 2.31;
--    "pressure_mca" = 23.5;
--    "flow_l_min" = 0.0;
--    "flow_m3_h" = 0.0;
--    "voltage_v" = 0;
--    "voltage_bat_v" = 0;
--    "current_a" = 0;
--    "power_w" = 0;
--    "energy_wh" = 0;
--    "energy_kwh" = 0;
--    "frequency_hz" = 0;
--    "power_factor" = 0;
--    "rpm" = 0;
--    "vibration_mm_s" = 0;
--    "vibration_g" = 0;
--    "status" = "OK";
--    "error_code" = 0;
--    "notes" = "Nenhuma observação"
--}  */
 
     char jsonBuffer[512] = {0};
     size_t jsonLen = serializeJson(doc, jsonBuffer);
@@ -908,8 +878,8 @@ bool mqtt_send_settings_confirmation() {
     doc["timestamp"] = atol(time_str_buffer);
     
     // Configurações do reservatório
-    doc["level_max_cm"] = level_max;
-    doc["level_min_cm"] = level_min;
+    doc["level_max"] = level_max;
+    doc["level_min"] = level_min;
     doc["level_effective_cm"] = roundf((level_min - level_max) * 100) / 100.0; // altura útil
     doc["sample_time_s"] = SAMPLE_INTERVAL;
     doc["filter_threshold_pct"] = filter_threshold;
@@ -978,6 +948,89 @@ bool mqtt_send_settings_confirmation() {
     return result;
 }
 
+
+/*
+*  envia as leituras habilitadas
+*/
+bool mqtt_send_datas_readings() {
+    if (!client.connected()) {
+        return false;
+    }
+    client.loop();
+    char time_str_buffer[16];           char* timestamp = get_time_str(time_str_buffer, sizeof(time_str_buffer));    
+    long timestamp2 = atol(time_str_buffer); // Converte string para long
+
+    StaticJsonDocument<1024> doc;    
+
+    doc["table"] = "device_readings";
+    doc["device_id"] = DISPOSITIVO_ID;
+    doc["timestamp"] = timestamp2;
+    doc["wifi_rssi_dbm"] = WiFi.RSSI();
+
+    // Cria um array para as leituras
+    JsonArray readings = doc.createNestedArray("readings");
+    
+    // se habilitado = reservatório incluir na lista leitura do reservatório
+    if (enabled_send_level_readings) {        
+        JsonObject reading = readings.createNestedObject();
+        reading["sensor_type"] = "level";
+        reading["metric_name"] = "level";
+        reading["value"] = roundf(percentual_reservatorio * 100) / 100.0;
+        reading["unit"] = "%";
+        reading["quality_flag"] = 0;        
+        enabled_send_level_readings = false;
+    }
+
+    // se habilitado = temperatura incluir na lista leitura da temperatura
+    if (enabled_send_temperature_readings) {        
+        JsonObject reading = readings.createNestedObject();
+        reading["sensor_type"] = "temperature";
+        reading["metric_name"] = "temperature";
+        reading["value"] = roundf(temperatura * 100) / 100.0;        
+        reading["unit"] = "celsius";
+        reading["quality_flag"] = 0;
+        enabled_send_temperature_readings = false;
+    }
+    
+    // se habilitado = umidade incluir na lista leitura da umidade
+    if (enabled_send_humidity_readings) {        
+        JsonObject reading = readings.createNestedObject();
+        reading["sensor_type"] = "humidity";
+        reading["metric_name"] = "humidity";
+        reading["value"] = roundf(humidade * 100) / 100.0;        
+        reading["unit"] = "percent";
+        reading["quality_flag"] = 0;    
+        enabled_send_humidity_readings = false;
+    }
+
+    // se habilitado = ticket incluir na lista leitura do ticket
+    if (enabled_send_ticket_readings) {        
+        JsonObject reading = readings.createNestedObject();
+        reading["sensor_type"] = "pulse";
+        reading["metric_name"] = "takt_time";
+        reading["value"] = 23;//current_ticket;        
+        reading["unit"] = "units";
+        reading["quality_flag"] = 0;     
+        enabled_send_ticket_readings = false;
+    }
+
+    
+
+    char jsonBuffer[1024] = {0};
+    size_t jsonLen = serializeJson(doc, jsonBuffer);
+    bool result = client.publish(topico, (const uint8_t*)jsonBuffer, jsonLen, false); // QoS 0
+    Serial.println("MQTT: device_readings enviado.. Topico:  " + String(topico));
+    Serial.println("JSON enviado: " + String(jsonBuffer));            
+    return result;
+}
+
+
+
+
+
+
+
+
 /**************************************************************
  * FIM DO ARQUIVO wifi_mqtt.cpp
  */
@@ -1018,3 +1071,45 @@ bool mqtt_send_settings_confirmation() {
 }
  
  */
+
+
+
+ /* Exemplo de JSON enviado:
+-{
+-    "table" = "device_readings";
+-    "device_id" = "presto-plh-l01-rsv-001";
+-    "timestamp" = 1759253363;
+-    "wifi_rssi_dbm" = -67;
+-    "zigbee_rssi_dbm" = 0;
+-    "wifi_rssi_%" = 33;
+-    "zigbee_rssi_%" = 0;
+-    "takt_time_id" = 34564;
+-    "temp_c" =  23.45;
+-    "temp_f" = 74.21;
+-    "humidity_%" = 65.50;
+-    "level_h_cm" = 150.25;
+-    "level_usage_%" = 75.50;
+-    "level_usage_cm" = 0.0;
+-    "level_usage_l" = 0.0;
+-    "level_usage_m3" = 0.0;
+-    "pressure_psi" = 33.5;
+-    "pressure_kpa" = 231.0;
+-    "pressure_bar" = 2.31;
+-    "pressure_mca" = 23.5;
+-    "flow_l_min" = 0.0;
+-    "flow_m3_h" = 0.0;
+-    "voltage_v" = 0;
+-    "voltage_bat_v" = 0;
+-    "current_a" = 0;
+-    "power_w" = 0;
+-    "energy_wh" = 0;
+-    "energy_kwh" = 0;
+-    "frequency_hz" = 0;
+-    "power_factor" = 0;
+-    "rpm" = 0;
+-    "vibration_mm_s" = 0;
+-    "vibration_g" = 0;
+-    "status" = "OK";
+-    "error_code" = 0;
+-    "notes" = "Nenhuma observação"
+-}  */

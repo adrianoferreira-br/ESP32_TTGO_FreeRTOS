@@ -8,7 +8,7 @@
 // CONFIGURAÇÃO DO CLIENTE E EQUIPAMENTO
 // ============================================================================
 #define Adriano // Presto | Adriano
-#define EQUIP_PRENSA // EQUIP_PRENSA | EQUIP_PROCESSAMENTO | EQUIP_LINEA | EQUIP_RESERVATORIO | EQUIP_OUTRO
+#define EQUIP_RESERVATORIO // EQUIP_PRENSA | EQUIP_PROCESSAMENTO | EQUIP_LINEA | EQUIP_RESERVATORIO | EQUIP_OUTRO
 
 // ============================================================================
 // ATIVAÇÃO AUTOMÁTICA DOS SENSORES BASEADO NO TIPO DE EQUIPAMENTO
@@ -37,28 +37,28 @@
 #define KEY_MQTT_PASS    "mqtt_pass"
 
 // prefs - settings_device
-#define KEY_CLIENTE      "cliente"
-#define KEY_LOCAL        "local"
-#define KEY_LINHA        "linha"
-#define KEY_TIPO_EQUIP   "tipo_equip"
-#define KEY_ID_EQUIP     "id_equip"
-#define KEY_NOME_EQUIP   "nome_equip"
-#define KEY_DISPOSITIVO_ID "dispositivo_id"
-#define KEY_PLACA_SOC    "placa_soc"
-#define KEY_FABRICANTE_MAQUINA "fab_maquina"
-#define KEY_MODELO_MAQUINA "modelo_maq"
-#define KEY_TIPO_SENSOR  "tipo_sensor"
-#define KEY_OBSERVACAO_DEVICE_INFO "obs_dev_info"
-#define KEY_OBSERVACAO_SETTINGS "obs_settings"
-#define KEY_OBSERVACAO_READINGS "obs_readings"
-#define KEY_FABRICANTE_SENSOR "fab_sensor"
-#define KEY_MODELO_SENSOR "modelo_sensor"
-#define KEY_VERSAO_HARDWARE "versao_hw"
-#define KEY_DATA_INSTALACAO "data_instal"
+#define KEY_CLIENTE      "client"
+#define KEY_LOCAL        "location"
+#define KEY_LINHA        "line"
+#define KEY_TIPO_EQUIP   "type_equip"
+#define KEY_ID_EQUIP     "equip_id"
+#define KEY_NOME_EQUIP   "name_equip"
+#define KEY_DISPOSITIVO_ID  "device_id"
+#define KEY_PLACA_SOC       "soc_board"
+#define KEY_FABRICANTE_MAQUINA "manufacturer_machine"
+#define KEY_MODELO_MAQUINA  "model_machine"
+#define KEY_TIPO_SENSOR     "type_sensor"
+#define KEY_DEVICE_INFO     "notes_device_info"
+#define KEY_OBSERVACAO_SETTINGS "notes_settings"
+#define KEY_OBSERVACAO_READINGS "notes_readings"
+#define KEY_FABRICANTE_SENSOR "manufacturer_sensor"
+#define KEY_MODELO_SENSOR   "model_sensor"
+#define KEY_VERSAO_HARDWARE "hardware_version"
+#define KEY_DATA_INSTALACAO "installation_date"
 
 // prefs - settings_sensor
-#define KEY_LEVEL_MAX    "level_max"
-#define KEY_LEVEL_MIN    "level_min"
+#define KEY_LEVEL_MAX     "level_max"
+#define KEY_LEVEL_MIN     "level_min"
 #define KEY_SAMPLE_TIME_S "sample_time_s"
 #define KEY_FILTER_THRESHOLD "filter_threshold"
 

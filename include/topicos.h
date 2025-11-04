@@ -16,6 +16,14 @@ extern PubSubClient client;
 extern void setup_wifi(void);
 extern void setup_mqtt(void);
 
+// ============ DECLARAÇÕES DE VARIÁVEIS GLOBAIS ============
+extern bool enabled_send_level_readings;        // Habilita envio de leituras de nível
+extern bool enabled_send_temperature_readings;  // Habilita envio de leituras de temperatura
+extern bool enabled_send_ticket_readings;       // Habilita envio de leituras de ticket
+extern bool enabled_send_humidity_readings;     // Habilita envio de leituras de umidade
+
+
+
 //mqtt - Callback e utilitários
 void callback(char*, byte*, unsigned int);
 void reconnect(void);
@@ -30,6 +38,9 @@ bool mqtt_send_settings_confirmation();
 bool mqtt_send_settings_device();
 bool mqtt_send_settings_equip();
 bool mqtt_send_settings_client();
+
+
+bool mqtt_send_datas_readings();
 
 
 

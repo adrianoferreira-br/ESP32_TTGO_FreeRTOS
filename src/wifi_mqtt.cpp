@@ -63,7 +63,6 @@ void setup_wifi(){
    Serial.print("Conectando a ");
    Serial.println(ssid);
 
-
    WiFi.begin(ssid, password); 
    do  
    { 

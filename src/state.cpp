@@ -13,6 +13,8 @@
 #include "constants.h"
 #include "wifi_mqtt.h"
 #include "mem_flash.h"
+#include "topicos.h"
+#include "extern_data.h"
 
 // Pino do sensor reflexivo
 #define BATIDA_PIN 12 
@@ -127,7 +129,11 @@ void verifica_timer(){
     // Executa a ação desejada
     // Exemplo: Enviar dados de sensores via MQTT
     if (WiFi.status() == WL_CONNECTED) {
-        bool enviado = mqtt_send_readings();                 
+        //bool enviado = mqtt_send_readings();    
+        enabled_send_temperature_readings = true;
+        enabled_send_humidity_readings = true;
+        enabled_send_level_readings = true;
+        bool enviado = mqtt_send_datas_readings();
         // Se falha do MQTT, armazena no buffer
         if (!enviado) {            
             Serial.println("Falha MQTT ao enviar leituras");
@@ -251,7 +257,9 @@ void verifica_batida_prensa(){
 
     // Tenta enviar imediatamente
     if (WiFi.status() == WL_CONNECTED) {
-        bool enviado = mqtt_send_data(nome_equipamento, timeStr, id_leitura, "");
+        //bool enviado = mqtt_send_data(nome_equipamento, timeStr, id_leitura, "");
+          enabled_send_ticket_readings = true; // Habilita o envio da leitura do ticket
+          bool enviado = mqtt_send_datas_readings();
         // Se falha do MQTT, armazena no buffer
         if (!enviado) {            
             buffer_batida(nome_equipamento, timeStr, id_leitura, "Retransmitido - falha MQTT");
@@ -364,7 +372,13 @@ void buffer_batida(const char* nome, const char* timeStr, long id, const char* o
 void try_send_buffered_batidas() {
     while (bufferCount > 0) {
         BatidaMsg& msg = batidaBuffer[bufferHead];
-        bool enviado = mqtt_send_data(msg.nome_equipamento, msg.timeStr, msg.id_leitura, msg.observacao);
+        //bool enviado = mqtt_send_data(msg.nome_equipamento, msg.timeStr, msg.id_leitura, msg.observacao);
+        
+        enabled_send_temperature_readings = true;
+        enabled_send_humidity_readings = true;
+        enabled_send_level_readings = true;
+        
+        bool enviado = mqtt_send_datas_readings();
         if (enviado) {
             bufferHead = (bufferHead + 1) % MAX_BUFFERED_MSGS;
             bufferCount--;            
