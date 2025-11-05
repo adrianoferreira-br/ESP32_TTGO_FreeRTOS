@@ -66,8 +66,7 @@ void callback(char* topic, byte* payload, unsigned int length)
   // Envia leitura do sistema
   if (String(topic) == String(CLIENTE) + "/" + String(LOCAL) + "/" + String(TIPO_EQUIPAMENTO) + "/" + String(ID_EQUIPAMENTO) + "/info") {
     Serial.println("Enviando informações do sistema conforme... Resposta topico INFO");
-    //bool result = mqtt_send_info();  
-    bool result = mqtt_send_datas_readings();
+    bool result = mqtt_send_info();      
   }
 
   // Envia informações do dispositivo
@@ -667,15 +666,15 @@ bool mqtt_send_info(){//const char* nome_equipamento, const char* horario, long 
     doc["machine_type"] = TIPO_EQUIPAMENTO;
     doc["machine_model"]  = MODELO_MAQUINA;
     doc["machine_manufacturer"] = FABRICANTE_MAQUINA;
+    doc["machine_serial"] = "";//SERIAL_MAQUINA;
     doc["sensor_type"] = TIPO_SENSOR;
     doc["sensor_manufacturer"] = FABRICANTE_SENSOR;
     doc["sensor_model"] = MODELO_SENSOR;
-    doc["ip_address"] = WiFi.localIP().toString();
+    doc["ip_address"] = WiFi.localIP().toString(); 
     doc["mac_address"] = WiFi.macAddress();
     doc["firmware_version"] = VERSION;
     doc["hardware_version"] = VERSAO_HARDWARE;
-    doc["installation_date"] = DATA_INSTALACAO;    
-    doc["sample_time_s"] = SAMPLE_INTERVAL;    //ToDo: colocar no topico: settings
+    doc["installation_date"] = DATA_INSTALACAO;        
     doc["notes"] = OBSERVACAO_DEVICE_INFO;
     
 
@@ -686,47 +685,24 @@ bool mqtt_send_info(){//const char* nome_equipamento, const char* horario, long 
     Serial.println("JSON enviado: " + String(jsonBuffer)); 
     return result;
 
-/* Exemplo de JSON enviado: 
-{
-    "table" = "device_info";
-    "device_id" = "presto-plh-l01-rsv-001";
-    "timestamp" = 1759253363;
-    "client" = "presto";
-    "plant" = "palhoca";
-    "line" = "l01";
-    "machine_type" = "reservatorio";
-    "machine_manufacturer" = "Presto";
-    "machine_model" = "X1000";
-    "machine_serial" = "123456789";
-    "machine_firmware" = "v1.0.0";
-
-    "sensor_type" = "ultrasonic"; 
-    "sensor_manufacturer" = "SensorCo";
-    "sensor_model" = "UltraX";
-    "sensor_serial" = "987654321";
-    "sensor_firmware" = "v2.1.0";
-    "sample_time_s" = 60;
-    
+/* avaliar essas informações: 
+{    
+    "sample_time_s" = 60;    
     "location" = "Instalação interna";
     "installation_date" = "2023-10-01";
     "last_maintenance_date" = "2024-06-15";
     "next_maintenance_date" = "2024-12-15";
     "operational_status" = "Ativo";
-
     "last_calibration_date" = "2024-01-10";
-    "next_calibration_date" = "2025-01-10";
-    
+    "next_calibration_date" = "2025-01-10";    
     "warranty_expiration_date" = "2025-10-01";
     "ip_address" = "192.168.1.100";
     "mac_address" = "00:1A:2B:3C:4D:5E";
     "firmware_version" = "v1.0.0";
-    "hardware_version" = "v1.0";
-    
-    
+    "hardware_version" = "v1.0";    
     "status" = "OK";
     "error_code" = 0;
     "notes" = "Teste adriano"
-
 */
 }
 
@@ -781,8 +757,7 @@ bool mqtt_send_settings_client() {
     doc["timestamp"] = timestamp2;
     doc["client"] = CLIENTE;
     doc["location"] = LOCAL;
-    doc["line"] = LINHA;
-    
+    doc["line"] = LINHA;    
     
 
     char jsonBuffer[512] = {0};
@@ -826,39 +801,6 @@ bool mqtt_send_settings_equip() {
 
 
 
- /*
-* envia a informação lida
-*/
- bool mqtt_send_readings() {
-    if (!client.connected()) {
-        return false;
-    }
-    client.loop();
-    char time_str_buffer[16];           char* timestamp = get_time_str(time_str_buffer, sizeof(time_str_buffer));    
-    long timestamp2 = atol(time_str_buffer); // Converte string para long
-
-    StaticJsonDocument<512> doc;    
-
-    doc["table"] = "device_readings";
-    doc["device_id"] = DISPOSITIVO_ID;
-    doc["timestamp"] = timestamp2;
-    doc["wifi_rssi_dbm"] = WiFi.RSSI();
-    doc["level_effective_cm"] = roundf((level_min - level_max) * 100) / 100.0; // altura útil do reservatório        
-    doc["level_available_cm"] = roundf((level_min - altura_medida) * 100) / 100.0; // nível disponível no reservatório
-    doc["level_available_%"] = roundf(percentual_reservatorio * 100) / 100.0;		    
-    doc["temp_c"] =  roundf(temperatura * 100) / 100.0;
-    doc["humidity_%"] = roundf(humidade * 100) / 100.0; 
-    doc["notes"] = OBSERVACAO_READINGS;   
-    
-
-    char jsonBuffer[512] = {0};
-    size_t jsonLen = serializeJson(doc, jsonBuffer);
-    bool result = client.publish(topico, (const uint8_t*)jsonBuffer, jsonLen, false); // QoS 0
-    Serial.println("MQTT: device_readings enviado.. Topico:  " + String(topico));
-    Serial.println("JSON enviado: " + String(jsonBuffer));            
-    return result;
-}
-
 /**************************************************************
  * ENVIO DE CONFIRMAÇÃO DE CONFIGURAÇÕES VIA MQTT
  */
@@ -885,16 +827,11 @@ bool mqtt_send_settings_confirmation() {
     doc["filter_threshold_pct"] = filter_threshold;
     
     // Configurações de conectividade (sem senhas por segurança)
-    doc["wifi_ssid"] = WiFi.SSID(); // SSID atual conectado
-    doc["wifi_status"] = WiFi.status() == WL_CONNECTED ? "connected" : "disconnected";
-    doc["wifi_rssi"] = WiFi.RSSI();
-    doc["wifi_ip"] = WiFi.localIP().toString();
-    
+    doc["wifi_ssid"] = WiFi.SSID(); // SSID atual conectado    
     doc["mqtt_server"] = MQTT_SERVER;
     doc["mqtt_port"] = PORT_MQTT;
     doc["mqtt_user"] = MQTT_USERNAME;
-    doc["mqtt_status"] = client.connected() ? "connected" : "disconnected";
-    
+    doc["mqtt_status"] = client.connected() ? "connected" : "disconnected";    
     doc["status"] = "settings_updated";
     doc["message"] = "Configurações atualizadas com sucesso";
 
@@ -972,48 +909,43 @@ bool mqtt_send_datas_readings() {
     
     // se habilitado = reservatório incluir na lista leitura do reservatório
     if (enabled_send_level_readings) {        
-        JsonObject reading = readings.createNestedObject();
-        reading["sensor_type"] = "ultrasonic";
+        JsonObject reading = readings.createNestedObject();        
         reading["metric_name"] = "level";
         reading["value"] = roundf(percentual_reservatorio * 100) / 100.0;
         reading["unit"] = "percent";
-        reading["quality_flag"] = 0;        
+        reading["message_code"] = 0;        
         enabled_send_level_readings = false;
     }
 
     // se habilitado = temperatura incluir na lista leitura da temperatura
     if (enabled_send_temperature_readings) {        
-        JsonObject reading = readings.createNestedObject();
-        reading["sensor_type"] = "";
+        JsonObject reading = readings.createNestedObject();        
         reading["metric_name"] = "temperature";
         reading["value"] = roundf(temperatura * 100) / 100.0;        
         reading["unit"] = "celsius";
-        reading["quality_flag"] = 0;
+        reading["message_code"] = 0;
         enabled_send_temperature_readings = false;
     }
     
     // se habilitado = humidade incluir na lista leitura de humidade
     if (enabled_send_humidity_readings) {        
-        JsonObject reading = readings.createNestedObject();
-        reading["sensor_type"] = "humidity";
+        JsonObject reading = readings.createNestedObject();        
         reading["metric_name"] = "humidity";
         reading["value"] = roundf(humidade * 100) / 100.0;        
         reading["unit"] = "percent";
-        reading["quality_flag"] = 0;    
+        reading["message_code"] = 0;    
         enabled_send_humidity_readings = false;
     }
 
     // se habilitado = ticket incluir na lista leitura do ticket
     if (enabled_send_ticket_readings) {        
         JsonObject reading = readings.createNestedObject();
-        reading["sensor_type"] = "pulse";
-        reading["metric_name"] = "takt_time";
-        reading["value"] = qtd_batidas_intervalo;//current_ticket;        
-        reading["unit"] = "units";
-        reading["quality_flag"] = 0;     
+        reading["metric_name"] = "batch_time";
+        reading["value"] = qtd_batidas_intervalo;//current_ticket;
+        reading["interval"] = 60;
+        reading["message_code"] = 0;
         enabled_send_ticket_readings = false;
     }
-
     
 
     char jsonBuffer[1024] = {0};
@@ -1027,10 +959,6 @@ bool mqtt_send_datas_readings() {
 
 
 
-
-
-
-
 /**************************************************************
  * FIM DO ARQUIVO wifi_mqtt.cpp
  */
@@ -1038,39 +966,6 @@ bool mqtt_send_datas_readings() {
 
 
 
- /*
-  ToDo: Exemplo de JSON para device_readings
- { 
-  "table": "device_readings",
-  "device_id": "presto-plh-l01-lna-002",
-  "timestamp": "2025-10-18T10:30:00Z",
-  "wifi_rssi_dbm": -65,
-  "readings": [
-    {
-      "sensor_type": "temperature",
-      "metric_name": "temperature",
-      "value": 23.5,
-      "unit": "celsius",
-      "quality_flag": 0
-    },
-    {
-      "sensor_type": "level",
-      "metric_name": "volume",
-      "value": 1500.0,
-      "unit": "liters",
-      "quality_flag": 0
-    },
-    {
-      "sensor_type": "humidity",
-      "metric_name": "humidity",
-      "value": 65.0,
-      "unit": "percent",
-      "quality_flag": 0
-    }
-  ]
-}
- 
- */
 
 
 

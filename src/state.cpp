@@ -144,8 +144,7 @@ void verifica_timer(){
   if (timerToSendReadings){
     // Executa a ação desejada
     // Exemplo: Enviar dados de sensores via MQTT
-    if (WiFi.status() == WL_CONNECTED) {
-        //bool enviado = mqtt_send_readings();    
+    if (WiFi.status() == WL_CONNECTED) {        
         enabled_send_temperature_readings = true;
         enabled_send_humidity_readings = true;
         enabled_send_level_readings = true;
