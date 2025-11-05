@@ -31,7 +31,7 @@ void loop_ota();
 void setup_ntp(void);
 
 //void mqtt_send_data(String, String);
-bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_leitura, const char* observacao);
+bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_message_batch, const char* observacao);
 bool mqtt_send_info();
 bool mqtt_send_settings();
 bool mqtt_send_settings_confirmation();

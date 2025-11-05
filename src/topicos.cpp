@@ -20,9 +20,10 @@ extern void reset_percentual_filter();
 // ============ VARIÁVEIS GLOBAIS PARA CONTROLE DE ENVIO DE LEITURAS ============
 bool enabled_send_level_readings = false;        // Habilita envio de leituras de nível
 bool enabled_send_temperature_readings = false;  // Habilita envio de leituras de temperatura
-bool enabled_send_ticket_readings = false;      // Habilita envio de leituras de ticket
+bool enabled_send_batch_readings = false;      // Habilita envio de leituras de ticket
 bool enabled_send_humidity_readings = false;     // Habilita envio de leituras de umidade
 
+long id_message_batch = 0;                     // ID da mensagem de batch
 
 
 /**************************************************************
@@ -557,11 +558,11 @@ void reconnect()
 * Exemplo de JSON enviado:
 *{   "equipamento":"teste",
 *    "hora":"2025-07-17 21:11:17",
-*    "id_leitura":"3",
+*    "id_message_batch":"3",
 *    "observacao":""  
 * }
 */
-bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_leitura, const char* observacao) {
+bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_message_batch, const char* observacao) {
     if (!client.connected()) {
         return false;
     }
@@ -575,7 +576,7 @@ bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_l
     doc["device_id"] = DISPOSITIVO_ID;
     doc["timestamp"] = timestamp2;
     doc["wifi_rssi_dbm"] = WiFi.RSSI();    
-    doc["takt_time_id"] = id_leitura;
+    doc["takt_time_id"] = id_message_batch;
     doc["note"] = observacao;
 
     char jsonBuffer[256] = {0};
@@ -583,7 +584,7 @@ bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_l
     bool result = client.publish(topico, (const uint8_t*)jsonBuffer, jsonLen, false); // QoS 0
 
     // web server update
-    idBatida = id_leitura; // Atualiza o ID da batida
+    idBatida = id_message_batch; // Atualiza o ID da batida
     Serial.println("MQTT: Dados enviados.." + String(CLIENTE));    
     //handleRoot(); // Atualiza a página web após enviar os dados
 
@@ -607,7 +608,7 @@ bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_l
 * }
 */
 
-bool mqtt_send_settings(){//const char* nome_equipamento, const char* horario, long id_leitura, const char* observacao) {
+bool mqtt_send_settings(){//const char* nome_equipamento, const char* horario, long id_message_batch, const char* observacao) {
     if (!client.connected()) {
        return false;
     }
@@ -641,12 +642,12 @@ bool mqtt_send_settings(){//const char* nome_equipamento, const char* horario, l
 * Exemplo de JSON enviado:
 *{   "equipamento":"teste",
 *    "hora":"2025-07-17 21:11:17",
-*    "id_leitura":"3",
+*    "id_message_batch":"3",
 *    "observacao":""  
 * }
 */
 
-bool mqtt_send_info(){//const char* nome_equipamento, const char* horario, long id_leitura, const char* observacao) {
+bool mqtt_send_info(){//const char* nome_equipamento, const char* horario, long id_message_batch, const char* observacao) {
     if (!client.connected()) {
        return false;
     }
@@ -938,13 +939,14 @@ bool mqtt_send_datas_readings() {
     }
 
     // se habilitado = ticket incluir na lista leitura do ticket
-    if (enabled_send_ticket_readings) {        
+    if (enabled_send_batch_readings) {        
         JsonObject reading = readings.createNestedObject();
         reading["metric_name"] = "batch_time";
         reading["value"] = qtd_batidas_intervalo;//current_ticket;
         reading["interval"] = 60;
+        reading["message_id"] = id_message_batch;
         reading["message_code"] = 0;
-        enabled_send_ticket_readings = false;
+        enabled_send_batch_readings = false;
     }
     
 

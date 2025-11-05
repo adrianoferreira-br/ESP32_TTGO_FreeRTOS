@@ -19,10 +19,10 @@ extern void setup_mqtt(void);
 // ============ DECLARAÇÕES DE VARIÁVEIS GLOBAIS ============
 extern bool enabled_send_level_readings;        // Habilita envio de leituras de nível
 extern bool enabled_send_temperature_readings;  // Habilita envio de leituras de temperatura
-extern bool enabled_send_ticket_readings;       // Habilita envio de leituras de ticket
+extern bool enabled_send_batch_readings;       // Habilita envio de leituras de ticket
 extern bool enabled_send_humidity_readings;     // Habilita envio de leituras de umidade
 
-
+extern long id_message_batch;                     // ID da mensagem de batch
 
 //mqtt - Callback e utilitários
 void callback(char*, byte*, unsigned int);
@@ -30,7 +30,7 @@ void reconnect(void);
 String getMqttErrorMessage(int errorCode);
 
 //mqtt - Funções de envio de dados
-bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_leitura, const char* observacao);
+bool mqtt_send_data(const char* nome_equipamento, const char* horario, long id_message_batch, const char* observacao);
 bool mqtt_send_info();
 bool mqtt_send_settings();
 bool mqtt_send_settings_confirmation();

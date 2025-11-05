@@ -23,7 +23,7 @@ void verifica_batida_prensa(void);
 void setup_batidas_prensa();
 void verifica_interrupcao();
 void try_send_buffered_batidas();
-void buffer_batida(const char* nome, const char* timeStr, long id, const char* obs);
+void buffer_batida(const char* nome, const char* timeStr, long id, int qtd_batidas, int interval, int cod_erro);
 void set_reservatorio();
 extern char* get_time_str(char* buffer, size_t bufferSize);
 
