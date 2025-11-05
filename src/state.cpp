@@ -26,7 +26,7 @@ float distance_max = 100; // distância máxima do sensor ultrassônico em cm (p
 float percentual_reservatorio = 0.0; // percentual do reservatório
 float altura_reservatorio = 100.0; // distância máxima do sensor ultrassônico em cm (padrão max. 400cm para o JSN-SR04T)
 
-
+int message_error_code = 0;
 
 
 //Timer do ESP32
@@ -332,7 +332,8 @@ void verifica_batida_prensa(){
 
                     // Se falha do MQTT, armazena no buffer
                     if (!enviado) {            
-                        buffer_batida(DISPOSITIVO_ID, timeStr, id_message_batch, qtd_batidas_intervalo, 60 /*interval*/, 10/*cod erro MQTT*/);  
+                        message_error_code = 10;
+                        buffer_batida(DISPOSITIVO_ID, timeStr, id_message_batch, qtd_batidas_intervalo, sample_interval_batch, message_error_code);                          
                         Serial.println("❌ Falha MQTT - Dados armazenados no buffer");
                     } else {
                         Serial.println("✅ Dados batch_time enviados via MQTT com sucesso!");
@@ -340,7 +341,8 @@ void verifica_batida_prensa(){
                     
                 } else {
                     // Se falha do WiFi, armazena no buffer
-                    buffer_batida(DISPOSITIVO_ID, timeStr, id_message_batch, qtd_batidas_intervalo, 60 /*interval*/, 20/*cod erro WiFi*/);
+                    message_error_code = 20;
+                    buffer_batida(DISPOSITIVO_ID, timeStr, id_message_batch, qtd_batidas_intervalo, sample_interval_batch, message_error_code);
                     Serial.println("❌ Falha WiFi - Dados armazenados no buffer");
                 }
           }

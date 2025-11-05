@@ -169,6 +169,15 @@ void callback(char* topic, byte* payload, unsigned int length)
                 // ✅ Não podemos alterar char* diretamente - valor será carregado no próximo boot
                 Serial.println("✅ Salvo LOCAL: " + local_tmp + " (ativo no próximo boot)");
             }
+
+            // LINE            
+            if (doc.containsKey("line")) {
+                String line_tmp = doc["line"];
+                save_flash_string(KEY_LINHA, line_tmp.c_str());
+                strcpy(LINHA, line_tmp.c_str());
+                Serial.println("✅ Salvo linha: " + line_tmp);
+            }
+
             // TIPO EQUIPAMENTO
             if (doc.containsKey("type_equip")) {
                 String tipo_equip_tmp = doc["type_equip"];
@@ -247,13 +256,7 @@ void callback(char* topic, byte* payload, unsigned int length)
                 Serial.println("✅ Salvo observacao_readings: " + observacao_readings_tmp);
             }
 
-            // LINHA
-            if (doc.containsKey("linha")) {
-                String linha_tmp = doc["linha"];
-                save_flash_string(KEY_LINHA, linha_tmp.c_str());
-                strcpy(LINHA, linha_tmp.c_str());
-                Serial.println("✅ Salvo linha: " + linha_tmp);
-            }
+            
 
             // PLACA_SOC
             if (doc.containsKey("placa_soc")) {
@@ -956,7 +959,9 @@ bool mqtt_send_datas_readings() {
         reading["value"] = qtd_batidas_intervalo;//current_ticket;
         reading["interval"] = sample_interval_batch;
         reading["message_id"] = id_message_batch;
-        reading["message_code"] = 0;
+        if (message_error_code != 0) {
+            reading["message_code"] = message_error_code;
+        }
         enabled_send_batch_readings = false;
     }
     

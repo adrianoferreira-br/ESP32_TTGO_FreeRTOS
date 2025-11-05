@@ -181,6 +181,19 @@ void load_all_settings_from_flash() {
         Serial.println("⚠️ LOCAL vazio, usando padrão: " + String(LOCAL));
     }
 
+    // LINHA
+    char line_tmp[32];
+    read_flash_string(KEY_LINHA, line_tmp, sizeof(line_tmp));
+    if (strlen(line_tmp) > 0) {
+        // ✅ ATUALIZA a variável global com o valor da flash
+        strcpy(LINHA, line_tmp);
+        Serial.println("✅ LINHA carregado da flash: " + String(LINHA));
+    } else {
+        // ✅ Salva o valor padrão na flash para próximas vezes
+        save_flash_string(KEY_LINHA, LINHA);
+        Serial.println("⚠️ LINHA vazio, usando padrão: " + String(LINHA));
+    }
+
     // TIPO DO DISPOSITIVO
     char device_type_tmp[32];
     read_flash_string(KEY_TIPO_EQUIP, device_type_tmp, sizeof(device_type_tmp));

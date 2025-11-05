@@ -31,6 +31,7 @@ extern char* get_time_str(char* buffer, size_t bufferSize);
 
 extern long idBatida; // Apenas declaração, sem inicialização
 extern int qtd_batidas_intervalo;
+extern int message_error_code;
 
 
 #endif // STATE_H_
