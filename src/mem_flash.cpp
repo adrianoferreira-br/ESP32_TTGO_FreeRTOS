@@ -107,6 +107,7 @@ void load_all_settings_from_flash() {
     level_max = read_flash_float(KEY_LEVEL_MAX);
     level_min = read_flash_float(KEY_LEVEL_MIN);
     SAMPLE_INTERVAL = read_flash_int(KEY_SAMPLE_TIME_S);
+    sample_interval_batch = read_flash_int(KEY_SAMPLE_INTERVAL_BATCH);
     
     // Validação e valores padrão para reservatório
     if (level_max <= 0.0 || level_max > 400 || isnan(level_max)) {
@@ -131,6 +132,14 @@ void load_all_settings_from_flash() {
         Serial.println("⚠️ Sample_interval inválido, usando padrão: " + String(SAMPLE_INTERVAL) + " segundos");
     } else {
         Serial.println("✅ Sample_interval: " + String(SAMPLE_INTERVAL) + " segundos");
+    }
+    
+    if (sample_interval_batch <= 0 || sample_interval_batch > 3600) {
+        sample_interval_batch = 60; // padrão 60 segundos (1 minuto)
+        save_flash_int(KEY_SAMPLE_INTERVAL_BATCH, sample_interval_batch);
+        Serial.println("⚠️ Sample_interval_batch inválido, usando padrão: " + String(sample_interval_batch) + " segundos");
+    } else {
+        Serial.println("✅ Sample_interval_batch: " + String(sample_interval_batch) + " segundos");
     }
     
     // ▶ FILTER THRESHOLD

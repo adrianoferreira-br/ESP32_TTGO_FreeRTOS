@@ -136,13 +136,22 @@ void callback(char* topic, byte* payload, unsigned int length)
                 save_flash_int(KEY_SAMPLE_TIME_S, sample_time_tmp);  // Usa função centralizada
                 SAMPLE_INTERVAL = sample_time_tmp; // Atualiza a variável global imediatamente
                 Serial.println("✅ Salvo sample_time_s: " + String(sample_time_tmp) + " segundos");
-            }
+            }            
             if (doc.containsKey("filter_threshold")) {
                 float filter_threshold_tmp = doc["filter_threshold"];
                 save_flash_float(KEY_FILTER_THRESHOLD, filter_threshold_tmp);  // Usa função centralizada
                 filter_threshold = filter_threshold_tmp; // Atualiza a variável global imediatamente
                 Serial.println("✅ Salvo filter_threshold: " + String(filter_threshold_tmp) + "%");
             }
+
+            if (doc.containsKey("sample_interval_batch")) {
+                int sample_interval_batch_tmp = doc["sample_interval_batch"];
+                save_flash_int(KEY_SAMPLE_INTERVAL_BATCH, sample_interval_batch_tmp);  // Usa função centralizada
+                sample_interval_batch = sample_interval_batch_tmp; // Atualiza a variável global imediatamente
+                reconfigure_batch_timer(sample_interval_batch_tmp); // Reconfigura o timer dinamicamente
+                Serial.println("✅ Salvo sample_interval_batch: " + String(sample_interval_batch_tmp) + " segundos");             
+            }
+
 
             // =============================== CONFIGURAÇÕES DE DISPOSITIVO ===
             
@@ -624,6 +633,7 @@ bool mqtt_send_settings(){//const char* nome_equipamento, const char* horario, l
     doc["level_min_cm"] = level_min;
     doc["level_max_cm"] = level_max;    
     doc["sample_time_s"] = SAMPLE_INTERVAL;
+    doc["sample_interval_batch"] = sample_interval_batch;
     doc["filter_threshold_pct"] = filter_threshold;    
     doc["notes"] = OBSERVACAO_SETTINGS;
 
@@ -825,6 +835,7 @@ bool mqtt_send_settings_confirmation() {
     doc["level_min"] = level_min;
     doc["level_effective_cm"] = roundf((level_min - level_max) * 100) / 100.0; // altura útil
     doc["sample_time_s"] = SAMPLE_INTERVAL;
+    doc["sample_interval_batch"] = sample_interval_batch;
     doc["filter_threshold_pct"] = filter_threshold;
     
     // Configurações de conectividade (sem senhas por segurança)
@@ -943,7 +954,7 @@ bool mqtt_send_datas_readings() {
         JsonObject reading = readings.createNestedObject();
         reading["metric_name"] = "batch_time";
         reading["value"] = qtd_batidas_intervalo;//current_ticket;
-        reading["interval"] = 60;
+        reading["interval"] = sample_interval_batch;
         reading["message_id"] = id_message_batch;
         reading["message_code"] = 0;
         enabled_send_batch_readings = false;

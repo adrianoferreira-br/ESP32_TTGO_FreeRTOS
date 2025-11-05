@@ -104,10 +104,33 @@ void setup_timer_send_takt_time() {
   
   timer = timerBegin(1, 80, true); // Timer 1, prescaler 80 (1us por tick)
   timerAttachInterrupt(timer, &onTimerSendMqtt, true);
-  timerAlarmWrite(timer, 1000000 * 30, true); // 1.000.000us * 30 = 30s
+  timerAlarmWrite(timer, 1000000 * sample_interval_batch, true); // 1.000.000us * sample_interval_batch = sample_interval_batch segundos
   timerAlarmEnable(timer);
+  Serial.printf("✅ Timer batch configurado para %d segundos\n", sample_interval_batch);
   
 }
+
+/**********************************************************************************************
+*   Função para reconfigurar o timer batch_time dinamicamente
+*/
+void reconfigure_batch_timer(int new_interval) {
+    if (new_interval <= 0 || new_interval > 3600) {
+        Serial.println("⚠️ Intervalo inválido para timer batch. Ignorando...");
+        return;
+    }
+    
+    // Desabilita o timer atual
+    timerAlarmDisable(timer);
+    
+    // Reconfigura com o novo intervalo
+    timerAlarmWrite(timer, 1000000ULL * new_interval, true);
+    
+    // Reabilita o timer
+    timerAlarmEnable(timer);
+    
+    Serial.printf("🔄 Timer batch reconfigurado para %d segundos\n", new_interval);
+}
+
 // Função de interrupção do timer para envio via MQTT
 void IRAM_ATTR onTimerSendMqtt() {
   portENTER_CRITICAL_ISR(&timerMux);

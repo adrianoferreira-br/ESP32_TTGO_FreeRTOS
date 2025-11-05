@@ -13,6 +13,7 @@ void InterruptionPino38(void);
 void InterruptionPino12(void);
 void setup_timer();
 void setup_timer_send_takt_time();
+void reconfigure_batch_timer(int new_interval);
 void onTimer();
 void onTimerSendMqtt();
 void verifica_timer();

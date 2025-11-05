@@ -8,7 +8,7 @@
 // CONFIGURAÇÃO DO CLIENTE E EQUIPAMENTO
 // ============================================================================
 #define Adriano // Presto | Adriano
-#define EQUIP_RESERVATORIO // EQUIP_PRENSA | EQUIP_PROCESSAMENTO | EQUIP_LINEA | EQUIP_RESERVATORIO | EQUIP_OUTRO
+#define EQUIP_PRENSA // EQUIP_PRENSA | EQUIP_PROCESSAMENTO | EQUIP_LINEA | EQUIP_RESERVATORIO | EQUIP_OUTRO
 
 // ============================================================================
 // ATIVAÇÃO AUTOMÁTICA DOS SENSORES BASEADO NO TIPO DE EQUIPAMENTO
@@ -60,6 +60,7 @@
 #define KEY_LEVEL_MAX     "level_max"
 #define KEY_LEVEL_MIN     "level_min"
 #define KEY_SAMPLE_TIME_S "sample_time_s"
+#define KEY_SAMPLE_INTERVAL_BATCH "sample_interval_batch"
 #define KEY_FILTER_THRESHOLD "filter_threshold"
 
 
@@ -90,6 +91,7 @@ extern float level_max;
 extern float level_min;
 extern float filter_threshold; // Threshold do filtro em % (padrão 10%)
 extern int SAMPLE_INTERVAL; // em segundos - Intervalo de amostragem em segundos (padrão 5 minutos)
+extern int sample_interval_batch; // em segundos - Intervalo de envio batch_time via MQTT (padrão 60 segundos)
 
 // informações do sensor ultrassônico
 extern float percentual_reservatorio;   // percentual do reservatório

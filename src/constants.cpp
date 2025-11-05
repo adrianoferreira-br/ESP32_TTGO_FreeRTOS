@@ -39,6 +39,7 @@ char DATA_INSTALACAO[32] = "2025-10-02"; // Data de instalação do equipamento 
 
 // informações da aplicação
 int  SAMPLE_INTERVAL = 60; //em segundos - Intervalo de envio MQTT do reservatório
+int  sample_interval_batch = 60; //em segundos - Intervalo de envio batch_time via MQTT (padrão 60 segundos)
 
 // Informação do coletor de dados
 
