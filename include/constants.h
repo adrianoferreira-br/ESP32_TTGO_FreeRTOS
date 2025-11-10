@@ -7,8 +7,7 @@
 // ============================================================================
 // CONFIGURAÇÃO DO CLIENTE E EQUIPAMENTO
 // ============================================================================
-#define Adriano // Presto | Adriano
-#define EQUIP_PRENSA // EQUIP_PRENSA | EQUIP_PROCESSAMENTO | EQUIP_LINEA | EQUIP_RESERVATORIO | EQUIP_OUTRO
+#define EQUIP_LINEA // EQUIP_PRENSA | EQUIP_PROCESSAMENTO | EQUIP_LINEA | EQUIP_RESERVATORIO | EQUIP_OUTRO
 
 // ============================================================================
 // ATIVAÇÃO AUTOMÁTICA DOS SENSORES BASEADO NO TIPO DE EQUIPAMENTO
@@ -47,6 +46,7 @@
 #define KEY_PLACA_SOC       "soc_board"
 #define KEY_FABRICANTE_MAQUINA "manufacturer_machine"
 #define KEY_MODELO_MAQUINA  "model_machine"
+#define KEY_SERIAL_MAQUINA  "serial_machine"
 #define KEY_TIPO_SENSOR     "type_sensor"
 #define KEY_DEVICE_INFO     "notes_device_info"
 #define KEY_OBSERVACAO_SETTINGS "notes_settings"
@@ -113,6 +113,7 @@ extern char LINHA[32];
 extern char FABRICANTE_MAQUINA[64];
 extern char NOME_EQUIPAMENTO[32];    
 extern char MODELO_MAQUINA[64];
+extern char SERIAL_MAQUINA[64];
 extern char ID_EQUIPAMENTO[32];
 extern char TIPO_EQUIPAMENTO[32];
 // informação do sensor indx4

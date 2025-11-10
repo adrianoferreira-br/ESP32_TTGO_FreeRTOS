@@ -323,6 +323,17 @@ void load_all_settings_from_flash() {
         Serial.println("⚠️ MODELO_MAQUINA vazio, usando padrão: " + String(MODELO_MAQUINA));
     }
 
+    // SERIAL_MAQUINA
+    char serial_maquina_tmp[64];
+    read_flash_string(KEY_SERIAL_MAQUINA, serial_maquina_tmp, sizeof(serial_maquina_tmp));
+    if (strlen(serial_maquina_tmp) > 0) {
+        strcpy(SERIAL_MAQUINA, serial_maquina_tmp);
+        Serial.println("✅ SERIAL_MAQUINA carregado da flash: " + String(SERIAL_MAQUINA));
+    } else {
+        save_flash_string(KEY_SERIAL_MAQUINA, SERIAL_MAQUINA);
+        Serial.println("⚠️ SERIAL_MAQUINA vazio, usando padrão: " + String(SERIAL_MAQUINA));
+    }
+
     // TIPO_SENSOR
     char tipo_sensor_tmp[32];
     read_flash_string(KEY_TIPO_SENSOR, tipo_sensor_tmp, sizeof(tipo_sensor_tmp));
