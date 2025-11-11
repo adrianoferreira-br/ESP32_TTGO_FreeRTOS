@@ -57,25 +57,11 @@ time_t before = 0;
 volatile bool buttonPressed = false;
 
 
-// Defina o tamanho máximo do buffer
-#define MAX_BUFFERED_MSGS 300
 
-// Estrutura para armazenar os dados da batida
-struct BatidaMsg {
-    char nome_equipamento[64];  // Device ID
-    char timeStr[24];           // Timestamp string
-    long id_message_batch;      // ID da mensagem de batch
-    int qtd_batidas;            // Quantidade de batidas no intervalo
-    int interval;               // Intervalo em segundos
-    int cod_erro;               // Código de erro (10=MQTT, 20=WiFi)
-};
-
-// Buffer circular
-BatidaMsg batidaBuffer[MAX_BUFFERED_MSGS];
-int bufferHead = 0;
-int bufferTail = 0;
-int bufferCount = 0;
-
+// VARIÁVEIS DE ACUMULAÇÃO DE BATIDAS 
+int accumulated_batidas = 0;           // Contador acumulado de batidas durante desconexão
+unsigned long disconnection_start_time = 0; // Timestamp da primeira batida durante desconexão
+bool is_accumulating = false;              // Informação do coletor de dadosag indicando se está acumulando batidas
 
 /**********************************************************************************************
  *     FUNÇÃO DE SETUP E CONFIGURAÇÃO INICIAL DA APLICAÇÃO
@@ -304,7 +290,6 @@ void verifica_batida_prensa(){
       
       batida_prensa = false;   
       
-      try_send_buffered_batidas();
       tft.drawString(" ",2, 50, 6); //simula um led no display a cada batida (apaga o "led")
 
  
@@ -313,48 +298,123 @@ void verifica_batida_prensa(){
 
 
 // Envia via MQTT quando chegar o timer correto
-  void check_timer_interrupt_tosend_MqttDataReadings() {
-      if (timerToSendDataReadings == true) {
-          if (qtd_batidas_intervalo > 0) {
-                char timeStr[20];
-                struct tm timeinfo;
-                
-                // Obtém timestamp atual
-                if (getLocalTime(&timeinfo)) {
-                    strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
-                } else {
-                    strcpy(timeStr, "1970-01-01 00:00:00");
-                }
-                
-                if (WiFi.status() == WL_CONNECTED) {
-                      enabled_send_batch_readings = true; // Habilita o envio da leitura do ticket
-                      bool enviado = mqtt_send_datas_readings();
-
-                    // Se falha do MQTT, armazena no buffer
-                    if (!enviado) {            
-                        message_error_code = 10;
-                        buffer_batida(DISPOSITIVO_ID, timeStr, id_message_batch, qtd_batidas_intervalo, sample_interval_batch, message_error_code);                          
-                        Serial.println("❌ Falha MQTT - Dados armazenados no buffer");
-                    } else {
-                        Serial.println("✅ Dados batch_time enviados via MQTT com sucesso!");
-                    }              
+void check_timer_interrupt_tosend_MqttDataReadings() {
+    if (timerToSendDataReadings == true) {
+        if (qtd_batidas_intervalo > 0) {
+            char timeStr[20];
+            struct tm timeinfo;
+            
+            // Obtém timestamp atual
+            if (getLocalTime(&timeinfo)) {
+                strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
+            } else {
+                strcpy(timeStr, "1970-01-01 00:00:00");
+            }
+            
+            bool wifi_connected = (WiFi.status() == WL_CONNECTED);
+            bool mqtt_connected = client.connected();
+            
+            // VERIFICA SE PRECISA INICIAR ACUMULAÇÃO
+            if (!wifi_connected || !mqtt_connected) {
+                if (!is_accumulating) {
+                    // INICIA ACUMULAÇÃO
+                    is_accumulating = true;
+                    accumulated_batidas = qtd_batidas_intervalo;
+                    disconnection_start_time = millis();
                     
+                    // Define código de erro conforme tipo de falha
+                    if (!wifi_connected) {
+                        message_error_code = 1; // WiFi
+                        Serial.println("⚠️ WiFi desconectado - Iniciando acumulação de batidas");
+                    } else {
+                        message_error_code = 2; // MQTT
+                        Serial.println("⚠️ MQTT desconectado - Iniciando acumulação de batidas");
+                    }
+                    Serial.printf("📊 Acumulação iniciada: %d batidas\n", accumulated_batidas);
+                    
+                    // 📺 ATUALIZA DISPLAY
+                    tft.drawString(String(accumulated_batidas) + "  ", 10, 105, 4);
                 } else {
-                    // Se falha do WiFi, armazena no buffer
-                    message_error_code = 20;
-                    buffer_batida(DISPOSITIVO_ID, timeStr, id_message_batch, qtd_batidas_intervalo, sample_interval_batch, message_error_code);
-                    Serial.println("❌ Falha WiFi - Dados armazenados no buffer");
+                    // CONTINUA ACUMULANDO
+                    accumulated_batidas += qtd_batidas_intervalo;
+                    Serial.printf("📊 Acumulando batidas: +%d (Total: %d)\n", 
+                                  qtd_batidas_intervalo, accumulated_batidas);
+                    
+                    // 📺 ATUALIZA DISPLAY
+                    tft.drawString(String(accumulated_batidas) + "  ", 10, 105, 4);
                 }
-          }
-          
-          timerToSendDataReadings = false; // Reseta a flag após envio
-          Serial.printf("Timer MQTT batidas verificado. qntd: %d\n", qtd_batidas_intervalo);
-          qtd_batidas_intervalo = 0;
-          
-          // Tenta enviar mensagens pendentes do buffer
-          try_send_buffered_batidas();
-      }        
-  }
+            } 
+            // VERIFICA SE PRECISA ENVIAR DADOS ACUMULADOS (RECONEXÃO)
+            else if (is_accumulating) {
+                // RECONECTOU - ADICIONA ÚLTIMAS BATIDAS E ENVIA TUDO
+                accumulated_batidas += qtd_batidas_intervalo;
+                unsigned long accumulated_time = (millis() - disconnection_start_time) / 1000;
+                
+                Serial.println("✅ Reconectado! Enviando dados acumulados...");
+                Serial.printf("📊 Total acumulado: %d batidas em %lu segundos\n", 
+                              accumulated_batidas, accumulated_time);
+                
+                // Temporariamente substitui valores para envio
+                int qtd_backup = qtd_batidas_intervalo;
+                int interval_backup = sample_interval_batch;
+                int error_backup = message_error_code;
+                
+                qtd_batidas_intervalo = accumulated_batidas;
+                sample_interval_batch = accumulated_time;
+                // message_error_code já está setado (1=WiFi ou 2=MQTT)
+                
+                enabled_send_batch_readings = true;
+                bool enviado = mqtt_send_datas_readings();
+                
+                // Restaura valores originais
+                qtd_batidas_intervalo = qtd_backup;
+                sample_interval_batch = interval_backup;
+                
+                if (enviado) {
+                    Serial.println("✅ Dados acumulados enviados com sucesso!");
+                    // RESETA ACUMULAÇÃO
+                    is_accumulating = false;
+                    accumulated_batidas = 0;
+                    disconnection_start_time = 0;
+                    message_error_code = 0;
+                    
+                    // 📺 LIMPA DISPLAY (volta para zero)
+                    tft.drawString("0    ", 10, 105, 4);
+                } else {
+                    Serial.println("❌ Falha ao enviar dados acumulados, continuando acumulação");
+                    message_error_code = error_backup; // Mantém código de erro
+                    
+                    // 📺 MANTÉM DISPLAY COM VALOR ACUMULADO
+                    tft.drawString(String(accumulated_batidas) + "  ", 10, 105, 4);
+                }
+            }
+            // OPERAÇÃO NORMAL - ENVIA DIRETO
+            else {
+                message_error_code = 0; // Sem erro
+                enabled_send_batch_readings = true;
+                bool enviado = mqtt_send_datas_readings();
+                
+                if (enviado) {
+                    Serial.println("✅ Dados batch_time enviados via MQTT com sucesso!");
+                } else {
+                    // Falhou - inicia acumulação
+                    is_accumulating = true;
+                    accumulated_batidas = qtd_batidas_intervalo;
+                    disconnection_start_time = millis();
+                    message_error_code = mqtt_connected ? 1 : 2; // 1=WiFi, 2=MQTT
+                    Serial.println("❌ Falha no envio - Iniciando acumulação");
+                    
+                    // 📺 ATUALIZA DISPLAY
+                    tft.drawString(String(accumulated_batidas) + "  ", 10, 105, 4);
+                }
+            }
+        }
+        
+        timerToSendDataReadings = false; // Reseta a flag após processamento
+        Serial.printf("Timer MQTT batidas verificado. qntd: %d\n", qtd_batidas_intervalo);
+        qtd_batidas_intervalo = 0;
+    }        
+}
 
 
 
@@ -416,71 +476,6 @@ void syncNtpIfNeeded() {
         Serial.println("NTP sincronizado");
     }
 }
-
-/**********************************************************************************************
- *     ADICIONA MENSAGEM AO BUFFER
- */    
-/**********************************************************************************************
- *     ADICIONA MENSAGEM AO BUFFER
- */
-void buffer_batida(const char* nome, const char* timeStr, long id, int qtd_batidas, int interval, int cod_erro) {
-    if (bufferCount < MAX_BUFFERED_MSGS) {
-        strncpy(batidaBuffer[bufferTail].nome_equipamento, nome, sizeof(batidaBuffer[bufferTail].nome_equipamento)-1);
-        batidaBuffer[bufferTail].nome_equipamento[sizeof(batidaBuffer[bufferTail].nome_equipamento)-1] = '\0';
-        
-        strncpy(batidaBuffer[bufferTail].timeStr, timeStr, sizeof(batidaBuffer[bufferTail].timeStr)-1);
-        batidaBuffer[bufferTail].timeStr[sizeof(batidaBuffer[bufferTail].timeStr)-1] = '\0';
-        
-        batidaBuffer[bufferTail].id_message_batch = id;
-        batidaBuffer[bufferTail].qtd_batidas = qtd_batidas;
-        batidaBuffer[bufferTail].interval = interval;
-        batidaBuffer[bufferTail].cod_erro = cod_erro;
-        
-        bufferTail = (bufferTail + 1) % MAX_BUFFERED_MSGS;
-        bufferCount++;
-        
-        Serial.printf("📦 Buffer armazenado: [%d/%d] Device: %s, Batidas: %d, Erro: %d\n", 
-                      bufferCount, MAX_BUFFERED_MSGS, nome, qtd_batidas, cod_erro);
-    } else {
-        // Buffer cheio, pode descartar ou sobrescrever o mais antigo
-        Serial.println("⚠️ Buffer de batidas CHEIO! Mensagem descartada.");
-    }
-    tft.drawString(String(bufferCount), 10, 105, 4);
-}
-
-/**********************************************************************************************
- *     TENTA ENVIAR TODAS AS MENSAGENS DO BUFFER
- */
-void try_send_buffered_batidas() {
-    while (bufferCount > 0) {
-        BatidaMsg& msg = batidaBuffer[bufferHead];
-        
-        // Habilita apenas o envio de ticket com os dados do buffer
-        enabled_send_batch_readings = true;
-        
-        // Temporariamente armazena qtd_batidas_intervalo e restaura após envio
-        int qtd_batidas_backup = qtd_batidas_intervalo;
-        qtd_batidas_intervalo = msg.qtd_batidas;
-        
-        bool enviado = mqtt_send_datas_readings();
-        
-        // Restaura o valor original
-        qtd_batidas_intervalo = qtd_batidas_backup;
-        
-        if (enviado) {
-            bufferHead = (bufferHead + 1) % MAX_BUFFERED_MSGS;
-            bufferCount--;            
-            Serial.println("✅ Mensagem do buffer enviada com sucesso!");
-        } else {
-            // Se falhar, pare para tentar novamente depois
-            Serial.println("⚠️ Falha ao enviar mensagem do buffer, tentando novamente mais tarde...");
-            break;
-        }
-        tft.drawString(String(bufferCount) + "  ", 10, 105, 4);
-        Serial.println("buffer_dec: " + String(bufferCount));
-    } 
-}
-
 
 /**********************************************************************************************
 *     DEFINE A MINIMO E MAXIMO DO RESERVATÓRIO DE ÁGUA
