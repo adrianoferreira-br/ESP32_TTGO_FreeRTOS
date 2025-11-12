@@ -7,27 +7,27 @@
 
 
 //Definir em constant.h
-#define Adriano // Presto | Adriano
+#define Presto // Presto | Adriano
 
 
 // Informações do cliente
-char CLIENTE[32] = "adriano"; // presto | adriano
+char CLIENTE[32] = "presto"; // presto | adriano
 char LOCAL[32] = "palhoca";      // palhoca | floripa | 
 
 
 // Informações do equipamento
-char TIPO_EQUIPAMENTO[32] = "linea"; // prensa | processamento | linea | reservatorio | teste
-char ID_EQUIPAMENTO[32] = "002"; // Identificação do equipamento (deve ser único para cada equipamento)
-char NOME_EQUIPAMENTO[32] = "linea_2";   // prensa_1 | prensa_2 | prensa_3 | prc_1  | linea_1 | linea_2 | teste | cx_agua
+char TIPO_EQUIPAMENTO[32] = "prensa"; // prensa | processamento | linea | reservatorio | teste
+char ID_EQUIPAMENTO[32] = "001"; // Identificação do equipamento (deve ser único para cada equipamento)
+char NOME_EQUIPAMENTO[32] = "prensa_1";   // prensa_1 | prensa_2 | prensa_3 | prc_1  | linea_1 | linea_2 | teste | cx_agua
 char LINHA[32] = "l01"; // Linha de produção onde o equipamento está instalado: L01 | L02 | L03 | etc
-char FABRICANTE_MAQUINA[64] = "Panitec"; //Panitec | Schuler | Komatsu | etc
+char FABRICANTE_MAQUINA[64] = "jacare"; //Panitec | Schuler | Komatsu | etc
 char MODELO_MAQUINA[64] = ""; // Prensa X1000 | Forno Y2000 | etc
 char SERIAL_MAQUINA[64] = "SN000000"; // Número de série da máquina
 
 
 // Informações do dispositivo
-char DISPOSITIVO_ID[64] = "presto-plh-l01-lna-001"; // Identificação do dispositivo (deve ser único para cada equipamento, usa no mqtt client ID
-char TIPO_SENSOR[32] = "pulse"; // Ultrassonico | DHT22 | Batida | TensãoBateria
+char DISPOSITIVO_ID[64] = "presto-plh-l01-prs-001"; // Identificação do dispositivo (deve ser único para cada equipamento, usa no mqtt client ID
+char TIPO_SENSOR[32] = "pulse eletrico"; // Ultrassonico | DHT22 | Batida | TensãoBateria
 char OBSERVACAO_READINGS[64] = ""; // Observação para as leituras enviadas via MQTT
 char OBSERVACAO_DEVICE_INFO[64] = ""; // Observação para as informações do dispositivo enviadas via MQTT
 char OBSERVACAO_SETTINGS[64] = ""; // Observação para as configurações do dispositivo enviadas via MQTT
@@ -37,8 +37,8 @@ char MODELO_SENSOR[32] = ""; // Modelo do sensor
 char FABRICANTE_SENSOR[32] = ""; // Fabricante do sensor
 char VERSAO_HARDWARE[32] = "v1.0"; // Versão do hardware
 
-char DATA_INSTALACAO[32] = "2025-11-05"; // Data de instalação do equipamento no local 
-char* VERSION = "v25.11.05";                             // Versão atual de uso. ex. "v25.4.15"
+char DATA_INSTALACAO[32] = "2025-11-12"; // Data de instalação do equipamento no local 
+char* VERSION = "v25.11.12";                             // Versão atual de uso. ex. "v25.4.15"
 
 
 // informações da aplicação
