@@ -465,11 +465,23 @@ String getMqttErrorMessage(int errorCode) {
  */
 void reconnect() 
 { 
-  int qnt = 3;
-  while (!client.connected() && qnt > 1) 
+  static unsigned long last_reconnect_attempt = 0;
+  static int tentativas_restantes = 3;
+  const unsigned long reconnect_interval = 5000; // 5 segundos entre tentativas
+  
+  // ✅ CONTROLE NÃO-BLOQUEANTE: Só tenta reconectar após intervalo
+  unsigned long now = millis();
+  if (now - last_reconnect_attempt < reconnect_interval) {
+    return; // Sai sem bloquear o loop
+  }
+  
+  // Atualiza timestamp da tentativa
+  last_reconnect_attempt = now;
+  
+  if (!client.connected() && tentativas_restantes > 0) 
   { 
-    qnt--;
-    Serial.println("=== TENTATIVA CONEXÃO MQTT ===");
+    tentativas_restantes--;
+    Serial.println("=== TENTATIVA CONEXÃO MQTT (restam " + String(tentativas_restantes) + ") ===");
     Serial.println("Device ID: '" + String(DISPOSITIVO_ID) + "'");
     Serial.println("Username: '" + String(MQTT_USERNAME) + "' (len: " + String(strlen(MQTT_USERNAME)) + ")");
     Serial.println("Password: '" + String(MQTT_PASSWORD) + "' (len: " + String(strlen(MQTT_PASSWORD)) + ")");
@@ -504,7 +516,11 @@ void reconnect()
       }
     }
     
-    if (connected) {       
+    if (connected) {
+      // ✅ SUCESSO - RESETA CONTADOR       
+      tentativas_restantes = 3;
+      last_reconnect_attempt = 0;
+      
       Serial.println("Conectado no MQTT com nome: " + String(DISPOSITIVO_ID));   
       client.subscribe("info",1);
       client.subscribe("settings",1);
@@ -548,7 +564,7 @@ void reconnect()
     else 
     { 
       int errorCode = client.state();
-      Serial.println("❌ TODAS AS TENTATIVAS FALHARAM!");
+      Serial.println("❌ FALHA NA CONEXÃO!");
       Serial.println("Último erro: " + String(errorCode) + " - " + getMqttErrorMessage(errorCode));
       
       // Mensagens específicas para problemas comuns
@@ -567,8 +583,13 @@ void reconnect()
         Serial.println("   • Verifique se o broker está online");
       }
       
-      Serial.println("Tentando novamente em 2 segundos..."); 
-      delay(2000); 
+      if (tentativas_restantes > 0) {
+        Serial.println("⏳ Próxima tentativa em " + String(reconnect_interval/1000) + " segundos..."); 
+      } else {
+        Serial.println("⏸️ Tentativas esgotadas. Aguardando " + String(reconnect_interval/1000) + " segundos antes de reiniciar...");
+        tentativas_restantes = 3; // Reseta para próximo ciclo
+      }
+      // ✅ REMOVIDO delay(2000) - agora usa controle não-bloqueante com millis()
     } 
   } 
 }

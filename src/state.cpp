@@ -208,8 +208,8 @@ void IRAM_ATTR InterruptionPino12() {
 
 void verifica_interrupcao(){
   if (batida_prensa){
-    verifica_batida_prensa();  
-    batida_prensa = false;  
+    batida_prensa = false; // Reset flag ANTES de processar para evitar múltiplas execuções
+    verifica_batida_prensa();      
   }
   return;
 }
@@ -228,12 +228,14 @@ void verifica_batida_prensa(){
     //Serial.println(String(digitalRead(BATIDA_PIN)) + "- verifica_batida_prensa");    
     tft.drawString("*",2, 50, 6); //simula um led no display a cada batida (acende o "led")
     
-     //atualiza horário       
-    if (now - lastNtpSync > ntpSyncInterval || lastNtpSync == 0) {
-        configTime(-3 * 3600, 0, "a.st1.ntp.br", "ntp.br", "time.nist.gov");
-        lastNtpSync = now;
-        Serial.println("NTP sincronizado");        
-    }    
+    // ✅ SINCRONIZA NTP APENAS SE CONECTADO (evita bloqueio quando desconectado)
+    if (WiFi.status() == WL_CONNECTED) {
+        if (now - lastNtpSync > ntpSyncInterval || lastNtpSync == 0) {
+            configTime(-3 * 3600, 0, "a.st1.ntp.br", "ntp.br", "time.nist.gov");
+            lastNtpSync = now;
+            Serial.println("NTP sincronizado");        
+        }
+    }
 
     if (getLocalTime(&timeinfo)) {
         timestamp_global = mktime(&timeinfo);
@@ -299,6 +301,56 @@ void verifica_batida_prensa(){
 
 // Envia via MQTT quando chegar o timer correto
 void check_timer_interrupt_tosend_MqttDataReadings() {
+    bool wifi_connected = (WiFi.status() == WL_CONNECTED);
+    bool mqtt_connected = client.connected();
+    
+    // ✅ PRIORIDADE: Verifica se há dados acumulados E reconectou (independente do timer)
+    if (is_accumulating && wifi_connected && mqtt_connected) {
+        unsigned long accumulated_time = (millis() - disconnection_start_time) / 1000;
+        
+        Serial.println("✅ Reconectado! Enviando dados acumulados...");
+        Serial.printf("📊 Total acumulado: %d batidas em %lu segundos\n", 
+                      accumulated_batidas, accumulated_time);
+        
+        // Temporariamente substitui valores para envio
+        int qtd_backup = qtd_batidas_intervalo;
+        int interval_backup = sample_interval_batch;
+        int error_backup = message_error_code;
+        
+        qtd_batidas_intervalo = accumulated_batidas;
+        sample_interval_batch = accumulated_time;
+        // message_error_code já está setado (1=WiFi ou 2=MQTT)
+        
+        enabled_send_batch_readings = true;
+        bool enviado = mqtt_send_datas_readings();
+        
+        // Restaura valores originais
+        qtd_batidas_intervalo = qtd_backup;
+        sample_interval_batch = interval_backup;
+        
+        if (enviado) {
+            Serial.println("✅ Dados acumulados enviados com sucesso!");
+            // RESETA ACUMULAÇÃO
+            is_accumulating = false;
+            accumulated_batidas = 0;
+            disconnection_start_time = 0;
+            message_error_code = 0;
+            
+            // 📺 LIMPA DISPLAY (volta para zero)
+            tft.drawString("0    ", 10, 105, 4);
+        } else {
+            Serial.println("❌ Falha ao enviar dados acumulados, continuando acumulação");
+            message_error_code = error_backup; // Mantém código de erro
+            
+            // 📺 MANTÉM DISPLAY COM VALOR ACUMULADO
+            tft.drawString(String(accumulated_batidas) + "  ", 10, 105, 4);
+        }
+        
+        // Sai da função após tentar enviar dados acumulados
+        return;
+    }
+    
+    // Processamento normal do timer
     if (timerToSendDataReadings == true) {
         if (qtd_batidas_intervalo > 0) {
             char timeStr[20];
@@ -310,9 +362,6 @@ void check_timer_interrupt_tosend_MqttDataReadings() {
             } else {
                 strcpy(timeStr, "1970-01-01 00:00:00");
             }
-            
-            bool wifi_connected = (WiFi.status() == WL_CONNECTED);
-            bool mqtt_connected = client.connected();
             
             // VERIFICA SE PRECISA INICIAR ACUMULAÇÃO
             if (!wifi_connected || !mqtt_connected) {
@@ -344,50 +393,6 @@ void check_timer_interrupt_tosend_MqttDataReadings() {
                     tft.drawString(String(accumulated_batidas) + "  ", 10, 105, 4);
                 }
             } 
-            // VERIFICA SE PRECISA ENVIAR DADOS ACUMULADOS (RECONEXÃO)
-            else if (is_accumulating) {
-                // RECONECTOU - ADICIONA ÚLTIMAS BATIDAS E ENVIA TUDO
-                accumulated_batidas += qtd_batidas_intervalo;
-                unsigned long accumulated_time = (millis() - disconnection_start_time) / 1000;
-                
-                Serial.println("✅ Reconectado! Enviando dados acumulados...");
-                Serial.printf("📊 Total acumulado: %d batidas em %lu segundos\n", 
-                              accumulated_batidas, accumulated_time);
-                
-                // Temporariamente substitui valores para envio
-                int qtd_backup = qtd_batidas_intervalo;
-                int interval_backup = sample_interval_batch;
-                int error_backup = message_error_code;
-                
-                qtd_batidas_intervalo = accumulated_batidas;
-                sample_interval_batch = accumulated_time;
-                // message_error_code já está setado (1=WiFi ou 2=MQTT)
-                
-                enabled_send_batch_readings = true;
-                bool enviado = mqtt_send_datas_readings();
-                
-                // Restaura valores originais
-                qtd_batidas_intervalo = qtd_backup;
-                sample_interval_batch = interval_backup;
-                
-                if (enviado) {
-                    Serial.println("✅ Dados acumulados enviados com sucesso!");
-                    // RESETA ACUMULAÇÃO
-                    is_accumulating = false;
-                    accumulated_batidas = 0;
-                    disconnection_start_time = 0;
-                    message_error_code = 0;
-                    
-                    // 📺 LIMPA DISPLAY (volta para zero)
-                    tft.drawString("0    ", 10, 105, 4);
-                } else {
-                    Serial.println("❌ Falha ao enviar dados acumulados, continuando acumulação");
-                    message_error_code = error_backup; // Mantém código de erro
-                    
-                    // 📺 MANTÉM DISPLAY COM VALOR ACUMULADO
-                    tft.drawString(String(accumulated_batidas) + "  ", 10, 105, 4);
-                }
-            }
             // OPERAÇÃO NORMAL - ENVIA DIRETO
             else {
                 message_error_code = 0; // Sem erro
@@ -428,10 +433,13 @@ void show_time() {
   unsigned long now = millis();
 
 
-  if (now - lastNtpSync > ntpSyncInterval || lastNtpSync == 0) {
-        configTime(-3 * 3600, 0, "a.st1.ntp.br", "ntp.br", "time.nist.gov");
-        lastNtpSync = now;
-        Serial.println("NTP sincronizado");
+  // ✅ SINCRONIZA NTP APENAS SE CONECTADO (evita bloqueio quando desconectado)
+  if (WiFi.status() == WL_CONNECTED) {
+      if (now - lastNtpSync > ntpSyncInterval || lastNtpSync == 0) {
+            configTime(-3 * 3600, 0, "a.st1.ntp.br", "ntp.br", "time.nist.gov");
+            lastNtpSync = now;
+            Serial.println("NTP sincronizado");
+      }
   }
   //syncNtpIfNeeded(); // Synchronize NTP time if needed  
   
