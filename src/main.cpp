@@ -144,23 +144,20 @@ void loop()
     dht_loop();
   #endif
 
-  // Ultrassônico 
+  // Ultrassônico - Executado apenas a cada 2 segundos (não-bloqueante)
   #ifdef SENSOR_WATER_LEVEL
-    loop_ultrasonic(); // ToDo: Poderia colocar isso dentro do timer e fazer sincrono
+    static unsigned long last_ultrasonic_time = 0;
+    unsigned long current_time = millis();
+    if (current_time - last_ultrasonic_time >= 2000) {  // 2000ms = 2 segundos
+      loop_ultrasonic();
+      last_ultrasonic_time = current_time;
+    }
     verifica_timer();
   #endif
 
   // Battery Voltage 
   #ifdef SENSOR_BATTERY_VOLTAGE
     //loop_tensao_bat();  //GPIO35 é compartilhado com sensor de tensão da bateria.
-  #endif
-
-  // delay - Dividido em chunks pequenos para manter OTA responsivo
-  #ifdef SENSOR_WATER_LEVEL  
-    for (int i = 0; i < 20; i++) {  // 20 x 100ms = 2000ms total
-      delay(100);
-      loop_ota();  // Mantém OTA responsivo durante o delay
-    }
   #endif
  
      
