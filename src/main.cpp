@@ -155,9 +155,12 @@ void loop()
     //loop_tensao_bat();  //GPIO35 é compartilhado com sensor de tensão da bateria.
   #endif
 
-  // delay 
+  // delay - Dividido em chunks pequenos para manter OTA responsivo
   #ifdef SENSOR_WATER_LEVEL  
-    delay(2000);
+    for (int i = 0; i < 20; i++) {  // 20 x 100ms = 2000ms total
+      delay(100);
+      loop_ota();  // Mantém OTA responsivo durante o delay
+    }
   #endif
  
      
