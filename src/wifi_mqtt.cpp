@@ -235,46 +235,92 @@ void show_partitions()
  */
 void setup_ota(void){
 
+  Serial.println("===== INICIANDO CONFIGURAÇÃO OTA =====");
+  
   // Inicializar mDNS primeiro
   if (!MDNS.begin(DISPOSITIVO_ID)) {
-    Serial.println("OTA: Erro ao inicializar mDNS!");
+    Serial.println("❌ OTA: Erro ao inicializar mDNS!");
+    Serial.println("   Tentando novamente...");
+    delay(1000);
+    if (!MDNS.begin(DISPOSITIVO_ID)) {
+      Serial.println("❌ OTA: Falha crítica no mDNS - OTA pode não funcionar!");
+    }
   } else {
-    Serial.println("OTA: mDNS inicializado com sucesso!");
-    Serial.print("OTA: mDNS hostname: ");
+    Serial.println("✅ OTA: mDNS inicializado com sucesso!");
+    Serial.print("📡 OTA: mDNS hostname: ");
     Serial.print(DISPOSITIVO_ID);
     Serial.println(".local");
   }
 
   // ArduinoOTA setup
   ArduinoOTA.setPort(3232); 
-  ArduinoOTA.setHostname(DISPOSITIVO_ID); 
+  ArduinoOTA.setHostname(DISPOSITIVO_ID);
+  
+  // ✅ ADICIONA SENHA PARA SEGURANÇA (opcional mas recomendado)
+  // ArduinoOTA.setPassword("admin"); // Descomente e defina uma senha se necessário
+  
   ArduinoOTA.onStart([]() {
-    Serial.println("Iniciando ArduinoOTA...");
+    String type;
+    if (ArduinoOTA.getCommand() == U_FLASH) {
+      type = "sketch";
+    } else { // U_SPIFFS
+      type = "filesystem";
+    }
+    Serial.println("\n🚀 Iniciando atualização OTA do " + type);
+    Serial.println("⚠️  NÃO DESLIGUE O DISPOSITIVO!");
   });
+  
   ArduinoOTA.onEnd([]() {
-    Serial.println("\nArduinoOTA finalizada!");
+    Serial.println("\n✅ ArduinoOTA finalizada com sucesso!");
+    Serial.println("🔄 Reiniciando...");
   });
+  
   ArduinoOTA.onProgress([](unsigned int progress, unsigned int total) {
-    Serial.printf("Progresso ArduinoOTA: %u%%\r", (progress / (total / 100)));
+    static unsigned int lastPercent = 0;
+    unsigned int percent = (progress / (total / 100));
+    if (percent != lastPercent && percent % 10 == 0) {
+      Serial.printf("📊 Progresso OTA: %u%%\n", percent);
+      lastPercent = percent;
+    }
   });
+  
   ArduinoOTA.onError([](ota_error_t error) {
-    Serial.printf("Erro ArduinoOTA[%u]: ", error);
-    if (error == OTA_AUTH_ERROR) 
+    Serial.printf("\n❌ Erro ArduinoOTA[%u]: ", error);
+    if (error == OTA_AUTH_ERROR) {
       Serial.println("Falha de autenticação");
-    else if (error == OTA_BEGIN_ERROR) 
+      Serial.println("💡 Dica: Verifique se a senha OTA está correta");
+    }
+    else if (error == OTA_BEGIN_ERROR) {
       Serial.println("Falha ao iniciar");
-    else if (error == OTA_CONNECT_ERROR) 
+      Serial.println("💡 Dica: Pode ser falta de espaço ou partição incorreta");
+    }
+    else if (error == OTA_CONNECT_ERROR) {
       Serial.println("Falha de conexão");
-    else if (error == OTA_RECEIVE_ERROR) 
-      Serial.println("Falha ao receber");
-    else if (error == OTA_END_ERROR) 
+      Serial.println("💡 Dica: Verifique firewall e conectividade de rede");
+    }
+    else if (error == OTA_RECEIVE_ERROR) {
+      Serial.println("Falha ao receber dados");
+      Serial.println("💡 Dica: Conexão WiFi instável ou interferência");
+    }
+    else if (error == OTA_END_ERROR) {
       Serial.println("Falha ao finalizar");
+      Serial.println("💡 Dica: Firmware corrompido ou incompatível");
+    }
   });
   
   ArduinoOTA.begin();
-  Serial.println("OTA: ArduinoOTA inicializado!");
-  Serial.print("OTA: ArduinoOTA porta 3232 - IP: ");
+  
+  Serial.println("✅ OTA: ArduinoOTA inicializado!");
+  Serial.println("📋 Informações de conexão OTA:");
+  Serial.print("   • IP: ");
   Serial.println(WiFi.localIP());
+  Serial.print("   • Hostname: ");
+  Serial.println(DISPOSITIVO_ID);
+  Serial.print("   • Porta: 3232");
+  Serial.println();
+  Serial.println("   • mDNS: " + String(DISPOSITIVO_ID) + ".local");
+  Serial.println("💡 Para testar: ping " + String(DISPOSITIVO_ID) + ".local");
+  Serial.println("============================================");
   
 }
 
