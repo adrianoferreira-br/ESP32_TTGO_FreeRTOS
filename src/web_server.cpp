@@ -7,6 +7,7 @@
 #include <esp_image_format.h>
 #include <esp_flash_partitions.h>
 #include <esp_partition.h>
+#include <esp_task_wdt.h>
 #include <MD5Builder.h>
 #include "constants.h"
 #include "mem_flash.h"
@@ -21,6 +22,8 @@ static size_t totalReceived = 0;
 static size_t lastReported = 0;
 static MD5Builder md5;
 static String firmwareHash = "";
+static bool ota_upload_success = false;
+static bool ota_in_progress = false;  // Previne uploads concorrentes
 
 
 
@@ -39,7 +42,8 @@ void setup_webserver()
   server.on("/config_mqtt", handleConfigMQTT); // <-- nova rota
   server.on("/readings", handleReadings);
   server.on("/info", handleInfo);
-  server.on("/ota", handleOTA);
+  server.on("/ota", HTTP_GET, handleOTA);
+  server.on("/ota", HTTP_POST, handleOTA, handleOTA);  // POST com handler de upload
   server.begin();
 }
 
@@ -295,20 +299,47 @@ void handleOTA() {
     Serial.printf("WEB OTA: Arg[%d]: %s = %s\n", i, server.argName(i).c_str(), server.arg(i).c_str());
   }
   
-  if (server.method() == HTTP_POST) {
-    // Resposta final após upload ESP-IDF nativo
-    server.sendHeader("Connection", "close");
-    server.send(200, "text/plain", "✅ ESP-IDF OTA FINALIZADO! Device rebooting in 3 seconds...");
-    delay(3000);
-    ESP.restart();
+  if (server.method() == HTTP_POST && !server.hasArg("upload")) {
+    // Resposta final após upload ESP-IDF nativo (só executa se NÃO tiver arg upload)
+    Serial.println("WEB OTA: 📨 POST final recebido (sem arg upload)");
+    if (ota_upload_success) {
+      Serial.println("WEB OTA: ✅ Upload foi bem-sucedido, enviando resposta e agendando reboot...");
+      server.sendHeader("Connection", "close");
+      server.send(200, "text/plain", "✅ Firmware atualizado com sucesso! Dispositivo reiniciando em 5 segundos...");
+      Serial.println("WEB OTA: ✅ Resposta HTTP 200 enviada ao navegador");
+      server.client().flush();  // Força envio imediato dos dados
+      delay(100);  // Pequeno delay para garantir envio
+      Serial.println("WEB OTA: ⏳ Aguardando 5 segundos antes de reiniciar...");
+      delay(5000);
+      Serial.println("WEB OTA: 🔄 REINICIANDO ESP32 AGORA!");
+      ESP.restart();
+    } else {
+      Serial.println("WEB OTA: ❌ Upload não foi bem-sucedido");
+      server.sendHeader("Connection", "close");
+      server.send(500, "text/plain", "❌ Erro: Upload não foi concluído ou falhou na validação");
+    }
+    return;  // Retorna após processar POST final
   } else if (server.hasArg("upload")) {
     // Handler de upload de arquivo ESP-IDF nativo
     HTTPUpload& upload = server.upload();
     
     if (upload.status == UPLOAD_FILE_START) {
+      // Verificar se já há um upload em progresso
+      if (ota_in_progress) {
+        Serial.println("WEB OTA: ⚠️ Upload já em progresso, ignorando requisição duplicada");
+        return;
+      }
+      
+      ota_in_progress = true;  // Marca que upload está em progresso
       Serial.printf("WEB OTA: ===== INICIANDO OTA ESP-IDF NATIVO =====\n");
       Serial.printf("WEB OTA: Arquivo: %s\n", upload.filename.c_str());
       Serial.printf("WEB OTA: Free heap antes: %u bytes\n", ESP.getFreeHeap());
+      
+      // Desabilitar watchdog durante OTA para evitar timeout
+      Serial.println("WEB OTA: Desabilitando watchdog...");
+      disableLoopWDT();  // Desabilita watchdog do loop principal
+      disableCore0WDT(); // Desabilita watchdog do Core 0
+      disableCore1WDT(); // Desabilita watchdog do Core 1
       
       // Verificar se o arquivo tem extensão .bin
       if (!upload.filename.endsWith(".bin")) {
@@ -329,6 +360,7 @@ void handleOTA() {
                     ota_partition->label, ota_partition->address, ota_partition->size);
       
       // Inicializar operação OTA ESP-IDF
+      Serial.println("WEB OTA: Chamando esp_ota_begin() - pode demorar 30-60 segundos...");
       esp_err_t err = esp_ota_begin(ota_partition, OTA_SIZE_UNKNOWN, &ota_handle);
       if (err != ESP_OK) {
         Serial.printf("WEB OTA: ❌ Falha ao iniciar ESP-IDF OTA: %s\n", esp_err_to_name(err));
@@ -341,9 +373,10 @@ void handleOTA() {
       totalReceived = 0;
       lastReported = 0;
       md5.begin();
+      ota_upload_success = false;  // Reseta flag de sucesso
       
-      // Parar ArduinoOTA para evitar conflitos
-      ArduinoOTA.end();
+      // NOTA: Não paramos ArduinoOTA para permitir uploads subsequentes via PlatformIO
+      // ArduinoOTA.end();  // ❌ REMOVIDO - causava "No response" em uploads posteriores
       
     } else if (upload.status == UPLOAD_FILE_WRITE) {
       // Adicionar dados ao cálculo MD5
@@ -355,6 +388,7 @@ void handleOTA() {
         Serial.printf("WEB OTA: ❌ Erro na escrita ESP-IDF: %s\n", esp_err_to_name(err));
         esp_ota_end(ota_handle);
         ota_handle = 0;
+        ota_in_progress = false;  // Libera flag
         server.send(500, "text/plain", "❌ Erro na escrita de dados");
         return;
       }
@@ -382,6 +416,7 @@ void handleOTA() {
         Serial.println("WEB OTA: ❌ Nenhum dado foi gravado!");
         esp_ota_end(ota_handle);
         ota_handle = 0;
+        ota_in_progress = false;  // Libera flag
         server.send(500, "text/plain", "❌ Erro: Nenhum dado recebido");
         return;
       }
@@ -398,16 +433,24 @@ void handleOTA() {
           Serial.printf("WEB OTA: ❌ Erro desconhecido: %s (0x%x)\n", esp_err_to_name(err), err);
         }
         ota_handle = 0;
+        ota_in_progress = false;  // Libera flag
         server.send(500, "text/plain", "❌ Erro na validação do firmware");
         return;
       }
       
       Serial.printf("WEB OTA: ✅ Firmware gravado com sucesso na partição %s!\n", ota_partition->label);
       
+      // Reinicializar watchdog após OTA (versão compatível)
+      Serial.println("WEB OTA: Reinicializando watchdog...");
+      enableLoopWDT();   // Reabilita watchdog do loop
+      enableCore0WDT();  // Reabilita watchdog do Core 0  
+      enableCore1WDT();  // Reabilita watchdog do Core 1
+      
       // Configurar partição de boot para o novo firmware
-      err = esp_ota_set_boot_partition(ota_partition);
-      if (err != ESP_OK) {
-        Serial.printf("WEB OTA: ❌ Falha ao configurar boot: %s\n", esp_err_to_name(err));
+      esp_err_t err2 = esp_ota_set_boot_partition(ota_partition);
+      if (err2 != ESP_OK) {
+        Serial.printf("WEB OTA: ❌ Falha ao configurar boot: %s\n", esp_err_to_name(err2));
+        ota_in_progress = false;  // Libera flag
         server.send(500, "text/plain", "❌ Erro ao configurar nova partição de boot");
         return;
       }
@@ -421,11 +464,26 @@ void handleOTA() {
         Serial.printf("WEB OTA: ✅ CONFIRMADO: Boot partition = %s (0x%06x)\n", 
                       new_boot->label, new_boot->address);
         Serial.println("WEB OTA: ✅ SUCESSO TOTAL - OTA completo e verificado!");
+        ota_upload_success = true;  // Marca upload como bem-sucedido
+        
+        // ✅ ENVIAR RESPOSTA IMEDIATAMENTE E REINICIAR
+        Serial.println("WEB OTA: 📤 Enviando resposta HTTP 200 ao navegador...");
+        server.sendHeader("Connection", "close");
+        server.sendHeader("Cache-Control", "no-cache");
+        server.send(200, "text/plain", "✅ Firmware atualizado com sucesso! Dispositivo reiniciando...");
+        server.client().stop();  // Fecha conexão imediatamente
+        Serial.println("WEB OTA: ✅ Resposta enviada e conexão fechada");
+        Serial.println("WEB OTA: ⏳ Aguardando 1 segundo antes de reiniciar...");
+        delay(1000);
+        Serial.println("WEB OTA: 🔄 REINICIANDO ESP32 AGORA!");
+        ESP.restart();  // Nunca retorna daqui
       } else {
         Serial.println("WEB OTA: ⚠️ ATENÇÃO: Partição de boot não foi alterada como esperado");
+        ota_upload_success = false;
+        ota_in_progress = false;  // Libera flag em caso de erro
+        server.send(500, "text/plain", "❌ Erro: Falha ao configurar partição de boot");
+        ota_handle = 0;
       }
-      
-      ota_handle = 0;
       
     } else if (upload.status == UPLOAD_FILE_ABORTED) {
       Serial.println("WEB OTA: ⚠️ Upload cancelado pelo usuário");
@@ -433,6 +491,12 @@ void handleOTA() {
         esp_ota_end(ota_handle);
         ota_handle = 0;
       }
+      
+      // Reinicializar watchdog após abortar
+      Serial.println("WEB OTA: Reinicializando watchdog após cancelamento...");
+      enableLoopWDT();
+      enableCore0WDT();
+      enableCore1WDT();
     }
   } else {
     // Página de upload principal
