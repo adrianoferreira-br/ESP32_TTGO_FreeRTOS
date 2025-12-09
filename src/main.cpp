@@ -106,6 +106,11 @@ void setup() {
     mlx90614_setup();
   #endif
 
+  /* DS18B20 Temperature Sensor */
+  #ifdef SENSOR_DS18B20
+    ds18b20_setup();
+  #endif
+
   /* botão de configuração */
  
   tft.fillScreen(TFT_BLACK);
@@ -168,6 +173,11 @@ void loop()
   // MLX90614 Infrared Temperature Sensor
   #ifdef SENSOR_MLX90614
     mlx90614_loop();
+  #endif
+
+  // DS18B20 Temperature Sensor
+  #ifdef SENSOR_DS18B20
+    ds18b20_loop();
   #endif
  
      

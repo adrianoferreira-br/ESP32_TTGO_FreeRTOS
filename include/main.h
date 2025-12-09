@@ -18,6 +18,7 @@
 #include "jsn_sr04t.h"
 #include "voltage_bat.h"
 #include "mlx90614.h"
+#include "ds18b20.h"
 #include "mem_flash.h"
 #include "web_server.h"
 #include <Preferences.h>
