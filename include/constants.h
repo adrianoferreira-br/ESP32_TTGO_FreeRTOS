@@ -25,6 +25,9 @@
   #define SENSOR_BATTERY_VOLTAGE
 #endif
 
+// Sensor de temperatura infravermelho MLX90614
+// #define SENSOR_MLX90614  // Descomente para ativar o sensor MLX90614
+
 
 // prefs - settings_network 
 #define KEY_IP           "ip"

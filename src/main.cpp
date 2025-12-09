@@ -101,6 +101,11 @@ void setup() {
     Serial.println("Setup Battery Voltage inicializado");
   #endif
 
+  /* MLX90614 Infrared Temperature Sensor */
+  #ifdef SENSOR_MLX90614
+    mlx90614_setup();
+  #endif
+
   /* botão de configuração */
  
   tft.fillScreen(TFT_BLACK);
@@ -158,6 +163,11 @@ void loop()
   // Battery Voltage 
   #ifdef SENSOR_BATTERY_VOLTAGE
     //loop_tensao_bat();  //GPIO35 é compartilhado com sensor de tensão da bateria.
+  #endif
+
+  // MLX90614 Infrared Temperature Sensor
+  #ifdef SENSOR_MLX90614
+    mlx90614_loop();
   #endif
  
      
