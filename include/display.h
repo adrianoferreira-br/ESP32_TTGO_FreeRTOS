@@ -18,6 +18,7 @@ void show_distancia(float dist);
 void show_percentual_reservatorio(float percentual);
 void show_battery_voltage(float voltage);
 void show_batidas(int batidas);
+void show_batidas_sensor2(int batidas);
 void show_time(char* timeStr);
 void show_ip();
 

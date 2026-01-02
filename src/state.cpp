@@ -16,12 +16,21 @@
 #include "topicos.h"
 #include "extern_data.h"
 
-// Pino do sensor reflexivo
-#define BATIDA_PIN 12 
+// Pinos dos sensores de batida
+#define BATIDA_PIN 12
+#define BATIDA_PIN_SENSOR2 13
+
+// Variáveis do Sensor 1 (GPIO 12)
 int qnt_batidas_prensa = 0;
 volatile bool batida_prensa = false;
 long idBatida = 0; // Variável global para armazenar o ID da batida
 int qtd_batidas_intervalo = 0;
+
+// Variáveis do Sensor 2 (GPIO 13)
+int qnt_batidas_prensa_sensor2 = 0;
+volatile bool batida_prensa_sensor2 = false;
+long idBatida_sensor2 = 0;
+int qtd_batidas_intervalo_sensor2 = 0;
 float distance_max = 100; // distância máxima do sensor ultrassônico em cm (padrão 400cm para o JSN-SR04T)
 float percentual_reservatorio = 0.0; // percentual do reservatório
 float altura_reservatorio = 100.0; // distância máxima do sensor ultrassônico em cm (padrão max. 400cm para o JSN-SR04T)
@@ -58,26 +67,34 @@ volatile bool buttonPressed = false;
 
 
 
-// VARIÁVEIS DE ACUMULAÇÃO DE BATIDAS 
+// VARIÁVEIS DE ACUMULAÇÃO DE BATIDAS - SENSOR 1
 int accumulated_batidas = 0;           // Contador acumulado de batidas durante desconexão
 unsigned long disconnection_start_time = 0; // Timestamp da primeira batida durante desconexão
-bool is_accumulating = false;              // Informação do coletor de dadosag indicando se está acumulando batidas
+bool is_accumulating = false;              // Flag indicando se está acumulando batidas
+
+// VARIÁVEIS DE ACUMULAÇÃO DE BATIDAS - SENSOR 2
+int accumulated_batidas_sensor2 = 0;
+unsigned long disconnection_start_time_sensor2 = 0;
+bool is_accumulating_sensor2 = false;
 
 /**********************************************************************************************
  *     FUNÇÃO DE SETUP E CONFIGURAÇÃO INICIAL DA APLICAÇÃO
  */
 void setup_batidas_prensa() {
 
-  // Configura a interrupção para o botão
-  attachInterrupt(digitalPinToInterrupt(BATIDA_PIN), InterruptionPino12, FALLING); // Configura a interrupção para o botão (pino 35) na borda de descida (pressionado)  
-
-  //Defini GPIO
-  pinMode(BATIDA_PIN, INPUT_PULLUP); // Configura o pino como entrada com pull-up interno
+  // Configura a interrupção para o Sensor 1 (GPIO 12)
+  attachInterrupt(digitalPinToInterrupt(BATIDA_PIN), InterruptionPino12, FALLING);
+  pinMode(BATIDA_PIN, INPUT_PULLUP);
   
-  // Inicializa horario do ntp com fuso -3
-  //configTime(-3 * 3600, 0, "pool.ntp.org", "time.nist.gov");
-
-  Serial.println("Sensor de batida da prensa configurado.");   
+  // Configura a interrupção para o Sensor 2 (GPIO 13)
+  attachInterrupt(digitalPinToInterrupt(BATIDA_PIN_SENSOR2), InterruptionPino13, FALLING);
+  pinMode(BATIDA_PIN_SENSOR2, INPUT_PULLUP);
+  
+  Serial.println("====================================");
+  Serial.println("Sensores de batida configurados:");
+  Serial.println("  Sensor 1: GPIO 12");
+  Serial.println("  Sensor 2: GPIO 13");
+  Serial.println("====================================");   
 
 }
 
@@ -200,16 +217,27 @@ void IRAM_ATTR pulseCounter() {
 
 
 /**********************************************************************************************
- *     INTERRUPÇÃO PINO 12 PARA CONTAR BATIDAS DA PRENSA
+ *     INTERRUPÇÃO PINO 12 PARA CONTAR BATIDAS DA PRENSA - SENSOR 1
  */
 void IRAM_ATTR InterruptionPino12() {
-  batida_prensa = true;  // Sinaliza que o botão foi pressionado  
+  batida_prensa = true;
+}
+
+/**********************************************************************************************
+ *     INTERRUPÇÃO PINO 13 PARA CONTAR BATIDAS DA PRENSA - SENSOR 2
+ */
+void IRAM_ATTR InterruptionPino13() {
+  batida_prensa_sensor2 = true;
 }
 
 void verifica_interrupcao(){
   if (batida_prensa){
     batida_prensa = false; // Reset flag ANTES de processar para evitar múltiplas execuções
     verifica_batida_prensa();      
+  }
+  if (batida_prensa_sensor2){
+    batida_prensa_sensor2 = false;
+    verifica_batida_prensa_sensor2();
   }
   return;
 }
@@ -293,10 +321,82 @@ void verifica_batida_prensa(){
       batida_prensa = false;   
       
       tft.drawString(" ",2, 50, 6); //simula um led no display a cada batida (apaga o "led")
-
- 
 }
 
+
+/**********************************************************************************************
+ *     VERIFICA AS BATIDAS DA PRENSA - SENSOR 2 (GPIO 13)
+ */
+void verifica_batida_prensa_sensor2(){
+    char timeStr[20];
+    struct tm timeinfo;
+    char nome_equipamento[10];    
+    unsigned long now = millis();
+    
+    tft.drawString("*",20, 50, 6); // LED virtual no display para sensor 2
+    
+    // Sincroniza NTP se conectado
+    if (WiFi.status() == WL_CONNECTED) {
+        if (now - lastNtpSync > ntpSyncInterval || lastNtpSync == 0) {
+            configTime(-3 * 3600, 0, "a.st1.ntp.br", "ntp.br", "time.nist.gov");
+            lastNtpSync = now;
+            Serial.println("NTP sincronizado");        
+        }
+    }
+
+    if (getLocalTime(&timeinfo)) {
+        timestamp_global = mktime(&timeinfo);
+    }
+    else {
+      Serial.println("Erro ao obter tempo!");    
+    }
+    
+    // Verifica se interrupção é falsa (debounce)
+    delay(100);
+    if (digitalRead(BATIDA_PIN_SENSOR2) == HIGH){
+      return;
+    }
+
+    // Confirmação de nível LOW por 300ms
+    if(digitalRead(BATIDA_PIN_SENSOR2) == LOW){
+        delay(100);              
+    }else {
+        Serial.println("Sensor2: falhou <100ms");        
+        return;
+    }        
+
+    if(digitalRead(BATIDA_PIN_SENSOR2) == LOW){
+        delay(100);                
+    }else {
+        Serial.println("Sensor2: falhou <200ms");        
+        return;
+    }
+
+    if(digitalRead(BATIDA_PIN_SENSOR2) == LOW){
+        delay(100);                
+    }else {
+        Serial.println("Sensor2: falhou <300ms");        
+        return;
+    }
+     
+    id_message_batch2++;
+    qtd_batidas_intervalo_sensor2++;
+    Serial.println("Sensor2 - batida: " + String(id_message_batch));
+
+    strcpy(nome_equipamento, NOME_EQUIPAMENTO);      
+    strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
+    
+    // Mostra quantidade de batida no display (sensor 2)
+    qnt_batidas_prensa_sensor2++;      
+    show_batidas_sensor2(qnt_batidas_prensa_sensor2);
+
+    strftime(timeStr, sizeof(timeStr), "%H:%M:%S", &timeinfo);
+    show_time(timeStr);
+      
+    batida_prensa_sensor2 = false;   
+      
+    tft.drawString(" ",20, 50, 6); // Apaga LED virtual do sensor 2
+}
 
 
 // Envia via MQTT quando chegar o timer correto
@@ -350,74 +450,135 @@ void check_timer_interrupt_tosend_MqttDataReadings() {
         return;
     }
     
-    // Processamento normal do timer
+    // ✅ PRIORIDADE: Verifica se há dados acumulados do SENSOR 2 E reconectou
+    if (is_accumulating_sensor2 && wifi_connected && mqtt_connected) {
+        unsigned long accumulated_time_s2 = (millis() - disconnection_start_time_sensor2) / 1000;
+        
+        Serial.println("✅ Sensor2: Reconectado! Enviando dados acumulados...");
+        Serial.printf("📊 Sensor2: Total acumulado: %d batidas em %lu segundos\n", 
+                      accumulated_batidas_sensor2, accumulated_time_s2);
+        
+        // Temporariamente substitui valores para envio
+        int qtd_backup_s2 = qtd_batidas_intervalo_sensor2;
+        int interval_backup_s2 = sample_interval_batch;
+        int error_backup_s2 = message_error_code;
+        
+        qtd_batidas_intervalo_sensor2 = accumulated_batidas_sensor2;
+        sample_interval_batch = accumulated_time_s2;
+        
+        enabled_send_batch_readings_sensor2 = true;
+        bool enviado_s2 = mqtt_send_datas_readings();
+        
+        // Restaura valores originais
+        qtd_batidas_intervalo_sensor2 = qtd_backup_s2;
+        sample_interval_batch = interval_backup_s2;
+        
+        if (enviado_s2) {
+            Serial.println("✅ Sensor2: Dados acumulados enviados com sucesso!");
+            // RESETA ACUMULAÇÃO
+            is_accumulating_sensor2 = false;
+            accumulated_batidas_sensor2 = 0;
+            disconnection_start_time_sensor2 = 0;
+            message_error_code = 0;
+        } else {
+            Serial.println("❌ Sensor2: Falha ao enviar dados acumulados, continuando acumulação");
+            message_error_code = error_backup_s2; // Mantém código de erro
+        }
+        
+        // Sai da função após tentar enviar dados acumulados do sensor 2
+        return;
+    }
+    
+    // ====== PROCESSAMENTO DO TIMER PARA AMBOS OS SENSORES ======
     if (timerToSendDataReadings == true) {
+        
+        // ====== PROCESSA SENSOR 1 (GPIO 12) ======
         if (qtd_batidas_intervalo > 0) {
-            char timeStr[20];
-            struct tm timeinfo;
-            
-            // Obtém timestamp atual
-            if (getLocalTime(&timeinfo)) {
-                strftime(timeStr, sizeof(timeStr), "%Y-%m-%d %H:%M:%S", &timeinfo);
-            } else {
-                strcpy(timeStr, "1970-01-01 00:00:00");
-            }
-            
-            // VERIFICA SE PRECISA INICIAR ACUMULAÇÃO
             if (!wifi_connected || !mqtt_connected) {
                 if (!is_accumulating) {
                     // INICIA ACUMULAÇÃO
                     is_accumulating = true;
                     accumulated_batidas = qtd_batidas_intervalo;
                     disconnection_start_time = millis();
-                    
-                    // Define código de erro conforme tipo de falha
-                    if (!wifi_connected) {
-                        message_error_code = 1; // WiFi
-                        Serial.println("⚠️ WiFi desconectado - Iniciando acumulação de batidas");
-                    } else {
-                        message_error_code = 2; // MQTT
-                        Serial.println("⚠️ MQTT desconectado - Iniciando acumulação de batidas");
-                    }
-                    Serial.printf("📊 Acumulação iniciada: %d batidas\n", accumulated_batidas);
-                    
-                    // 📺 ATUALIZA DISPLAY
+                    message_error_code = !wifi_connected ? 1 : 2;
+                    Serial.printf("⚠️ Sensor1: Iniciando acumulação: %d batidas\n", accumulated_batidas);
                     tft.drawString(String(accumulated_batidas) + "  ", 10, 105, 4);
                 } else {
                     // CONTINUA ACUMULANDO
                     accumulated_batidas += qtd_batidas_intervalo;
-                    Serial.printf("📊 Acumulando batidas: +%d (Total: %d)\n", 
+                    Serial.printf("📊 Sensor1: Acumulando: +%d (Total: %d)\n", 
                                   qtd_batidas_intervalo, accumulated_batidas);
-                    
-                    // 📺 ATUALIZA DISPLAY
                     tft.drawString(String(accumulated_batidas) + "  ", 10, 105, 4);
                 }
-            } 
-            // OPERAÇÃO NORMAL - ENVIA DIRETO
-            else {
-                message_error_code = 0; // Sem erro
+            } else {
+                // Habilita flag para envio posterior
+                message_error_code = 0;
                 enabled_send_batch_readings = true;
-                bool enviado = mqtt_send_datas_readings();
-                
-                if (enviado) {
-                    Serial.println("✅ Dados batch_time enviados via MQTT com sucesso!");
-                } else {
-                    // Falhou - inicia acumulação
-                    is_accumulating = true;
-                    accumulated_batidas = qtd_batidas_intervalo;
-                    disconnection_start_time = millis();
-                    message_error_code = mqtt_connected ? 1 : 2; // 1=WiFi, 2=MQTT
-                    Serial.println("❌ Falha no envio - Iniciando acumulação");
-                    
-                    // 📺 ATUALIZA DISPLAY
-                    tft.drawString(String(accumulated_batidas) + "  ", 10, 105, 4);
-                }
+                Serial.printf("✅ Sensor1: Flag habilitada para envio: %d batidas\n", qtd_batidas_intervalo);
             }
         }
         
-        timerToSendDataReadings = false; // Reseta a flag após processamento
-        Serial.printf("Timer MQTT batidas verificado. qntd: %d\n", qtd_batidas_intervalo);
+        // ====== PROCESSA SENSOR 2 (GPIO 13) ======
+        if (qtd_batidas_intervalo_sensor2 > 0) {
+            if (!wifi_connected || !mqtt_connected) {
+                if (!is_accumulating_sensor2) {
+                    is_accumulating_sensor2 = true;
+                    accumulated_batidas_sensor2 = qtd_batidas_intervalo_sensor2;
+                    disconnection_start_time_sensor2 = millis();
+                    message_error_code = !wifi_connected ? 1 : 2;
+                    Serial.printf("⚠️ Sensor2: Iniciando acumulação: %d batidas\n", accumulated_batidas_sensor2);
+                } else {
+                    accumulated_batidas_sensor2 += qtd_batidas_intervalo_sensor2;
+                    Serial.printf("📊 Sensor2: Acumulando: +%d (Total: %d)\n", 
+                                  qtd_batidas_intervalo_sensor2, accumulated_batidas_sensor2);
+                }
+            } else {
+                // Habilita flag para envio posterior
+                message_error_code = 0;
+                enabled_send_batch_readings_sensor2 = true;
+                Serial.printf("✅ Sensor2: Flag habilitada para envio: %d batidas\n", qtd_batidas_intervalo_sensor2);
+            }
+        }
+        
+        // ====== ENVIO ÚNICO PARA AMBOS OS SENSORES ======
+        // Só envia se pelo menos um dos sensores tiver dados E estiver conectado
+        if ((enabled_send_batch_readings || enabled_send_batch_readings_sensor2) && wifi_connected && mqtt_connected) {
+            bool enviado = mqtt_send_datas_readings();
+            
+            if (enviado) {
+                Serial.println("✅ Dados enviados via MQTT com sucesso!");
+                if (enabled_send_batch_readings) {
+                    Serial.printf("  - Sensor1: %d batidas\n", qtd_batidas_intervalo);
+                }
+                if (enabled_send_batch_readings_sensor2) {
+                    Serial.printf("  - Sensor2: %d batidas\n", qtd_batidas_intervalo_sensor2);
+                }
+            } else {
+                Serial.println("❌ Falha no envio MQTT");
+                // Inicia acumulação para os sensores que falharam
+                if (enabled_send_batch_readings && !is_accumulating) {
+                    is_accumulating = true;
+                    accumulated_batidas = qtd_batidas_intervalo;
+                    disconnection_start_time = millis();
+                    Serial.println("❌ Sensor1: Iniciando acumulação após falha");
+                    tft.drawString(String(accumulated_batidas) + "  ", 10, 105, 4);
+                }
+                if (enabled_send_batch_readings_sensor2 && !is_accumulating_sensor2) {
+                    is_accumulating_sensor2 = true;
+                    accumulated_batidas_sensor2 = qtd_batidas_intervalo_sensor2;
+                    disconnection_start_time_sensor2 = millis();
+                    Serial.println("❌ Sensor2: Iniciando acumulação após falha");
+                }
+                message_error_code = mqtt_connected ? 1 : 2;
+            }
+        }
+        
+        // Reseta a flag do timer e os contadores
+        timerToSendDataReadings = false;
+        Serial.printf("Timer MQTT verificado. Sensor1: %d | Sensor2: %d\n", 
+                      qtd_batidas_intervalo, qtd_batidas_intervalo_sensor2);
         qtd_batidas_intervalo = 0;
+        qtd_batidas_intervalo_sensor2 = 0;
     }        
 }
 

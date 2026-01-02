@@ -192,11 +192,19 @@ void show_battery_voltage(float voltage) {
 }
 
 /*
- *  Description: Show the number of presses on the display
+ *  Description: Show the number of presses on the display - Sensor 1
 */
 void show_batidas(int batidas) {
     tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-    tft.drawString("   " + String(batidas), 55, 50, 6);
+    tft.drawString("S1:" + String(batidas) + "  ", 5, 50, 4);
+}
+
+/*
+ *  Description: Show the number of presses on the display - Sensor 2
+*/
+void show_batidas_sensor2(int batidas) {
+    tft.setTextColor(TFT_CYAN, TFT_BLACK);
+    tft.drawString("S2:" + String(batidas) + "  ", 5, 75, 4);
 }
 
 

@@ -19,10 +19,12 @@ extern void setup_mqtt(void);
 // ============ DECLARAÇÕES DE VARIÁVEIS GLOBAIS ============
 extern bool enabled_send_level_readings;        // Habilita envio de leituras de nível
 extern bool enabled_send_temperature_readings;  // Habilita envio de leituras de temperatura
-extern bool enabled_send_batch_readings;       // Habilita envio de leituras de ticket
+extern bool enabled_send_batch_readings;       // Habilita envio de leituras de ticket - Sensor 1
+extern bool enabled_send_batch_readings_sensor2; // Habilita envio de leituras de ticket - Sensor 2
 extern bool enabled_send_humidity_readings;     // Habilita envio de leituras de umidade
 
 extern long id_message_batch;                     // ID da mensagem de batch
+extern long id_message_batch2;                    // ID da mensagem de batch sensor 2
 
 //mqtt - Callback e utilitários
 void callback(char*, byte*, unsigned int);

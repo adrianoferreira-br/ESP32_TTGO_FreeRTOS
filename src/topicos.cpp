@@ -20,10 +20,12 @@ extern void reset_percentual_filter();
 // ============ VARIÁVEIS GLOBAIS PARA CONTROLE DE ENVIO DE LEITURAS ============
 bool enabled_send_level_readings = false;        // Habilita envio de leituras de nível
 bool enabled_send_temperature_readings = false;  // Habilita envio de leituras de temperatura
-bool enabled_send_batch_readings = false;      // Habilita envio de leituras de ticket
+bool enabled_send_batch_readings = false;      // Habilita envio de leituras de ticket - Sensor 1
+bool enabled_send_batch_readings_sensor2 = false; // Habilita envio de leituras de ticket - Sensor 2
 bool enabled_send_humidity_readings = false;     // Habilita envio de leituras de umidade
 
 long id_message_batch = 0;                     // ID da mensagem de batch
+long id_message_batch2 = 0;                    // ID da mensagem de batch sensor 2
 
 
 /**************************************************************
@@ -982,17 +984,30 @@ bool mqtt_send_datas_readings() {
         enabled_send_humidity_readings = false;
     }
 
-    // se habilitado = ticket incluir na lista leitura do ticket
+    // se habilitado = ticket incluir na lista leitura do ticket - SENSOR 1
     if (enabled_send_batch_readings) {        
         JsonObject reading = readings.createNestedObject();
         reading["metric_name"] = "batch_time";
-        reading["value"] = qtd_batidas_intervalo;//current_ticket;
+        reading["value"] = qtd_batidas_intervalo;
         reading["interval"] = sample_interval_batch;
         reading["message_id"] = id_message_batch;
         if (message_error_code != 0) {
             reading["message_code"] = message_error_code;
         }
         enabled_send_batch_readings = false;
+    }
+    
+    // se habilitado = ticket incluir na lista leitura do ticket - SENSOR 2
+    if (enabled_send_batch_readings_sensor2) {        
+        JsonObject reading = readings.createNestedObject();
+        reading["metric_name"] = "batch_time_sensor2";
+        reading["value"] = qtd_batidas_intervalo_sensor2;
+        reading["interval"] = sample_interval_batch; //todo: diferenciar intervalo sensor 2
+        reading["message_id"] = id_message_batch2; 
+        if (message_error_code != 0) {
+            reading["message_code"] = message_error_code;
+        }
+        enabled_send_batch_readings_sensor2 = false;
     }
     
 
