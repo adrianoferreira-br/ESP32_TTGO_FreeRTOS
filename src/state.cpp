@@ -17,8 +17,16 @@
 #include "extern_data.h"
 
 // Pinos dos sensores de batida
-#define BATIDA_PIN 12
-#define BATIDA_PIN_SENSOR2 13
+#ifdef LILYGO_T_DISPLAY_S3
+  // LilyGo S3: GPIO 12 e 13 são usados pelo display (SCLK e DC)
+  #define BATIDA_PIN 3       // Usar GPIO alternativo
+  #define BATIDA_PIN_SENSOR2 16 // Usar GPIO alternativo
+  #warning "LilyGo S3: Sensores de batida remapeados para GPIO 12->3 e 13->16"
+#else
+  // TTGO T-Display: Pinos originais
+  #define BATIDA_PIN 12
+  #define BATIDA_PIN_SENSOR2 13
+#endif
 
 // Variáveis do Sensor 1 (GPIO 12)
 int qnt_batidas_prensa = 0;
@@ -49,7 +57,11 @@ time_t timestamp_global = 0; // Variável global para armazenar o timestamp
 volatile bool reflexSensorTriggered = false;
 
 // botão da placa
-const int BUTTON_35 = 35;
+#ifdef LILYGO_T_DISPLAY_S3
+  const int BUTTON_35 = 14;  // GPIO14 (button) no ESP32-S3
+#else
+  const int BUTTON_35 = 35; // GPIO35 no ESP32 original
+#endif
 float level_max = 20;   //cx d´agua
 float level_min = 100;  //cx d´agua
 float filter_threshold = 10.0; // Threshold do filtro em % (padrão 10%)

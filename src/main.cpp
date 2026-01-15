@@ -3,9 +3,15 @@
 
 #include "main.h"
 
+// Remapeamento de pinos para LilyGo T-Display S3
+#ifdef LILYGO_T_DISPLAY_S3
+  #define BUTTON_35 14   // GPIO 0 (botão BOOT) no ESP32-S3
+  #define PINO_12 3    // GPIO 15 (GPIO 12 usado pelo display SCLK)
+#else
+  #define BUTTON_35 35  // GPIO 35 no ESP32 original
+  #define PINO_12 12    // GPIO 12 no ESP32 original
+#endif
 
-#define BUTTON_35 35
-#define PINO_12 12
 #define WDT_TIMEOUT 5
 
 
@@ -24,7 +30,18 @@ bool initial_call = true;
 
 
 void setup() {  
-  Serial.begin(115200); 
+  Serial.begin(115200);
+  delay(500); // Aguarda estabilização da serial
+  
+  Serial.println("\n\n========== BOOT INICIADO ==========");
+  
+  #ifdef LILYGO_T_DISPLAY_S3
+    Serial.println("Placa: LilyGo T-Display S3 (ESP32-S3)");
+    // Desabilita watchdog temporariamente para debug
+    //esp_task_wdt_delete(NULL);
+  #else
+    Serial.println("Placa: TTGO T-Display (ESP32)");
+  #endif
   
   // VERIFICAÇÃO CRÍTICA DE PARTIÇÕES - DEVE SER PRIMEIRO
   Serial.println("=== VERIFICAÇÃO CRÍTICA DE BOOT ===");
@@ -55,16 +72,30 @@ void setup() {
   }
   Serial.println("=====================================");
 
-  /*    HARDWARE   */     
-  define_hardware();   
-  setup_mem_flash(); 
+  /*    HARDWARE   */
+  Serial.println("\n[1/15] Configurando hardware...");     
+  define_hardware();
+  
+  Serial.println("[2/15] Configurando memoria flash...");
+  setup_mem_flash();
+  
+  Serial.println("[3/15] Mostrando particoes...");
   show_partitions();
+  
+  Serial.println("[4/15] Carregando configuracoes...");
   load_all_settings_from_flash(); // 📂 Carrega todas as configurações da flash
+  
+  Serial.println("[5/15] Info OTA...");
   show_ota_info();      // Adicionar info sobre partições OTA
+  
+  Serial.println("[6/15] Setup timer...");
   setup_timer();
+  
+  Serial.println("[7/15] Setup timer takt...");
   setup_timer_send_takt_time();
 
   /*    WIFI    */
+  Serial.println("[8/15] Setup WiFi...");
   setup_wifi();       
   setup_ota();
   setup_webserver();
@@ -205,19 +236,41 @@ void vTask2(void *pvParameters)
 void define_hardware(){
 
   Serial.begin(115200); 
+  
+  Serial.print("Configurando pinos - BUTTON_35: GPIO ");
+  Serial.print(BUTTON_35);
+  Serial.print(" | PINO_12: GPIO ");
+  Serial.println(PINO_12);
 
   // circuito prensa
-  pinMode(PINO_12, INPUT_PULLUP);   
+  Serial.println("  -> pinMode PINO_12...");
+  pinMode(PINO_12, INPUT_PULLUP);
+  Serial.println("  -> PINO_12 OK");
 
-  // botão proximo ao reset  
-  pinMode(BUTTON_35, INPUT);     
+  // botão proximo ao reset
+  Serial.println("  -> pinMode BUTTON_35...");  
+  pinMode(BUTTON_35, INPUT);
+  Serial.println("  -> BUTTON_35 OK");
   
   // sensor ultrassônico
-  pinMode(ULTRASONIC_TRIG, OUTPUT); //pino 26  
+  Serial.println("  -> pinMode ULTRASONIC_TRIG...");
+  pinMode(ULTRASONIC_TRIG, OUTPUT); //pino 26
+  Serial.println("  -> ULTRASONIC_TRIG OK");
+  
+  Serial.println("  -> pinMode ULTRASONIC_ECHO...");  
   pinMode(ULTRASONIC_ECHO, INPUT);  //pino 27
+  Serial.println("  -> ULTRASONIC_ECHO OK");
 
   // sensor de temperatura
+  Serial.println("  -> pinMode DHTPIN...");
   pinMode(DHTPIN, INPUT); //pino 21
+  Serial.println("  -> DHTPIN OK");
+  
+  #ifdef LILYGO_T_DISPLAY_S3
+    Serial.println("Hardware: LilyGo T-Display S3");
+  #else
+    Serial.println("Hardware: TTGO T-Display");
+  #endif
 
 }
 

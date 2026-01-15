@@ -18,24 +18,77 @@ TFT_eSPI tft = TFT_eSPI();
 */
 void init_display()
 { 
-    tft.init();
-    tft.setRotation(1);  // 3- landpage com conector a esquerda
-    tft.setTextFont(4);
-    tft.setTextSize(1);
-    tft.fillScreen(TFT_BLACK);         
-    tft.setTextDatum(TL_DATUM);
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);        
-    // Mostra resolução para debug (opcional)
-    /*tft.drawString(String(tft.width()) + " x " + String(tft.height()), 90, 50, 2);
-    delay(500);
-    // Animação de boot (opcional)
-    uint16_t bootColors[] = {TFT_RED, TFT_GREEN, TFT_BLUE, TFT_ORANGE};
-    for (uint8_t i = 0; i < 4; i++) {
-        tft.fillScreen(bootColors[i]);
-        delay(300);
-    }*/
+    #ifdef LILYGO_T_DISPLAY_S3
+        // DEBUG: Inicialização com logs detalhados
+        Serial.begin(115200);
+        delay(100);
+        Serial.println("\n=== INIT DISPLAY LILYGO S3 (PARALLEL 8-BIT) ===");
+        
+        // Liga backlight
+        pinMode(38, OUTPUT);
+        digitalWrite(38, HIGH);
+        Serial.println("Backlight ON (GPIO 38)");
+        delay(100);
+        
+        // Inicializa display (interface paralela não precisa de SPI.begin())
+        Serial.println("Chamando tft.init()...");
+        tft.init();
+        delay(200);
+        Serial.println("tft.init() OK");
+        
+        tft.setRotation(1);
+        Serial.print("Rotacao 1 - Resolucao: ");
+        Serial.print(tft.width());
+        Serial.print(" x ");
+        Serial.println(tft.height());
+        
+        tft.setTextFont(4);
+        tft.setTextSize(1);
+        
+        // Teste visual RGB        
+        tft.fillScreen(TFT_RED);
+        delay(500);
+        tft.fillScreen(TFT_GREEN);
+        delay(500);
+        tft.fillScreen(TFT_BLUE);
+        delay(500);
+        tft.fillScreen(TFT_WHITE);
+        delay(500);
+        tft.fillScreen(TFT_BLACK);
+        
+        /*
+        tft.setTextDatum(TL_DATUM);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        tft.drawString("LilyGo T-Display S3", 10, 10, 4);
+        */
+        
+        
+        Serial.println("=== INIT COMPLETO ===");
+        delay(3000);
+    #else
+        // TTGO T-Display original
+        pinMode(TFT_BL, OUTPUT);
+        digitalWrite(TFT_BL, HIGH);
+        
+        tft.init();
+        tft.setRotation(1);
+        tft.setTextFont(4);
+        tft.setTextSize(1);
+        tft.fillScreen(TFT_BLACK);         
+        tft.setTextDatum(TL_DATUM);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+    #endif
+    
     tft.fillScreen(TFT_BLACK);
-    tft.pushImage(30, 40, 192, 51, (uint16_t *)INDX4_240x135); // Logo Presto
+    
+    #ifdef LILYGO_T_DISPLAY_S3
+        int logoX = (tft.width() - 192) / 2;
+        int logoY = (tft.height() - 51) / 2;
+        tft.pushImage(logoX, logoY, 192, 51, (uint16_t *)INDX4_240x135);
+    #else
+        tft.pushImage(30, 40, 192, 51, (uint16_t *)INDX4_240x135);
+    #endif
+    
     delay(3000);
 }
 
@@ -122,11 +175,19 @@ void showBootInfo() {
     tft.fillScreen(TFT_BLACK);
     tft.setTextDatum(MC_DATUM); // Centraliza texto
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    // Exibe versão na parte superior centralizada
-    tft.drawString("Versao: " + String(VERSION), tft.width() / 2, 30, 4);
-    // Exibe nome do equipamento na parte inferior centralizada
-    tft.drawString("Equip: " + String(DISPOSITIVO_ID), tft.width() / 2, tft.height() - 30, 2);
-    delay(2000); // Aguarda 2 segundos
+    
+    #ifdef LILYGO_T_DISPLAY_S3
+        // Layout para LilyGo S3 (320x170)
+        tft.drawString("Versao: " + String(VERSION), tft.width() / 2, 40, 4);
+        tft.drawString("LilyGo T-Display S3", tft.width() / 2, 85, 4);
+        tft.drawString("Equip: " + String(DISPOSITIVO_ID), tft.width() / 2, tft.height() - 40, 2);
+    #else
+        // Layout para TTGO (240x135)
+        tft.drawString("Versao: " + String(VERSION), tft.width() / 2, 30, 4);
+        tft.drawString("Equip: " + String(DISPOSITIVO_ID), tft.width() / 2, tft.height() - 30, 2);
+    #endif
+    
+    delay(2000);
     tft.setTextDatum(TL_DATUM); // Retorna para o padrão (top-left)
 }
 
@@ -137,14 +198,25 @@ void showBootInfo() {
 *  Description: Show distance on the display
 */
 void show_distancia(float dist) {
-    tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-    tft.drawString("   " + String(dist, 1), 120, 25, 4);
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.drawString("cm", 200, 25, 4);    
-    graficoBarra(3, 20, 60, 113,  level_min - dist, level_min - level_max, TFT_BLUE, false); // Exemplo de uso do gráfico de barras    
-    
-    tft.drawString(String(level_max), 70, 20, 2); // Exibe medida inicial do reservatório
-    tft.drawString(String(level_min), 70, 120, 2); // Exibe altura máxima do ponto inicial até o modo sem agua    
+    #ifdef LILYGO_T_DISPLAY_S3
+        // Layout para LilyGo S3 (320x170) - ajustado proporcionalmente
+        tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+        tft.drawString("   " + String(dist, 1), 160, 25, 4);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        tft.drawString("cm", 260, 25, 4);    
+        graficoBarra(5, 20, 80, 140, level_min - dist, level_min - level_max, TFT_BLUE, false);
+        tft.drawString(String(level_max), 90, 20, 2);
+        tft.drawString(String(level_min), 90, 145, 2);
+    #else
+        // Layout para TTGO (240x135)
+        tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+        tft.drawString("   " + String(dist, 1), 120, 25, 4);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        tft.drawString("cm", 200, 25, 4);    
+        graficoBarra(3, 20, 60, 113, level_min - dist, level_min - level_max, TFT_BLUE, false);
+        tft.drawString(String(level_max), 70, 20, 2);
+        tft.drawString(String(level_min), 70, 120, 2);
+    #endif
 }
 
 
@@ -156,7 +228,12 @@ void show_percentual_reservatorio(float percentual) {
     char buffer[16];
     snprintf(buffer, sizeof(buffer), "%.1f%%", percentual);
     tft.setTextColor(TFT_RED, TFT_BLACK);
-    tft.drawString(buffer, 120, 115, 4); // Ajuste a posição conforme necessário
+    
+    #ifdef LILYGO_T_DISPLAY_S3
+        tft.drawString(buffer, 160, 140, 4);
+    #else
+        tft.drawString(buffer, 120, 115, 4);
+    #endif
 }
 
 
@@ -166,9 +243,16 @@ void show_percentual_reservatorio(float percentual) {
 */
 void show_temperature(float temp) {
     tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-    tft.drawString(" t: " + String(temp, 1), 120, 55, 4);
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.drawString("C", 200, 55, 4);
+    
+    #ifdef LILYGO_T_DISPLAY_S3
+        tft.drawString(" t: " + String(temp, 1), 160, 60, 4);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        tft.drawString("C", 260, 60, 4);
+    #else
+        tft.drawString(" t: " + String(temp, 1), 120, 55, 4);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        tft.drawString("C", 200, 55, 4);
+    #endif
 }
 
 /*
@@ -176,9 +260,16 @@ void show_temperature(float temp) {
 */
 void show_humidity(float hum) {
     tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-    tft.drawString(" h:" + String(hum, 1), 120, 85, 4);
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.drawString("%", 200, 85, 4);
+    
+    #ifdef LILYGO_T_DISPLAY_S3
+        tft.drawString(" h:" + String(hum, 1), 160, 95, 4);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        tft.drawString("%", 260, 95, 4);
+    #else
+        tft.drawString(" h:" + String(hum, 1), 120, 85, 4);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        tft.drawString("%", 200, 85, 4);
+    #endif
 }
 
 /*
@@ -186,9 +277,16 @@ void show_humidity(float hum) {
 */
 void show_battery_voltage(float voltage) {
     tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-    tft.drawString("   " + String(voltage, 2), 120, 115, 4);
-    tft.setTextColor(TFT_WHITE, TFT_BLACK);
-    tft.drawString("V", 200, 115, 4);
+    
+    #ifdef LILYGO_T_DISPLAY_S3
+        tft.drawString("   " + String(voltage, 2), 160, 130, 4);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        tft.drawString("V", 260, 130, 4);
+    #else
+        tft.drawString("   " + String(voltage, 2), 120, 115, 4);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        tft.drawString("V", 200, 115, 4);
+    #endif
 }
 
 /*
