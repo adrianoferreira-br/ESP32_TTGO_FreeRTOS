@@ -16,25 +16,13 @@
 #include "topicos.h"
 #include "extern_data.h"
 
-// Pinos dos sensores de batida
-#ifdef LILYGO_T_DISPLAY_S3
-  // LilyGo S3: GPIO 12 e 13 são usados pelo display (SCLK e DC)
-  #define BATIDA_PIN 3       // Usar GPIO alternativo
-  #define BATIDA_PIN_SENSOR2 16 // Usar GPIO alternativo
-  #warning "LilyGo S3: Sensores de batida remapeados para GPIO 12->3 e 13->16"
-#else
-  // TTGO T-Display: Pinos originais
-  #define BATIDA_PIN 12
-  #define BATIDA_PIN_SENSOR2 13
-#endif
-
-// Variáveis do Sensor 1 (GPIO 12)
+// Variáveis do Sensor 1 (definido em hardware_config.h como SENSOR_BATIDA_1)
 int qnt_batidas_prensa = 0;
 volatile bool batida_prensa = false;
 long idBatida = 0; // Variável global para armazenar o ID da batida
 int qtd_batidas_intervalo = 0;
 
-// Variáveis do Sensor 2 (GPIO 13)
+// Variáveis do Sensor 2 (definido em hardware_config.h como SENSOR_BATIDA_2)
 int qnt_batidas_prensa_sensor2 = 0;
 volatile bool batida_prensa_sensor2 = false;
 long idBatida_sensor2 = 0;
@@ -56,12 +44,7 @@ time_t timestamp_global = 0; // Variável global para armazenar o timestamp
 //Verificação de reflexo
 volatile bool reflexSensorTriggered = false;
 
-// botão da placa
-#ifdef LILYGO_T_DISPLAY_S3
-  const int BUTTON_35 = 14;  // GPIO14 (button) no ESP32-S3
-#else
-  const int BUTTON_35 = 35; // GPIO35 no ESP32 original
-#endif
+// botão da placa (definido em hardware_config.h como BTN_USER)
 float level_max = 20;   //cx d´agua
 float level_min = 100;  //cx d´agua
 float filter_threshold = 10.0; // Threshold do filtro em % (padrão 10%)
@@ -94,18 +77,18 @@ bool is_accumulating_sensor2 = false;
  */
 void setup_batidas_prensa() {
 
-  // Configura a interrupção para o Sensor 1 (GPIO 12)
-  attachInterrupt(digitalPinToInterrupt(BATIDA_PIN), InterruptionPino12, FALLING);
-  pinMode(BATIDA_PIN, INPUT_PULLUP);
+  // Configura a interrupção para o Sensor 1
+  attachInterrupt(digitalPinToInterrupt(SENSOR_BATIDA_1), InterruptionPino12, FALLING);
+  pinMode(SENSOR_BATIDA_1, INPUT_PULLUP);
   
-  // Configura a interrupção para o Sensor 2 (GPIO 13)
-  attachInterrupt(digitalPinToInterrupt(BATIDA_PIN_SENSOR2), InterruptionPino13, FALLING);
-  pinMode(BATIDA_PIN_SENSOR2, INPUT_PULLUP);
+  // Configura a interrupção para o Sensor 2
+  attachInterrupt(digitalPinToInterrupt(SENSOR_BATIDA_2), InterruptionPino13, FALLING);
+  pinMode(SENSOR_BATIDA_2, INPUT_PULLUP);
   
   Serial.println("====================================");
   Serial.println("Sensores de batida configurados:");
-  Serial.println("  Sensor 1: GPIO 12");
-  Serial.println("  Sensor 2: GPIO 13");
+  Serial.printf("  Sensor 1: GPIO %d\n", SENSOR_BATIDA_1);
+  Serial.printf("  Sensor 2: GPIO %d\n", SENSOR_BATIDA_2);
   Serial.println("====================================");   
 
 }
@@ -365,26 +348,26 @@ void verifica_batida_prensa_sensor2(){
     
     // Verifica se interrupção é falsa (debounce)
     delay(100);
-    if (digitalRead(BATIDA_PIN_SENSOR2) == HIGH){
+    if (digitalRead(SENSOR_BATIDA_2) == HIGH){
       return;
     }
 
     // Confirmação de nível LOW por 300ms
-    if(digitalRead(BATIDA_PIN_SENSOR2) == LOW){
+    if(digitalRead(SENSOR_BATIDA_2) == LOW){
         delay(100);              
     }else {
         Serial.println("Sensor2: falhou <100ms");        
         return;
     }        
 
-    if(digitalRead(BATIDA_PIN_SENSOR2) == LOW){
+    if(digitalRead(SENSOR_BATIDA_2) == LOW){
         delay(100);                
     }else {
         Serial.println("Sensor2: falhou <200ms");        
         return;
     }
 
-    if(digitalRead(BATIDA_PIN_SENSOR2) == LOW){
+    if(digitalRead(SENSOR_BATIDA_2) == LOW){
         delay(100);                
     }else {
         Serial.println("Sensor2: falhou <300ms");        
@@ -670,7 +653,7 @@ void set_reservatorio(){
   tft.drawString(" ou aguarde inciar", 10, 80, 4);
   delay(4000); // Aguarda 4 segundos para o usuário se preparar
 
-  if (digitalRead(BUTTON_35) == LOW){  // botão pressionado (GND){
+  if (digitalRead(BTN_USER) == LOW){  // botão pressionado (GND){
       Serial.println("Botão pressionado - config caixa de água");
       UltrasonicResult res = ultrasonic_read();
       Serial.println("Altura mínima do reservatório: " + String(res.distance_cm) + " cm");
@@ -697,7 +680,7 @@ void set_reservatorio(){
   tft.drawString("Pressione o botão", 10, 30, 4);
   tft.drawString(" definir maximo", 10, 60, 4);
   delay(4000); // Aguarda 4 segundos para o usuário se preparar
-  if (digitalRead(BUTTON_35) == LOW){  // botão pressionado (GND){
+  if (digitalRead(BTN_USER) == LOW){  // botão pressionado (GND){
       Serial.println("Botão pressionado - config caixa de água");
       UltrasonicResult res = ultrasonic_read();
       Serial.println("Altura máxima do reservatório: " + String(res.distance_cm) + " cm");

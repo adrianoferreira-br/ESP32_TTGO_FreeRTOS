@@ -2,7 +2,7 @@
 
 
 
-DHT_Unified dht(DHTPIN, DHTTYPE);
+DHT_Unified dht(DHT_DATA_PIN, DHTTYPE);
 uint32_t delayMS = 2000;
 float temperatura = 0.0;
 float humidade = 0.0;

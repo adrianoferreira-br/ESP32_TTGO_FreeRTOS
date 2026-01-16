@@ -4,9 +4,9 @@
 #include <Arduino.h>
 #include <OneWire.h>
 #include <DallasTemperature.h>
+#include "hardware_config.h"
 
-// Definição do pino para o sensor DS18B20
-#define DS18B20_PIN 22
+// Pino definido em hardware_config.h como DS18B20_DATA_PIN
 
 // Variáveis globais para armazenar a temperatura
 extern float temperatura_ds18b20;

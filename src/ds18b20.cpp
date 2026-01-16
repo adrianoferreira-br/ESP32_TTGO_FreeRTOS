@@ -1,7 +1,7 @@
 #include "ds18b20.h"
 
 // Configuração do barramento OneWire e sensor Dallas
-OneWire oneWire(DS18B20_PIN);
+OneWire oneWire(DS18B20_DATA_PIN);
 DallasTemperature sensors(&oneWire);
 
 // Variáveis globais

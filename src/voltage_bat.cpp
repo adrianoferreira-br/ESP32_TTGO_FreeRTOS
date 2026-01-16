@@ -31,7 +31,7 @@ float read_tensao() {
     // Retorna valor dummy para evitar leitura de pino inválido
     return 3.3; //ToDo: Implementar leitura correta no S3
   #else
-    int raw = analogRead(VBAT_PIN);
+    int raw = analogRead(VBAT_ADC_PIN);
     // O divisor de tensão da placa TTGO T-Display é geralmente 2:1
     // 3.3V -> 4095 (12 bits)
     float tensao = (raw / 4095.0) * 3.3; // Multiplica por 2 por causa do divisor

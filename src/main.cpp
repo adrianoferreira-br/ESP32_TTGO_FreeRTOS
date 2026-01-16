@@ -3,15 +3,6 @@
 
 #include "main.h"
 
-// Remapeamento de pinos para LilyGo T-Display S3
-#ifdef LILYGO_T_DISPLAY_S3
-  #define BUTTON_35 14   // GPIO 0 (botão BOOT) no ESP32-S3
-  #define PINO_12 3    // GPIO 15 (GPIO 12 usado pelo display SCLK)
-#else
-  #define BUTTON_35 35  // GPIO 35 no ESP32 original
-  #define PINO_12 12    // GPIO 12 no ESP32 original
-#endif
-
 #define WDT_TIMEOUT 5
 
 
@@ -75,6 +66,7 @@ void setup() {
   /*    HARDWARE   */
   Serial.println("\n[1/15] Configurando hardware...");     
   define_hardware();
+  print_pin_configuration(); // Imprime configuração de pinos
   
   Serial.println("[2/15] Configurando memoria flash...");
   setup_mem_flash();
@@ -237,40 +229,34 @@ void define_hardware(){
 
   Serial.begin(115200); 
   
-  Serial.print("Configurando pinos - BUTTON_35: GPIO ");
-  Serial.print(BUTTON_35);
-  Serial.print(" | PINO_12: GPIO ");
-  Serial.println(PINO_12);
+  Serial.printf("Configurando pinos - BTN_USER: GPIO %d | SENSOR_BATIDA_1: GPIO %d\n", 
+                BTN_USER, SENSOR_BATIDA_1);
 
-  // circuito prensa
-  Serial.println("  -> pinMode PINO_12...");
-  pinMode(PINO_12, INPUT_PULLUP);
-  Serial.println("  -> PINO_12 OK");
+  // Sensor de batida da prensa
+  Serial.println("  -> pinMode SENSOR_BATIDA_1...");
+  pinMode(SENSOR_BATIDA_1, INPUT_PULLUP);
+  Serial.println("  -> SENSOR_BATIDA_1 OK");
 
-  // botão proximo ao reset
-  Serial.println("  -> pinMode BUTTON_35...");  
-  pinMode(BUTTON_35, INPUT);
-  Serial.println("  -> BUTTON_35 OK");
+  // Botão próximo ao reset
+  Serial.println("  -> pinMode BTN_USER...");  
+  pinMode(BTN_USER, INPUT);
+  Serial.println("  -> BTN_USER OK");
   
-  // sensor ultrassônico
+  // Sensor ultrassônico
   Serial.println("  -> pinMode ULTRASONIC_TRIG...");
-  pinMode(ULTRASONIC_TRIG, OUTPUT); //pino 26
+  pinMode(ULTRASONIC_TRIG, OUTPUT);
   Serial.println("  -> ULTRASONIC_TRIG OK");
   
   Serial.println("  -> pinMode ULTRASONIC_ECHO...");  
-  pinMode(ULTRASONIC_ECHO, INPUT);  //pino 27
+  pinMode(ULTRASONIC_ECHO, INPUT);
   Serial.println("  -> ULTRASONIC_ECHO OK");
 
-  // sensor de temperatura
-  Serial.println("  -> pinMode DHTPIN...");
-  pinMode(DHTPIN, INPUT); //pino 21
-  Serial.println("  -> DHTPIN OK");
+  // Sensor de temperatura DHT
+  Serial.println("  -> pinMode DHT_DATA_PIN...");
+  pinMode(DHT_DATA_PIN, INPUT);
+  Serial.println("  -> DHT_DATA_PIN OK");
   
-  #ifdef LILYGO_T_DISPLAY_S3
-    Serial.println("Hardware: LilyGo T-Display S3");
-  #else
-    Serial.println("Hardware: TTGO T-Display");
-  #endif
+  Serial.printf("Hardware configurado: %s\n", get_board_name());
 
 }
 
