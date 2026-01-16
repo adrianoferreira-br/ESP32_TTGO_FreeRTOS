@@ -53,7 +53,7 @@
   // --------------------------------------------------------------------------
   // SENSOR DE TEMPERATURA E UMIDADE (DHT22/DHT11)
   // --------------------------------------------------------------------------
-  #define DHT_DATA_PIN      21    // GPIO 21 - Compatível com S3
+  #define DHT_DATA_PIN      43    // GPIO 43 - Compatível com S3
   
   // --------------------------------------------------------------------------
   // SENSOR DE TEMPERATURA 1-WIRE (DS18B20)
