@@ -21,7 +21,7 @@ void show_batidas(int batidas);
 void show_batidas_sensor2(int batidas);
 void show_time(char* timeStr);
 void show_ip();
-
+void show_door_sensor(int sensor_id, int value);
 
 extern TFT_eSPI tft;
 

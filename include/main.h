@@ -22,6 +22,7 @@
 #include "ds18b20.h"
 #include "mem_flash.h"
 #include "web_server.h"
+#include "door_sensor.h"
 #include <Preferences.h>
 #include "wifi_mqtt.h"
 

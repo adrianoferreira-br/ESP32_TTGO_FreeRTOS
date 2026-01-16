@@ -70,7 +70,14 @@
   // --------------------------------------------------------------------------
   #define I2C_SDA_PIN       21    // GPIO 21 - Compatível (pode compartilhar com DHT se não usar simultaneamente)
   #define I2C_SCL_PIN       22    // GPIO 22 - Compatível (pode compartilhar com DS18B20 se não usar simultaneamente)
-  
+
+  // --------------------------------------------------------------------------
+  // Sensor status de porta 
+  // --------------------------------------------------------------------------
+  #define DOOR_SENSOR_1   18    // GPIO 18 - Sensor de porta (entrada somente) 17(ttgo)
+  #define DOOR_SENSOR_2   13    // GPIO 13 - Sensor de porta (entrada somente) 25(ttgo)
+
+
   // Informações da placa
   #define BOARD_NAME        "LilyGo T-Display S3 (ESP32-S3)"
   
@@ -122,6 +129,12 @@
   // --------------------------------------------------------------------------
   #define I2C_SDA_PIN       21    // GPIO 21 - SDA (padrão ESP32)
   #define I2C_SCL_PIN       22    // GPIO 22 - SCL (padrão ESP32)
+  
+  // --------------------------------------------------------------------------
+  // SENSORES DE PORTA (DOOR SENSORS)
+  // --------------------------------------------------------------------------
+  #define DOOR_SENSOR_1     17    // GPIO 17 - Sensor de porta 1 (entrada com pull-up)
+  #define DOOR_SENSOR_2     25    // GPIO 25 - Sensor de porta 2 (entrada com pull-up)
   
   // Informações da placa
   #define BOARD_NAME        "TTGO T-Display (ESP32)"
@@ -178,6 +191,8 @@ inline void print_pin_configuration() {
   Serial.printf("VBAT ADC:            GPIO %d\n", VBAT_ADC_PIN);
   Serial.printf("I2C SDA:             GPIO %d\n", I2C_SDA_PIN);
   Serial.printf("I2C SCL:             GPIO %d\n", I2C_SCL_PIN);
+  Serial.printf("Door Sensor 1:       GPIO %d\n", DOOR_SENSOR_1);
+  Serial.printf("Door Sensor 2:       GPIO %d\n", DOOR_SENSOR_2);
   Serial.println("========================================\n");
 }
 

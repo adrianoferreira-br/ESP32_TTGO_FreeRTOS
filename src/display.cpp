@@ -350,3 +350,45 @@ void show_ip () {
       tft.drawString((String)NivelSinal, 205, 1, 4);
       tft.setTextColor(TFT_WHITE, TFT_BLACK);    
 }
+
+/**********************************************************************************************
+ *     MOSTRA O STATUS DO SENSOR DE PORTA NO DISPLAY
+ *     
+ *     @param sensor_id: ID do sensor (1 ou 2)
+ *     @param value: valor do sensor (0 = fechado/azul, 1 = aberto/vermelho)
+ *     
+ *     Desenha um quadrado colorido com o texto D1 ou D2
+ *     - Posição D1: canto superior direito (200, 20)
+ *     - Posição D2: canto superior direito (200, 60)
+ */
+void show_door_sensor(int sensor_id, int value) {
+    // Define posições baseadas no sensor_id
+    int x = 280;  // Posição X (próximo ao canto direito)
+    int y = (sensor_id == 1) ? 20 : 60;  // D1 no topo, D2 abaixo
+    
+    int box_width = 40;
+    int box_height = 35;
+    
+    // Escolhe cor baseada no valor
+    // 0 (LOW) = Fechado = Azul
+    // 1 (HIGH) = Aberto = Vermelho
+    uint16_t box_color = (value == 0) ? TFT_BLUE : TFT_RED;
+    uint16_t text_color = TFT_WHITE;
+    
+    // Desenha o quadrado preenchido
+    tft.fillRect(x, y, box_width, box_height, box_color);
+    
+    // Desenha a borda (opcional, para destaque)
+    tft.drawRect(x, y, box_width, box_height, TFT_WHITE);
+    
+    // Desenha o texto "D1" ou "D2" centralizado
+    tft.setTextColor(text_color, box_color);
+    tft.setTextDatum(MC_DATUM); // Middle Center
+    
+    String label = "D" + String(sensor_id);
+    tft.drawString(label, x + box_width/2, y + box_height/2, 4);
+    
+    // Restaura configurações padrão
+    tft.setTextDatum(TL_DATUM); // Top Left
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+}

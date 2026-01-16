@@ -134,6 +134,10 @@ void setup() {
     ds18b20_setup();
   #endif
 
+  /* Door Sensors */
+  Serial.println("[14/15] Setup Door Sensors...");
+  door_sensor_setup();
+
   /* botão de configuração */
  
   tft.fillScreen(TFT_BLACK);
@@ -202,6 +206,9 @@ void loop()
   #ifdef SENSOR_DS18B20
     ds18b20_loop();
   #endif
+
+  // Door Sensors - Executado a cada 1 segundo (não-bloqueante)
+  door_sensor_loop();
  
      
 
