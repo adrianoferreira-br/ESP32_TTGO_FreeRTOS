@@ -6,6 +6,7 @@ DHT_Unified dht(DHT_DATA_PIN, DHTTYPE);
 uint32_t delayMS = 2000;
 float temperatura = 0.0;
 float humidade = 0.0;
+unsigned long last_dht_read = 0;  // Timer para leitura não-bloqueante
 
 
 
@@ -41,8 +42,13 @@ void dht_setup() {
 
 
 void dht_loop() {
-  // Delay between measurements.
-  delay(delayMS);
+  // Leitura não-bloqueante - só lê a cada delayMS
+  unsigned long current_time = millis();
+  if (current_time - last_dht_read < delayMS) {
+    return;  // Ainda não passou o tempo necessário
+  }
+  last_dht_read = current_time;
+  
   // Get temperature event and print its value.
   sensors_event_t event;
   dht.temperature().getEvent(&event);
