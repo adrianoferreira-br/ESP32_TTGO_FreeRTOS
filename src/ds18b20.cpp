@@ -15,7 +15,7 @@ int num_sensors_ds18b20 = 0;
 void ds18b20_setup() {
   Serial.println("====================================");
   Serial.println("Inicializando sensor DS18B20...");
-  Serial.println("Pino: GPIO 22");
+  Serial.printf("Pino: GPIO %d\n", DS18B20_DATA_PIN);
   
   // Inicializa o barramento OneWire
   sensors.begin();
@@ -26,7 +26,7 @@ void ds18b20_setup() {
   if (num_sensors_ds18b20 == 0) {
     Serial.println("❌ ERRO: Nenhum sensor DS18B20 encontrado!");
     Serial.println("   Verifique as conexões:");
-    Serial.println("   - DATA: GPIO 22 (com resistor pull-up 4.7kΩ)");
+    Serial.printf("   - DATA: GPIO %d (com resistor pull-up 4.7kΩ)\n", DS18B20_DATA_PIN);
     Serial.println("   - VCC: 3.3V");
     Serial.println("   - GND: GND");
     return;
@@ -34,14 +34,11 @@ void ds18b20_setup() {
   
   Serial.printf("✅ DS18B20 inicializado com sucesso!\n");
   Serial.printf("   Número de sensores encontrados: %d\n", num_sensors_ds18b20);
-  Serial.printf("   Resolução: %d bits\n", sensors.getResolution());
   
   // Configura a resolução (9, 10, 11 ou 12 bits)
-  // 9 bits: 0.5°C, tempo de conversão ~94ms
-  // 10 bits: 0.25°C, tempo de conversão ~188ms
-  // 11 bits: 0.125°C, tempo de conversão ~375ms
   // 12 bits: 0.0625°C, tempo de conversão ~750ms
   sensors.setResolution(12);
+  Serial.printf("   Resolução: %d bits\n", sensors.getResolution());
   
   Serial.println("====================================");
 }

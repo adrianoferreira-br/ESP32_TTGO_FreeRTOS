@@ -58,7 +58,7 @@
   // --------------------------------------------------------------------------
   // SENSOR DE TEMPERATURA 1-WIRE (DS18B20)
   // --------------------------------------------------------------------------
-  #define DS18B20_DATA_PIN  22    // GPIO 22 - Comunicação 1-Wire
+  #define DS18B20_DATA_PIN  10    // GPIO 10 - Comunicação 1-Wire (GPIO 44 não funcionou)
   
   // --------------------------------------------------------------------------
   // LEITURA DE TENSÃO DA BATERIA (ADC)
@@ -79,7 +79,7 @@
 
 
   // Informações da placa
-  #define BOARD_NAME        "LilyGo T-Display S3 (ESP32-S3)"
+  #define BOARD_NAME        "LilyGo T-Display S3"
   
 #else
   // ==========================================================================
@@ -137,7 +137,7 @@
   #define DOOR_SENSOR_2     25    // GPIO 25 - Sensor de porta 2 (entrada com pull-up)
   
   // Informações da placa
-  #define BOARD_NAME        "TTGO T-Display (ESP32)"
+  #define BOARD_NAME        "TTGO T-Display"
   
 #endif
 
@@ -161,7 +161,7 @@
   #warning "Configuração de hardware: LilyGo T-Display S3 (ESP32-S3)"
   #warning "ATENÇÃO: GPIO 12 e 13 são usados pelo display - sensores remapeados para GPIO 3 e 16"
 #else
-  #warning "Configuração de hardware: TTGO T-Display (ESP32 original)"
+  #warning "Configuração de hardware: TTGO T-Display"
 #endif
 
 // ============================================================================

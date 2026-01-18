@@ -108,7 +108,7 @@ void setup() {
   #endif
 
   /*  DHT Sensor  */
-  #ifdef SENSOR_TEMPERATURE
+  #ifdef SENSOR_TEMPERATURE_DHT
     dht_setup();
   #endif
 
@@ -130,13 +130,15 @@ void setup() {
   #endif
 
   /* DS18B20 Temperature Sensor */
-  #ifdef SENSOR_DS18B20
+  #ifdef SENSOR_TEMPERATURA_DS18B20
     ds18b20_setup();
   #endif
 
   /* Door Sensors */
   Serial.println("[14/15] Setup Door Sensors...");
-  door_sensor_setup();
+  #ifdef SENSOR_DOOR
+    door_sensor_setup();
+  #endif
 
   /* botão de configuração */
  
@@ -177,7 +179,7 @@ void loop()
   #endif
 
   //  DHT Sensor  
-  #ifdef SENSOR_TEMPERATURE
+  #ifdef SENSOR_TEMPERATURE_DHT
     dht_loop();
   #endif
 
@@ -203,13 +205,14 @@ void loop()
   #endif
 
   // DS18B20 Temperature Sensor
-  #ifdef SENSOR_DS18B20
+  #ifdef SENSOR_TEMPERATURA_DS18B20
     ds18b20_loop();
   #endif
 
   // Door Sensors - Executado a cada 1 segundo (não-bloqueante)
-  door_sensor_loop();
- 
+  #ifdef SENSOR_DOOR
+    door_sensor_loop();
+  #endif
      
 
   if (initial_call) {   //envia uma mqtt de inicialização
