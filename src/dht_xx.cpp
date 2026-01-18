@@ -11,7 +11,13 @@ unsigned long last_dht_read = 0;  // Timer para leitura não-bloqueante
 
 
 void dht_setup() {
-  dht.begin();  
+  Serial.println("Inicializando DHT...");
+  dht.begin();
+  
+  // DHT precisa de tempo para estabilizar após power-on
+  Serial.println("Aguardando estabilização do DHT (2s)...");
+  delay(2000);
+  
   // Print temperature sensor details.
   sensor_t sensor;
   dht.temperature().getSensor(&sensor);
@@ -36,7 +42,18 @@ void dht_setup() {
   Serial.println(F("------------------------------------"));
   // Set delay between sensor readings based on sensor details.
   delayMS = sensor.min_delay / 1000;
-  Serial.println("Setup DHT inicializado");
+  
+  // Fazer uma leitura inicial para "acordar" o sensor
+  Serial.println("Fazendo leitura inicial do DHT...");
+  sensors_event_t event;
+  dht.temperature().getEvent(&event);
+  dht.humidity().getEvent(&event);
+  delay(1000);
+  
+  // Inicializar timer para primeira leitura real ocorrer logo
+  last_dht_read = millis();
+  
+  Serial.println("✅ Setup DHT inicializado");
 }
 
 
