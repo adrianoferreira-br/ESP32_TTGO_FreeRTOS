@@ -191,8 +191,10 @@ void loop()
       loop_ultrasonic();
       last_ultrasonic_time = current_time;
     }
-    verifica_timer();
   #endif
+
+  // Verificação do timer para envio de leituras MQTT (funciona com qualquer sensor)
+  verifica_timer();
 
   // Battery Voltage 
   #ifdef SENSOR_BATTERY_VOLTAGE

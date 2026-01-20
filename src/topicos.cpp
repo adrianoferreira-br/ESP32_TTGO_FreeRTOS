@@ -16,10 +16,16 @@
 extern void reset_percentual_filter();
 #endif
 
+// Referência ao sensor DS18B20 (se necessário)
+#ifdef SENSOR_TEMPERATURA_DS18B20
+extern float temperatura_ds18b20;
+#endif
+
 
 // ============ VARIÁVEIS GLOBAIS PARA CONTROLE DE ENVIO DE LEITURAS ============
 bool enabled_send_level_readings = false;        // Habilita envio de leituras de nível
-bool enabled_send_temperature_readings = false;  // Habilita envio de leituras de temperatura
+bool enabled_send_temperature_readings = false;  // Habilita envio de leituras de temperatura (DHT)
+bool enabled_send_temp_DS18B20_readings = false; // Habilita envio de leituras de temperatura (DS18B20)
 bool enabled_send_batch_readings = false;      // Habilita envio de leituras de ticket - Sensor 1
 bool enabled_send_batch_readings_sensor2 = false; // Habilita envio de leituras de ticket - Sensor 2
 bool enabled_send_humidity_readings = false;     // Habilita envio de leituras de umidade
@@ -890,12 +896,12 @@ bool mqtt_send_settings_confirmation() {
     
     if (result) {
         Serial.println("✅ Confirmação de configurações enviada com sucesso!");
-        Serial.println("📋 Configurações atuais:");        
-        Serial.println("   📶 WIFI:");
+        Serial.println("== Configurações atuais: ==");        
+        Serial.println("    WIFI:");
         Serial.println("      • SSID:   " + WiFi.SSID());
         Serial.println("      • Status: " + String(WiFi.status() == WL_CONNECTED ? "Conectado" : "Desconectado"));
         Serial.println("      • IP:     " + WiFi.localIP().toString());
-        Serial.println("   📡 MQTT:");
+        Serial.println("    MQTT:");
         Serial.println("      • Servidor: " + String(MQTT_SERVER));
         Serial.println("      • Porta:    " + String(PORT_MQTT));
         Serial.println("      • Usuário:  " + String(MQTT_USERNAME));
@@ -919,7 +925,7 @@ bool mqtt_send_settings_confirmation() {
         Serial.println("      • Obs. (Device Info): " + String(OBSERVACAO_DEVICE_INFO));
         Serial.println("      • Obs. (Settings):    " + String(OBSERVACAO_SETTINGS));
         Serial.println("      • Obs. (Readings):    " + String(OBSERVACAO_READINGS));
-        Serial.println("   🏠 RESERVATÓRIO:");
+        Serial.println("    RESERVATÓRIO:");
         Serial.println("      • Level Max: " + String(level_max) + " cm");
         Serial.println("      • Level Min: " + String(level_min) + " cm");        
         Serial.println("      • Intervalo: " + String(SAMPLE_INTERVAL) + " segundos");        
@@ -983,6 +989,18 @@ bool mqtt_send_datas_readings() {
         reading["message_code"] = 0;    
         enabled_send_humidity_readings = false;
     }
+
+    #ifdef SENSOR_TEMPERATURA_DS18B20
+    // se habilitado = temperatura DS18B20 incluir na lista leitura da temperatura
+    if (enabled_send_temp_DS18B20_readings) {        
+        JsonObject reading = readings.createNestedObject();        
+        reading["metric_name"] = "temperature";
+        reading["value"] = roundf(temperatura_ds18b20 * 100) / 100.0;        
+        reading["unit"] = "celsius";
+        reading["message_code"] = 0;
+        enabled_send_temp_DS18B20_readings = false;
+    }
+    #endif
 
     // se habilitado = ticket incluir na lista leitura do ticket - SENSOR 1
     if (enabled_send_batch_readings) {        
