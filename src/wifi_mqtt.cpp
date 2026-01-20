@@ -4,6 +4,9 @@
  *  date: 2025-01-14
  ***********************************************************/
 
+
+#define MQTT_MAX_PACKET_SIZE 1024  // CRÍTICO: Definir ANTES de incluir PubSubClient
+
 #include "wifi_mqtt.h"
 #include "topicos.h"
 #include "constants.h"
@@ -24,8 +27,6 @@
 #include <display.h>
 // flash
 #include "mem_flash.h"
-
-#define MQTT_MAX_PACKET_SIZE 1024
 
 WiFiClient espClient;
 PubSubClient client(espClient);
@@ -431,6 +432,8 @@ void setup_mqtt()
    if (port_mqtt > 0) {
        PORT_MQTT = port_mqtt;
    }
+      
+   client.setBufferSize(1024); // Configura buffer MQTT para suportar JSONs grandes (até 1024 bytes)
    
    client.setServer(MQTT_SERVER, PORT_MQTT);   
    client.setCallback(callback); 

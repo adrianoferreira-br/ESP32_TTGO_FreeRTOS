@@ -700,6 +700,7 @@ bool mqtt_send_settings(){//const char* nome_equipamento, const char* horario, l
 
 bool mqtt_send_info(){//const char* nome_equipamento, const char* horario, long id_message_batch, const char* observacao) {
     if (!client.connected()) {
+       Serial.println("❌ mqtt_send_info: Cliente MQTT desconectado!");
        return false;
     }
     client.loop();
@@ -732,9 +733,30 @@ bool mqtt_send_info(){//const char* nome_equipamento, const char* horario, long 
 
     char jsonBuffer[1024] = {0};
     size_t jsonLen = serializeJson(doc, jsonBuffer);
+    
+    // Verifica se JSON foi serializado corretamente
+    if (jsonLen == 0) {
+        Serial.println("❌ mqtt_send_info: Falha ao serializar JSON!");
+        return false;
+    }
+    
+    // Verifica se JSON cabe no buffer
+    if (jsonLen >= sizeof(jsonBuffer)) {
+        Serial.printf("❌ mqtt_send_info: JSON truncado! Tamanho: %d bytes (buffer: %d bytes)\n", jsonLen, sizeof(jsonBuffer));
+    }
+    
+    Serial.printf("mqtt_send_info: Enviando %d bytes para tópico '%s'\n", jsonLen, topico);
+    Serial.println("JSON: " + String(jsonBuffer));
+    
     bool result = client.publish(topico, (const uint8_t*)jsonBuffer, jsonLen, false); // QoS 0
-    Serial.println("MQTT: Dados info enviados.." + String(topico));
-    Serial.println("JSON enviado: " + String(jsonBuffer)); 
+    
+    if (result) {
+        Serial.println("mqtt_send_info: Publicação bem-sucedida!");
+    } else {
+        Serial.println("❌ mqtt_send_info: Falha na publicação MQTT!");
+        Serial.printf("   Estado MQTT: %d (%s)\n", client.state(), getMqttErrorMessage(client.state()).c_str());
+    }
+    
     return result;
 
 /* avaliar essas informações: 
@@ -997,6 +1019,7 @@ bool mqtt_send_datas_readings() {
         reading["metric_name"] = "temperature";
         reading["value"] = roundf(temperatura_ds18b20 * 100) / 100.0;        
         reading["unit"] = "celsius";
+        reading["interval"] = sample_interval_batch;
         reading["message_code"] = 0;
         enabled_send_temp_DS18B20_readings = false;
     }
