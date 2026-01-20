@@ -364,10 +364,10 @@ void show_ip () {
 void show_door_sensor(int sensor_id, int value) {
     // Define posições baseadas no sensor_id
     int x = 280;  // Posição X (próximo ao canto direito)
-    int y = (sensor_id == 1) ? 20 : 60;  // D1 no topo, D2 abaixo
+    int y = (sensor_id == 1) ? 20 : 90;  // D1 no topo, D2 abaixo
     
     int box_width = 40;
-    int box_height = 35;
+    int box_height = 70;
     
     // Escolhe cor baseada no valor
     // 0 (LOW) = Fechado = Azul
@@ -390,5 +390,35 @@ void show_door_sensor(int sensor_id, int value) {
     
     // Restaura configurações padrão
     tft.setTextDatum(TL_DATUM); // Top Left
+    tft.setTextColor(TFT_WHITE, TFT_BLACK);
+}
+
+/*
+ *  Description: Show DS18B20 sensor temperature reading on display
+ *  @param sensor_id: Index of sensor on OneWire bus (0 for first sensor)
+ *  @param value: Temperature in Celsius
+ */
+void show_sensor_ds18b20(int sensor_id, float value) {
+    // Posição no display (pode ser ajustada conforme necessário)
+    int x = 5;
+    int y = 100;
+    
+    // Cor: Verde se temperatura válida (> -100°C), Vermelho se erro
+    uint16_t text_color = (value > -100.0) ? TFT_GREEN : TFT_RED;
+    
+    tft.setTextColor(text_color, TFT_BLACK);
+    
+    // Formata string: "T0: 25.50 C" (sensor_id 0)
+    String display_text = "T" + String(sensor_id) + ": ";
+    
+    if (value > -100.0) {
+        display_text += String(value, 2) + " C  ";
+    } else {
+        display_text += "ERROR  ";
+    }
+    
+    tft.drawString(display_text, x, y, 4);
+    
+    // Restaura cor padrão
     tft.setTextColor(TFT_WHITE, TFT_BLACK);
 }

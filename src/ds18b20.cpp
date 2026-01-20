@@ -1,4 +1,5 @@
 #include "ds18b20.h"
+#include "display.h"  // Para exibir temperatura no display
 
 // Configuração do barramento OneWire e sensor Dallas
 OneWire oneWire(DS18B20_DATA_PIN);
@@ -39,7 +40,9 @@ void ds18b20_setup() {
   // 12 bits: 0.0625°C, tempo de conversão ~750ms
   sensors.setResolution(12);
   Serial.printf("   Resolução: %d bits\n", sensors.getResolution());
-  
+
+  ds18b20_loop(); // Leitura inicial para exibir no display  
+
   Serial.println("====================================");
 }
 
@@ -71,6 +74,9 @@ void ds18b20_loop() {
   Serial.print("  Temperatura: ");
   Serial.print(temperatura_ds18b20, 2);
   Serial.println(" °C");
+  
+  // Atualiza display com a temperatura (sensor índice 0)
+  show_sensor_ds18b20(0, temperatura_ds18b20);
   
   // Se houver múltiplos sensores, mostra todos
   if (num_sensors_ds18b20 > 1) {

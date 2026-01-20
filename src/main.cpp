@@ -100,6 +100,9 @@ void setup() {
   /*    MQTT    */
   setup_mqtt();
   
+
+  tft.fillScreen(TFT_BLACK);
+
   /***** DEFINE APLICAÇÃO ******/ 
 
   /*    BATIDA   */
@@ -142,7 +145,7 @@ void setup() {
 
   /* botão de configuração */
  
-  tft.fillScreen(TFT_BLACK);
+  
 }
 
 
