@@ -64,23 +64,62 @@ void setup_wifi(){
    Serial.print("Conectando a ");
    Serial.println(ssid);
 
+   // Mostra mensagem no display indicando que está procurando rede WiFi
+   tft.fillScreen(TFT_BLACK);
+   tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+   tft.drawString("Procurando WiFi...", 10, 30, 4);
+   tft.setTextColor(TFT_WHITE, TFT_BLACK);
+   tft.drawString("SSID: " + String(ssid), 10, 60, 2);
+   tft.drawString("Aguarde...", 10, 90, 2);
+
    WiFi.begin(ssid, password); 
    do  
    { 
       delay(1000); 
       Serial.print("."); 
+      
+      // Atualiza indicador visual no display a cada tentativa
+      int dots = i % 4;
+      String indicator = "";
+      for(int d = 0; d < dots; d++) indicator += ".";
+      tft.fillRect(10, 110, 310, 60, TFT_BLACK); // Limpa área
+      tft.setTextColor(TFT_CYAN, TFT_BLACK);
+      tft.drawString("Tentando" + indicator + "     ", 10, 110, 2);
+      tft.setTextColor(TFT_WHITE, TFT_BLACK);
+      tft.drawString("Tentativa: " + String(i+1) + "/360", 10, 140, 2);
+      
       i++;
    } while (((WiFi.status() != WL_CONNECTED) && (i<360)));
 
    if (WiFi.status() != WL_CONNECTED)
    {
       Serial.println("Falha ao conectar na rede");
+      
+      // Mostra mensagem de falha no display
+      tft.fillScreen(TFT_BLACK);
+      tft.setTextColor(TFT_RED, TFT_BLACK);
+      tft.drawString("WiFi FALHOU!", 10, 30, 4);
+      tft.setTextColor(TFT_WHITE, TFT_BLACK);
+      tft.drawString("SSID: " + String(ssid), 10, 60, 2);
+      tft.drawString("Rede nao encontrada", 10, 90, 2);
+      tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+      tft.drawString("Verifique nome/senha", 10, 110, 2);
+      
+      delay(5000); // Mantém mensagem por 5 segundos
+      
       return;
    } 
    else 
    {
      Serial.println(""); 
-     // tft.fillScreen(TFT_BLACK);  // Comentado para teste OTA sem display
+     
+     // Mostra sucesso no display
+     tft.fillScreen(TFT_BLACK);
+     tft.setTextColor(TFT_GREEN, TFT_BLACK);
+     tft.drawString("WiFi OK!", 10, 30, 4);
+     tft.setTextColor(TFT_WHITE, TFT_BLACK);
+     tft.drawString("SSID: " + String(ssid), 10, 60, 2);
+     
      Serial.println("WiFi conectado"); 
      Serial.print("Endereço IP: "); 
      Serial.println(WiFi.localIP());     

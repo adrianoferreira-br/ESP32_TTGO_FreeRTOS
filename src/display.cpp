@@ -189,6 +189,7 @@ void showBootInfo() {
     
     delay(2000);
     tft.setTextDatum(TL_DATUM); // Retorna para o padrão (top-left)
+    tft.fillScreen(TFT_BLACK);
 }
 
 

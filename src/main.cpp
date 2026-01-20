@@ -86,22 +86,22 @@ void setup() {
   Serial.println("[7/15] Setup timer takt...");
   setup_timer_send_takt_time();
 
+  /*    DISPLAY  */
+  Serial.println("[8/15] Init Display...");
+  init_display();
+
   /*    WIFI    */
-  Serial.println("[8/15] Setup WiFi...");
+  Serial.println("[9/15] Setup WiFi...");
   setup_wifi();       
   setup_ota();
   setup_webserver();
   setup_ntp();
   
-  /*    DISPLAY  */
-  init_display();      
   showBootInfo(); // Exibe informações de boot (versão e nome do equipamento)
 
   /*    MQTT    */
   setup_mqtt();
   
-
-  tft.fillScreen(TFT_BLACK);
 
   /***** DEFINE APLICAÇÃO ******/ 
 
