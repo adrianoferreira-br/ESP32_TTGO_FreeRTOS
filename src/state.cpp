@@ -176,6 +176,8 @@ void verifica_timer(){
         #endif
         
         #ifdef SENSOR_TEMPERATURA_DS18B20
+            // Realiza leitura do DS18B20 apenas quando vai enviar (otimizado)
+            ds18b20_loop();
             enabled_send_temp_DS18B20_readings = true;
         #endif
         

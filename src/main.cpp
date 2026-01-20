@@ -206,10 +206,8 @@ void loop()
     mlx90614_loop();
   #endif
 
-  // DS18B20 Temperature Sensor
-  #ifdef SENSOR_TEMPERATURA_DS18B20
-    ds18b20_loop();
-  #endif
+  // DS18B20 Temperature Sensor - Leitura feita apenas quando timer dispara (otimizado)
+  // A chamada de ds18b20_loop() foi movida para verifica_timer() em state.cpp
 
   // Door Sensors - Executado a cada 1 segundo (não-bloqueante)
   #ifdef SENSOR_DOOR
