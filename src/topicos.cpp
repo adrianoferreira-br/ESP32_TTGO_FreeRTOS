@@ -1019,7 +1019,7 @@ bool mqtt_send_datas_readings() {
         reading["metric_name"] = "temperature";
         reading["value"] = roundf(temperatura_ds18b20 * 100) / 100.0;        
         reading["unit"] = "celsius";
-        reading["interval"] = sample_interval_batch;
+        reading["interval"] = SAMPLE_INTERVAL;  // Intervalo correto: Timer 0 usa SAMPLE_INTERVAL
         reading["message_code"] = 0;
         enabled_send_temp_DS18B20_readings = false;
     }
