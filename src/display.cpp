@@ -400,9 +400,9 @@ void show_door_sensor(int sensor_id, int value) {
  *  @param value: Temperature in Celsius
  */
 void show_sensor_ds18b20(int sensor_id, float value) {
-    // Posição no display (pode ser ajustada conforme necessário)
-    int x = 5;
-    int y = 100;
+    // Posição no display (ajustada conforme sensor_id)
+    int x = 20;
+    int y = 40 + (sensor_id * 60);  // Espaço de 60 pixels entre sensores
     
     // Cor: Verde se temperatura válida (> -100°C), Vermelho se erro
     uint16_t text_color = (value > -100.0) ? TFT_GREEN : TFT_RED;
@@ -410,7 +410,7 @@ void show_sensor_ds18b20(int sensor_id, float value) {
     tft.setTextColor(text_color, TFT_BLACK);
     
     // Formata string: "T0: 25.50 C" (sensor_id 0)
-    String display_text = "T" + String(sensor_id) + ": ";
+    String display_text = "T" + String(sensor_id+1) + ": ";
     
     if (value > -100.0) {
         display_text += String(value, 2) + " C  ";
@@ -418,7 +418,7 @@ void show_sensor_ds18b20(int sensor_id, float value) {
         display_text += "ERROR  ";
     }
     
-    tft.drawString(display_text, x, y, 4);
+    tft.drawString(display_text, x, y, 6);
     
     // Restaura cor padrão
     tft.setTextColor(TFT_WHITE, TFT_BLACK);

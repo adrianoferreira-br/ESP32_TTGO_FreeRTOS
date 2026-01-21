@@ -7,6 +7,7 @@ DallasTemperature sensors(&oneWire);
 
 // Variáveis globais
 float temperatura_ds18b20 = 0.0;
+float temperatura_ds18b20_2 = 0.0;  // Segundo sensor
 int num_sensors_ds18b20 = 0;
 
 /**
@@ -59,24 +60,41 @@ void ds18b20_loop() {
   // Solicita leitura de todos os sensores no barramento
   sensors.requestTemperatures();
   
+  Serial.println("------------------------------------");
+  Serial.println("DS18B20 - Leitura:");
+  
   // Lê a temperatura do primeiro sensor (índice 0)
   temperatura_ds18b20 = sensors.getTempCByIndex(0);
   
   // Verifica se a leitura é válida
   if (temperatura_ds18b20 == DEVICE_DISCONNECTED_C) {
-    Serial.println("❌ DS18B20: Erro na leitura - Sensor desconectado");
+    Serial.println("❌ DS18B20 [0]: Erro na leitura - Sensor desconectado");
     temperatura_ds18b20 = -127.0; // Valor padrão de erro
-    return;
+  } else {
+    Serial.print("  Sensor [0] Temperatura: ");
+    Serial.print(temperatura_ds18b20, 2);
+    Serial.println(" °C");
   }
   
-  Serial.println("------------------------------------");
-  Serial.println("DS18B20 - Leitura:");
-  Serial.print("  Temperatura: ");
-  Serial.print(temperatura_ds18b20, 2);
-  Serial.println(" °C");
-  
-  // Atualiza display com a temperatura (sensor índice 0)
+  // Atualiza display com a temperatura do sensor 0
   show_sensor_ds18b20(0, temperatura_ds18b20);
+  
+  // Se houver segundo sensor, lê a temperatura
+  if (num_sensors_ds18b20 >= 2) {
+    temperatura_ds18b20_2 = sensors.getTempCByIndex(1);
+    
+    if (temperatura_ds18b20_2 == DEVICE_DISCONNECTED_C) {
+      Serial.println("❌ DS18B20 [1]: Erro na leitura - Sensor desconectado");
+      temperatura_ds18b20_2 = -127.0; // Valor padrão de erro
+    } else {
+      Serial.print("  Sensor [1] Temperatura: ");
+      Serial.print(temperatura_ds18b20_2, 2);
+      Serial.println(" °C");
+    }
+    
+    // Atualiza display com a temperatura do sensor 1
+    show_sensor_ds18b20(1, temperatura_ds18b20_2);
+  }
   
   // Se houver múltiplos sensores, mostra todos
   if (num_sensors_ds18b20 > 1) {
