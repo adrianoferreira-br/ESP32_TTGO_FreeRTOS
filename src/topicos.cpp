@@ -19,6 +19,8 @@ extern void reset_percentual_filter();
 // Referência ao sensor DS18B20 (se necessário)
 #ifdef SENSOR_TEMPERATURA_DS18B20
 extern float temperatura_ds18b20;
+extern float temperatura_ds18b20_2;  // Segundo sensor
+extern int num_sensors_ds18b20;
 #endif
 
 
@@ -1014,13 +1016,25 @@ bool mqtt_send_datas_readings() {
 
     #ifdef SENSOR_TEMPERATURA_DS18B20
     // se habilitado = temperatura DS18B20 incluir na lista leitura da temperatura
-    if (enabled_send_temp_DS18B20_readings) {        
+    if (enabled_send_temp_DS18B20_readings) {
+        // Sensor 0 (primeiro sensor)
         JsonObject reading = readings.createNestedObject();        
         reading["metric_name"] = "temperature";
         reading["value"] = roundf(temperatura_ds18b20 * 100) / 100.0;        
         reading["unit"] = "celsius";
         reading["interval"] = SAMPLE_INTERVAL;  // Intervalo correto: Timer 0 usa SAMPLE_INTERVAL
         reading["message_code"] = 0;
+        
+        // Sensor 1 (segundo sensor, se existir)
+        if (num_sensors_ds18b20 >= 2) {
+            JsonObject reading2 = readings.createNestedObject();
+            reading2["metric_name"] = "temperature2";  // Diferencia do primeiro
+            reading2["value"] = roundf(temperatura_ds18b20_2 * 100) / 100.0;
+            reading2["unit"] = "celsius";
+            reading2["interval"] = SAMPLE_INTERVAL;
+            reading2["message_code"] = 0;
+        }
+        
         enabled_send_temp_DS18B20_readings = false;
     }
     #endif
