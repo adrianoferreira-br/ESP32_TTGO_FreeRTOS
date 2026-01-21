@@ -16,29 +16,29 @@ char LOCAL[32] = "palhoca";      // palhoca | floripa |
 
 
 // Informações do equipamento
-char TIPO_EQUIPAMENTO[32] = "teste"; // dosadora | prensa | processamento | linea | reservatorio | teste
+char TIPO_EQUIPAMENTO[32] = "teste"; // dosadora | prensa | processamento | linea | reservatorio | abertura |teste
 char ID_EQUIPAMENTO[32] = "001"; // Identificação do equipamento (deve ser único para cada equipamento)
-char NOME_EQUIPAMENTO[32] = "teste";   // dosadora_1 | prensa_1 | prensa_2 | prensa_3 | prc_1  | linea_1 | linea_2 | teste | cx_agua
+char NOME_EQUIPAMENTO[32] = "teste_1";   // dosadora_1 | prensa_1 | prensa_2 | prensa_3 | prc_1  | linea_1 | linea_2 | prt_1 | reservatorio_1 | teste_1
 char LINHA[32] = "l01"; // Linha de produção onde o equipamento está instalado: L01 | L02 | L03 | etc
-char FABRICANTE_MAQUINA[64] = "Panitec"; //Panitec | Schuler | Komatsu | etc
+char FABRICANTE_MAQUINA[64] = ""; //Panitec | Schuler | Komatsu | etc
 char MODELO_MAQUINA[64] = ""; // Prensa X1000 | Forno Y2000 | etc
 char SERIAL_MAQUINA[64] = "SN000000"; // Número de série da máquina
 
 
 // Informações do dispositivo
-char DISPOSITIVO_ID[64] = "presto-plh-tst-001"; // Identificação do dispositivo (deve ser único para cada equipamento, usa no mqtt client ID
-char TIPO_SENSOR[32] = "pulse eletrico"; // Ultrassonico | DHT22 | Batida | TensãoBateria
+char DISPOSITIVO_ID[64] = "presto-plh-l01-tst-001"; // Identificação do dispositivo (deve ser único para cada equipamento, usa no mqtt client ID
+char TIPO_SENSOR[32] = "batida"; // Ultrassonico | DHT22 | Batida | TensãoBateria  |  abertura  |  temperatura
 char OBSERVACAO_READINGS[64] = ""; // Observação para as leituras enviadas via MQTT
 char OBSERVACAO_DEVICE_INFO[64] = ""; // Observação para as informações do dispositivo enviadas via MQTT
 char OBSERVACAO_SETTINGS[64] = ""; // Observação para as configurações do dispositivo enviadas via MQTT
 
-char PLACA_SOC[64] = "TTGO T-Display V1.1"; // TTGO T-Display | Heltec WiFi Kit 32 | M5Stack Core2 | LILYGO S3 T-display
-char MODELO_SENSOR[32] = ""; // Modelo do sensor
+char PLACA_SOC[64] = "LILYGO S3 T-display"; // TTGO T-Display | Heltec WiFi Kit 32 | M5Stack Core2 | LILYGO S3 T-display
+char MODELO_SENSOR[32] = ""; // Modelo do sensor JSN-SR04T | DHT22 | DS18B20 | etc
 char FABRICANTE_SENSOR[32] = ""; // Fabricante do sensor
 char VERSAO_HARDWARE[32] = "v1.0"; // Versão do hardware
 
-char DATA_INSTALACAO[32] = "2025-11-12"; // Data de instalação do equipamento no local 
-char* VERSION = "v25.12.12";                             // Versão atual de uso. ex. "v25.4.15"
+char DATA_INSTALACAO[32] = "2026-01-05"; // Data de instalação do equipamento no local 
+char* VERSION = "v26.01.05";                             // Versão atual de uso. ex. "v25.4.15"
 
 
 // informações da aplicação
@@ -83,7 +83,7 @@ char* SSID = "STARLINK"; //"PhoneAdr";  // Substitua pelo seu SSID para acesso a
 char* PASSWORD = "11121314"; //"UDJ1-ddsp"; // Substitua pela sua senha de acesso a Internet
 
 // Informações para acesso ao servidor MQTT
-char MQTT_SERVER[32] =  "srv.vamodale.com";//"mqtt.soscode.com.br"; //"192.168.100.4";          //"172.24.96.1";//"82d3aa30f5744315a2bdde52bafe1ec7.s1.eu.hivemq.cloud"; // Substitua pelo endereço do servidor MQTT
+char MQTT_SERVER[32] =  "mqtt.indx4.com";//"mqtt.soscode.com.br"; //"192.168.100.4";          //"172.24.96.1";//"82d3aa30f5744315a2bdde52bafe1ec7.s1.eu.hivemq.cloud"; // Substitua pelo endereço do servidor MQTT
 int PORT_MQTT = 1883;//18883;                       // Porta do servidor MQTT      padrão: 1883
 char MQTT_USERNAME[32] = "";//"admin";
 char MQTT_PASSWORD[32] = "";//"mqtt123";     // TODO: criptografar a senha em outro momento. (Cuidado com o Git)
@@ -96,6 +96,7 @@ char topico[64];
 
 comando para apagar a flash:
 pio run --target erase --environment ttgo-t-display
+pio run --target erase --environment lilygo-t-display-s3
 
 
 

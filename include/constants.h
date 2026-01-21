@@ -7,18 +7,22 @@
 // ============================================================================
 // CONFIGURAÇÃO DO CLIENTE E EQUIPAMENTO
 // ============================================================================
-#define EQUIP_PRENSA // EQUIP_PRENSA | EQUIP_PROCESSAMENTO | EQUIP_LINEA | EQUIP_RESERVATORIO | EQUIP_OUTRO
+#define EQUIP_PRENSA // EQUIP_PRENSA | EQUIP_PROCESSAMENTO | EQUIP_LINEA | EQUIP_RESERVATORIO | EQUIP_PORTA | EQUIP_OUTRO
 
 // ============================================================================
 // ATIVAÇÃO AUTOMÁTICA DOS SENSORES BASEADO NO TIPO DE EQUIPAMENTO
 // ============================================================================
 #if defined(EQUIP_PRENSA) || defined(EQUIP_PROCESSAMENTO) || defined(EQUIP_LINEA)
-  #define SENSOR_BATIDA    
+  #define SENSOR_BATIDA      
 #elif defined(EQUIP_RESERVATORIO)
-  #define SENSOR_TEMPERATURE
+  #define SENSOR_TEMPERATURE_DHT
   #define SENSOR_WATER_LEVEL     
+#elif defined(EQUIP_PORTA)
+  //#define SENSOR_TEMPERATURE_DHT
+  #define SENSOR_TEMPERATURA_DS18B20
+  #define SENSOR_DOOR
 #elif defined(EQUIP_OUTRO)
-  #define SENSOR_TEMPERATURE
+  #define SENSOR_TEMPERATURE_DHT
   #define SENSOR_BATTERY_VOLTAGE
 #else
   // Configuração padrão quando nenhum equipamento específico é definido

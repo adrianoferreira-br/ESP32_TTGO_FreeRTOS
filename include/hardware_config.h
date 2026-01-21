@@ -58,7 +58,7 @@
   // --------------------------------------------------------------------------
   // SENSOR DE TEMPERATURA 1-WIRE (DS18B20)
   // --------------------------------------------------------------------------
-  #define DS18B20_DATA_PIN  10    // GPIO 10 - Comunicação 1-Wire (GPIO 44 não funcionou)
+  #define DS18B20_DATA_PIN      10    // GPIO 10 - Comunicação 1-Wire //(GPIO 44 não funcionou (posso ter queimado anteriomente, testar em outra placa))
   
   // --------------------------------------------------------------------------
   // LEITURA DE TENSÃO DA BATERIA (ADC)

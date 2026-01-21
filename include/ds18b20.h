@@ -10,6 +10,7 @@
 
 // Variáveis globais para armazenar a temperatura
 extern float temperatura_ds18b20;
+extern float temperatura_ds18b20_2;  // Segundo sensor
 extern int num_sensors_ds18b20;
 
 // Funções do sensor DS18B20
