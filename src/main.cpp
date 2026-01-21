@@ -89,15 +89,14 @@ void setup() {
   /*    DISPLAY  */
   Serial.println("[8/15] Init Display...");
   init_display();
+  showBootInfo(); // Exibe informações de boot (versão e nome do equipamento)
 
   /*    WIFI    */
   Serial.println("[9/15] Setup WiFi...");
   setup_wifi();       
   setup_ota();
   setup_webserver();
-  setup_ntp();
-  
-  showBootInfo(); // Exibe informações de boot (versão e nome do equipamento)
+  setup_ntp();   
 
   /*    MQTT    */
   setup_mqtt();

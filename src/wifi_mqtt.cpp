@@ -124,6 +124,8 @@ void setup_wifi(){
      Serial.print("Endereço IP: "); 
      Serial.println(WiFi.localIP());     
    }       
+   delay(2000);
+   tft.fillScreen(TFT_BLACK);
   }
 
   
