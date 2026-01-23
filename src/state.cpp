@@ -178,7 +178,11 @@ void verifica_timer(){
         #ifdef SENSOR_TEMPERATURA_DS18B20
             // Realiza leitura do DS18B20 apenas quando vai enviar (otimizado)
             ds18b20_loop();
-            enabled_send_temp_DS18B20_readings = true;
+            // Só habilita envio se houver sensores detectados
+            extern int num_sensors_ds18b20;
+            if (num_sensors_ds18b20 > 0) {
+                enabled_send_temp_DS18B20_readings = true;
+            }
         #endif
         
         bool enviado = mqtt_send_datas_readings();
@@ -664,6 +668,7 @@ void set_reservatorio(){
   tft.drawString("definir nivel min.", 10, 50, 4);
   tft.drawString(" ou aguarde inciar", 10, 80, 4);
   delay(4000); // Aguarda 4 segundos para o usuário se preparar
+  tft.fillScreen(TFT_BLACK);
 
   if (digitalRead(BTN_USER) == LOW){  // botão pressionado (GND){
       Serial.println("Botão pressionado - config caixa de água");
