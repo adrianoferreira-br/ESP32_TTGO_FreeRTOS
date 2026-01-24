@@ -61,8 +61,8 @@ int  sample_interval_batch = 60; //em segundos - Intervalo de envio batch_time v
 
 #ifdef Presto  
 // Informações para acesso a Internet - Rede Principal
-char* SSID = "PRESTO!_IoT";                 //Substitua pelo seu SSID para acesso a Internet
-char* PASSWORD = "prestoiot100";    //Substitua pela sua senha de acesso a Internet
+char SSID[32] = "PRESTO!_IoT";                 //Substitua pelo seu SSID para acesso a Internet
+char PASSWORD[64] = "prestoiot100";    //Substitua pela sua senha de acesso a Internet
 
 // Informações para acesso a Internet - Rede Secundária (fallback)
 char* SSID_2 = "INDX4";  // Segunda rede WiFi (backup)
@@ -80,8 +80,8 @@ char topico[64];
 #elif defined Adriano
 
 // Informações para acesso a Internet - Rede Principal
-char* SSID = "Unifique-Roberto-2G::"; //"PhoneAdr";  // Substitua pelo seu SSID para acesso a Internet
-char* PASSWORD = "17125314"; //"UDJ1-ddsp"; // Substitua pela sua senha de acesso a Internet
+char SSID[32] = "Unifique-Roberto-2G::"; //"PhoneAdr";  // Substitua pelo seu SSID para acesso a Internet
+char PASSWORD[64] = "17125314"; //"UDJ1-ddsp"; // Substitua pela sua senha de acesso a Internet
 
 // Informações para acesso a Internet - Rede Secundária (fallback)
 char* SSID_2 = "INDX4";  // Segunda rede WiFi (backup)

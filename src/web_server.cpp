@@ -26,7 +26,13 @@ static String firmwareHash = "";
 static bool ota_upload_success = false;
 static bool ota_in_progress = false;  // Previne uploads concorrentes
 
-
+// Protótipos de funções
+void handleRoot();
+void handleInfo();
+void handleReadings();
+void handleConfigMQTT();
+void handleRestart();
+void handleOTA();
 
 extern WebServer server;
 WebServer server(80); // Porta 80 padrão HTTP
@@ -43,6 +49,7 @@ void setup_webserver()
   server.on("/config_mqtt", handleConfigMQTT); // <-- nova rota
   server.on("/readings", handleReadings);
   server.on("/info", handleInfo);
+  server.on("/restart", handleRestart);
   server.on("/ota", HTTP_GET, handleOTA);
   server.on("/ota", HTTP_POST, handleOTA, handleOTA);  // POST com handler de upload
   server.begin();
@@ -84,7 +91,7 @@ void handleRoot() {
   html += "</div>";
   html += "<a href='/info' class='menu-item'>📊 Informações do Sistema</a>";
   html += "<a href='/readings' class='menu-item'>📈 Monitoramento</a>";
-  html += "<a href='/config_mqtt' class='menu-item'>⚙️ Configurar MQTT</a>";
+  html += "<a href='/config_mqtt' class='menu-item'>⚙️ Configuração</a>";
   html += "<a href='/ota' class='menu-item ota'>🚀 Atualização OTA</a>";
   html += "</div></body></html>";
   server.send(200, "text/html", html);
@@ -218,23 +225,59 @@ void handleReadings() {
 
 void handleConfigMQTT() {
   if (server.method() == HTTP_POST) {
+    // WiFi
+    String wifi_ssid = server.arg("wifi_ssid");
+    String wifi_pass = server.arg("wifi_pass");
+    
+    // MQTT
     String server_mqtt = server.arg("server");
     int port_mqtt = server.arg("port").toInt();
     String user_mqtt = server.arg("user");
     String pass_mqtt = server.arg("pass");
+    
+    // Dispositivo
+    String dispositivo_id = server.arg("dispositivo_id");
+    String cliente = server.arg("cliente");
+    String local = server.arg("local");
+    String linha = server.arg("linha");
+    String nome_equip = server.arg("nome_equip");
+    String id_equip = server.arg("id_equip");
 
-    // Salva na NVS
+    // Salva na NVS - WiFi
+    save_flash_string(KEY_WIFI_SSID, wifi_ssid.c_str());
+    save_flash_string(KEY_WIFI_PASS, wifi_pass.c_str());
+    
+    // Salva na NVS - MQTT
     save_flash_string(KEY_MQTT_SERVER, server_mqtt.c_str());
     save_flash_int(KEY_MQTT_PORT, port_mqtt);
     save_flash_string(KEY_MQTT_USER, user_mqtt.c_str());
     save_flash_string(KEY_MQTT_PASS, pass_mqtt.c_str());
     
+    // Salva na NVS - Dispositivo
+    save_flash_string(KEY_DISPOSITIVO_ID, dispositivo_id.c_str());
+    save_flash_string(KEY_CLIENTE, cliente.c_str());
+    save_flash_string(KEY_LOCAL, local.c_str());
+    save_flash_string(KEY_LINHA, linha.c_str());
+    save_flash_string(KEY_NOME_EQUIP, nome_equip.c_str());
+    save_flash_string(KEY_ID_EQUIP, id_equip.c_str());
 
-    // Atualiza variáveis em RAM
+    // Atualiza variáveis em RAM - WiFi
+    strncpy(SSID, wifi_ssid.c_str(), sizeof(SSID));
+    strncpy(PASSWORD, wifi_pass.c_str(), sizeof(PASSWORD));
+    
+    // Atualiza variáveis em RAM - MQTT
     strncpy(MQTT_SERVER, server_mqtt.c_str(), sizeof(MQTT_SERVER));
     PORT_MQTT = port_mqtt;
     strncpy(MQTT_USERNAME, user_mqtt.c_str(), sizeof(MQTT_USERNAME));
     strncpy(MQTT_PASSWORD, pass_mqtt.c_str(), sizeof(MQTT_PASSWORD));
+    
+    // Atualiza variáveis em RAM - Dispositivo
+    strncpy(DISPOSITIVO_ID, dispositivo_id.c_str(), sizeof(DISPOSITIVO_ID));
+    strncpy(CLIENTE, cliente.c_str(), sizeof(CLIENTE));
+    strncpy(LOCAL, local.c_str(), sizeof(LOCAL));
+    strncpy(LINHA, linha.c_str(), sizeof(LINHA));
+    strncpy(NOME_EQUIPAMENTO, nome_equip.c_str(), sizeof(NOME_EQUIPAMENTO));
+    strncpy(ID_EQUIPAMENTO, id_equip.c_str(), sizeof(ID_EQUIPAMENTO));
 
     String successHtml = "<!DOCTYPE html><html><head>";
     successHtml += "<meta charset='UTF-8'>";
@@ -250,7 +293,7 @@ void handleConfigMQTT() {
     successHtml += "<div class='container'>";
     successHtml += "<h1>✅ Configuração Salva com Sucesso!</h1>";
     successHtml += "<div class='success-message'>";
-    successHtml += "<p>As configurações MQTT foram salvas na memória flash.</p>";
+    successHtml += "<p>As configurações foram salvas na memória flash.</p>";
     successHtml += "<p><strong>Reinicie o dispositivo para aplicar as mudanças.</strong></p>";
     successHtml += "</div>";
     successHtml += "<div class='back-link'>";
@@ -263,7 +306,7 @@ void handleConfigMQTT() {
 
   String html = "<!DOCTYPE html><html><head>";
   html += "<meta charset='UTF-8'>";
-  html += "<title>Configuração MQTT - Presto Alimentos</title>";
+  html += "<title>Configuração - Presto Alimentos</title>";
   html += "<style>";
   html += "body { font-family: Arial, sans-serif; margin: 40px; background: #f0f0f0; }";
   html += ".container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }";
@@ -275,28 +318,91 @@ void handleConfigMQTT() {
   html += "input[type='submit'] { width: 100%; padding: 15px; background: #007cba; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-top: 20px; }";
   html += "input[type='submit']:hover { background: #005a87; }";
   html += ".info { background: #e8f4fd; padding: 15px; border-radius: 5px; margin: 20px 0; }";
+  html += ".restart-btn { width: 100%; padding: 15px; background: #dc3545; color: white; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin-top: 10px; }";
+  html += ".restart-btn:hover { background: #c82333; }";
   html += ".back-link { text-align: center; margin: 20px 0; }";
   html += ".back-link a { color: #007cba; text-decoration: none; font-weight: bold; padding: 10px 20px; background: #f8f9fa; border-radius: 5px; }";
   html += ".back-link a:hover { background: #e9ecef; }";
   html += "</style></head><body>";
   html += "<div class='container'>";
-  html += "<h1>⚙️ Configuração MQTT</h1>";
+  html += "<h1>⚙️ Configuração do Sistema</h1>";
   html += "<div class='info'>";
   html += "<p><strong>Atenção:</strong> Após salvar as configurações, reinicie o dispositivo para aplicar as mudanças.</p>";
   html += "</div>";
   html += "<form method='POST'>";
+  html += "<h2 style='color: #007cba; margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid #007cba; padding-bottom: 5px;'>� Configuração WiFi</h2>";
+  html += "<div class='form-group'><label for='wifi_ssid'>SSID (Rede Principal):</label><input type='text' id='wifi_ssid' name='wifi_ssid' value='" + String(SSID) + "' required></div>";
+  html += "<div class='form-group'><label for='wifi_pass'>Senha WiFi:</label><input type='password' id='wifi_pass' name='wifi_pass' value='" + String(PASSWORD) + "' required></div>";
+  html += "<h2 style='color: #007cba; margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid #007cba; padding-bottom: 5px;'>�📡 Configuração MQTT</h2>";
   html += "<div class='form-group'><label for='server'>Servidor MQTT:</label><input type='text' id='server' name='server' value='" + String(MQTT_SERVER) + "' required></div>";
   html += "<div class='form-group'><label for='port'>Porta:</label><input type='number' id='port' name='port' value='" + String(PORT_MQTT) + "' min='1' max='65535' required></div>";
   html += "<div class='form-group'><label for='user'>Usuário:</label><input type='text' id='user' name='user' value='" + String(MQTT_USERNAME) + "'></div>";
   html += "<div class='form-group'><label for='pass'>Senha:</label><input type='password' id='pass' name='pass' value='" + String(MQTT_PASSWORD) + "'></div>";
+  html += "<h2 style='color: #007cba; margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid #007cba; padding-bottom: 5px;'>🏭 Identificação do Dispositivo</h2>";
+  html += "<div class='form-group'><label for='dispositivo_id'>Device ID:</label><input type='text' id='dispositivo_id' name='dispositivo_id' value='" + String(DISPOSITIVO_ID) + "' required></div>";
+  html += "<div class='form-group'><label for='cliente'>Cliente:</label><input type='text' id='cliente' name='cliente' value='" + String(CLIENTE) + "'></div>";
+  html += "<div class='form-group'><label for='local'>Local:</label><input type='text' id='local' name='local' value='" + String(LOCAL) + "'></div>";
+  html += "<div class='form-group'><label for='linha'>Linha:</label><input type='text' id='linha' name='linha' value='" + String(LINHA) + "'></div>";
+  html += "<div class='form-group'><label for='nome_equip'>Nome do Equipamento:</label><input type='text' id='nome_equip' name='nome_equip' value='" + String(NOME_EQUIPAMENTO) + "'></div>";
+  html += "<div class='form-group'><label for='id_equip'>ID do Equipamento:</label><input type='text' id='id_equip' name='id_equip' value='" + String(ID_EQUIPAMENTO) + "'></div>";
   html += "<input type='submit' value='💾 Salvar Configuração'>";
   html += "</form>";
+  html += "<button class='restart-btn' onclick='restartDevice()'>🔄 Reiniciar Dispositivo</button>";
   html += "<div class='back-link'>";
   html += "<a href='/'>⬅️ Voltar ao Menu Principal</a>";
   html += "</div>";
+  html += "<script>";
+  html += "function restartDevice() {";
+  html += "  if (confirm('Tem certeza que deseja reiniciar o dispositivo?')) {";
+  html += "    fetch('/restart').then(() => {";
+  html += "      alert('Dispositivo reiniciando... Aguarde 10 segundos e atualize a página.');";
+  html += "      setTimeout(() => { location.href = '/'; }, 10000);";
+  html += "    }).catch(() => {";
+  html += "      alert('Erro ao enviar comando de reinicialização.');";  
+  html += "    });";
+  html += "  }";
+  html += "}";
+  html += "</script>";
   html += "</div></body></html>";
 
   server.send(200, "text/html", html);
+}
+
+
+/**************************************************************
+ *    IP/restart - Reiniciar dispositivo
+ */
+
+void handleRestart() {
+  String html = "<!DOCTYPE html><html><head>";
+  html += "<meta charset='UTF-8'>";
+  html += "<meta http-equiv='refresh' content='10; url=/'>";
+  html += "<title>Reiniciando - INDX4 Tecnologia</title>";
+  html += "<style>";
+  html += "body { font-family: Arial, sans-serif; margin: 40px; background: #f0f0f0; text-align: center; }";
+  html += ".container { max-width: 500px; margin: 100px auto; background: white; padding: 40px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }";
+  html += "h1 { color: #dc3545; margin-bottom: 20px; }";
+  html += ".spinner { border: 4px solid #f3f3f3; border-top: 4px solid #dc3545; border-radius: 50%; width: 50px; height: 50px; animation: spin 1s linear infinite; margin: 30px auto; }";
+  html += "@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }";
+  html += "p { color: #555; font-size: 16px; }";
+  html += "</style></head><body>";
+  html += "<div class='container'>";
+  html += "<h1>🔄 Reiniciando Dispositivo</h1>";
+  html += "<div class='spinner'></div>";
+  html += "<p>O dispositivo está sendo reiniciado...</p>";
+  html += "<p><strong>Aguarde cerca de 10 segundos.</strong></p>";
+  html += "<p>Você será redirecionado automaticamente.</p>";
+  html += "</div></body></html>";
+  
+  server.send(200, "text/html", html);
+  server.client().stop();
+  delay(500);
+  
+  Serial.println("\n========================================");
+  Serial.println("🔄 REINICIALIZAÇÃO SOLICITADA VIA WEB");
+  Serial.println("========================================\n");
+  
+  ESP.restart();
 }
 
 

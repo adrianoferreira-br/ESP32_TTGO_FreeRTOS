@@ -28,8 +28,8 @@
   #define SENSOR_TEMPERATURE_DHT
   //#define SENSOR_BATTERY_VOLTAGE
   #define SENSOR_BATIDA
-  //#define SENSOR_MLX90614
-  //#define SENSOR_WATER_LEVEL     
+  #define SENSOR_MLX90614
+  #define SENSOR_WATER_LEVEL     
   #define SENSOR_TEMPERATURA_DS18B20
   #define SENSOR_DOOR
 #else
@@ -90,8 +90,8 @@
 
 
 // Informações para acesso a Internet - Rede Principal
-extern char* SSID;      // "STARLINK";            // Substitua pelo seu SSID para acesso a Internet
-extern char* PASSWORD; //"11121314";              // Substitua pela sua senha de acesso a Internet
+extern char SSID[32];      // "STARLINK";            // Substitua pelo seu SSID para acesso a Internet
+extern char PASSWORD[64]; //"11121314";              // Substitua pela sua senha de acesso a Internet
 
 // Informações para acesso a Internet - Rede Secundária (fallback)
 extern char* SSID_2;      // Segunda rede WiFi (backup)
