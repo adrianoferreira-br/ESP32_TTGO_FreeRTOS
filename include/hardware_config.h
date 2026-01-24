@@ -68,8 +68,8 @@
   // --------------------------------------------------------------------------
   // I2C (MLX90614 e outros sensores I2C)
   // --------------------------------------------------------------------------
-  #define I2C_SDA_PIN       21    // GPIO 21 - Compatível (pode compartilhar com DHT se não usar simultaneamente)
-  #define I2C_SCL_PIN       22    // GPIO 22 - Compatível (pode compartilhar com DS18B20 se não usar simultaneamente)
+  #define I2C_SDA_PIN       11    // GPIO 21 - Compatível (pode compartilhar com DHT se não usar simultaneamente)
+  #define I2C_SCL_PIN       17    // GPIO 22 - Compatível (pode compartilhar com DS18B20 se não usar simultaneamente)
 
   // --------------------------------------------------------------------------
   // Sensor status de porta 
