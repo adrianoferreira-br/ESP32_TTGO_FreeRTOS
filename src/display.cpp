@@ -233,7 +233,7 @@ void show_percentual_reservatorio(float percentual) {
     #ifdef LILYGO_T_DISPLAY_S3
         tft.drawString(buffer, 160, 140, 4);
     #else
-        tft.drawString(buffer, 120, 115, 4);
+        tft.drawString(buffer, 145, 115, 4);
     #endif
 }
 
