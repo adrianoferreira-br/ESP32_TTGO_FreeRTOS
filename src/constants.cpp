@@ -26,7 +26,7 @@ char SERIAL_MAQUINA[64] = "SN000000"; // Número de série da máquina
 
 
 // Informações do dispositivo
-char DISPOSITIVO_ID[64] = "presto-plh-l01-tst-001"; // Identificação do dispositivo (deve ser único para cada equipamento, usa no mqtt client ID
+char DISPOSITIVO_ID[64] = "presto-plh-l01-tst-002"; // Identificação do dispositivo (deve ser único para cada equipamento, usa no mqtt client ID
 char TIPO_SENSOR[32] = "batida"; // Ultrassonico | DHT22 | Batida | TensãoBateria  |  abertura  |  temperatura
 char OBSERVACAO_READINGS[64] = ""; // Observação para as leituras enviadas via MQTT
 char OBSERVACAO_DEVICE_INFO[64] = ""; // Observação para as informações do dispositivo enviadas via MQTT
@@ -37,18 +37,15 @@ char MODELO_SENSOR[32] = ""; // Modelo do sensor JSN-SR04T | DHT22 | DS18B20 | e
 char FABRICANTE_SENSOR[32] = ""; // Fabricante do sensor
 char VERSAO_HARDWARE[32] = "v1.0"; // Versão do hardware
 
-char DATA_INSTALACAO[32] = "2026-01-05"; // Data de instalação do equipamento no local 
-char* VERSION = "v26.01.05";                             // Versão atual de uso. ex. "v25.4.15"
+char DATA_INSTALACAO[32] = "2026-01-10"; // Data de instalação do equipamento no local 
+char* VERSION = "v26.01.10";                             // Versão atual de uso. ex. "v25.4.15"
 
 
 // informações da aplicação
 int  SAMPLE_INTERVAL = 60; //em segundos - Intervalo de envio MQTT do reservatório
 int  sample_interval_batch = 60; //em segundos - Intervalo de envio batch_time via MQTT (padrão 60 segundos)
 
-// Informação do coletor de dados
 
-char* FIREBASE_HOST = "seu_projeto.firebaseio.com"; // Host do Firebase
-char* FIREBASE_AUTH = "sua_chave_de_autenticacao"; // Chave
 
 
 
@@ -63,9 +60,13 @@ char* FIREBASE_AUTH = "sua_chave_de_autenticacao"; // Chave
 // Definições de constantes para o projeto
 
 #ifdef Presto  
-// Informações para acesso a Internet
+// Informações para acesso a Internet - Rede Principal
 char* SSID = "PRESTO!_IoT";                 //Substitua pelo seu SSID para acesso a Internet
 char* PASSWORD = "prestoiot100";    //Substitua pela sua senha de acesso a Internet
+
+// Informações para acesso a Internet - Rede Secundária (fallback)
+char* SSID_2 = "INDX4";  // Segunda rede WiFi (backup)
+char* PASSWORD_2 = "11121314"; // Senha da segunda rede
 
 // Informações para acesso ao servidor MQTT
 char MQTT_SERVER[32] =  "192.168.0.210";//"srv.vamodale.com"; //"192.168.100.4";          //"172.24.96.1";//"82d3aa30f5744315a2bdde52bafe1ec7.s1.eu.hivemq.cloud"; // Substitua pelo endereço do servidor MQTT
@@ -78,9 +79,13 @@ char topico[64];
 
 #elif defined Adriano
 
-// Informações para acesso a Internet
-char* SSID = "STARLINK"; //"PhoneAdr";  // Substitua pelo seu SSID para acesso a Internet
-char* PASSWORD = "11121314"; //"UDJ1-ddsp"; // Substitua pela sua senha de acesso a Internet
+// Informações para acesso a Internet - Rede Principal
+char* SSID = "Unifique-Roberto-2G::"; //"PhoneAdr";  // Substitua pelo seu SSID para acesso a Internet
+char* PASSWORD = "17125314"; //"UDJ1-ddsp"; // Substitua pela sua senha de acesso a Internet
+
+// Informações para acesso a Internet - Rede Secundária (fallback)
+char* SSID_2 = "INDX4";  // Segunda rede WiFi (backup)
+char* PASSWORD_2 = "11121314"; // Senha da segunda rede
 
 // Informações para acesso ao servidor MQTT
 char MQTT_SERVER[32] =  "mqtt.indx4.com";//"mqtt.soscode.com.br"; //"192.168.100.4";          //"172.24.96.1";//"82d3aa30f5744315a2bdde52bafe1ec7.s1.eu.hivemq.cloud"; // Substitua pelo endereço do servidor MQTT

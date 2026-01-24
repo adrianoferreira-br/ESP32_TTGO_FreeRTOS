@@ -32,10 +32,11 @@ WiFiClient espClient;
 PubSubClient client(espClient);
 //ip_addr_t new_dns;
 
-
-
-const char* ssid = SSID;                //"STARLINK";//"PhoneAdr"; // Substitua pelo seu SSID 
-const char* password = PASSWORD;        //"11121314";//"UDJ1-ddsp";// "SUA_SENHA"; // Substitua pela sua senha 
+// Configuração de duas redes WiFi (principal e secundária)
+const char* ssid = SSID;                // Rede principal
+const char* password = PASSWORD;        // Senha rede principal
+const char* ssid_2 = SSID_2;            // Rede secundária (fallback)
+const char* password_2 = PASSWORD_2;    // Senha rede secundária 
 
 
 
@@ -48,20 +49,35 @@ void setup_wifi(){
    int i = 0;
    char ssid_tmp[32];
    char password_tmp[64];
+   char ssid_tmp_2[32];
+   char password_tmp_2[64];
+   bool connected = false;
 
-   // Lê ssid e password na memoria NVS, se não existir usa os definidos em constants.cpp
+   // Lê credenciais da rede principal na memoria NVS
    read_flash_string(KEY_WIFI_SSID, ssid_tmp, 32);
    read_flash_string(KEY_WIFI_PASS, password_tmp, 64);
    if (strlen(ssid_tmp) > 0) {
        ssid = ssid_tmp;       
    }
-
    if (strlen(password_tmp) > 0) {
        password = password_tmp;
    }
 
-   Serial.println("ssid lindo em NVS: " + String(ssid_tmp) + " Usando: " + String(ssid));
-   Serial.print("Conectando a ");
+   // Lê credenciais da rede secundária na memoria NVS
+   read_flash_string(KEY_WIFI_SSID_2, ssid_tmp_2, 32);
+   read_flash_string(KEY_WIFI_PASS_2, password_tmp_2, 64);
+   if (strlen(ssid_tmp_2) > 0) {
+       ssid_2 = ssid_tmp_2;       
+   }
+   if (strlen(password_tmp_2) > 0) {
+       password_2 = password_tmp_2;
+   }
+
+   Serial.println("=== Configuração WiFi ===");
+   Serial.println("Rede Principal: " + String(ssid));
+   Serial.println("Rede Secundária: " + String(ssid_2));
+   Serial.println("=========================");
+   Serial.print("Tentando conectar a ");
    Serial.println(ssid);
 
    // Mostra mensagem no display indicando que está procurando rede WiFi
@@ -72,6 +88,7 @@ void setup_wifi(){
    tft.drawString("SSID: " + String(ssid), 10, 60, 2);
    tft.drawString("Aguarde...", 10, 90, 2);
 
+   // TENTATIVA 1: Conexão com rede principal
    WiFi.begin(ssid, password); 
    do  
    { 
@@ -91,36 +108,102 @@ void setup_wifi(){
       i++;
    } while (((WiFi.status() != WL_CONNECTED) && (i<360)));
 
-   if (WiFi.status() != WL_CONNECTED)
+   // Se não conectou na rede principal e existe uma rede secundária configurada
+   if (WiFi.status() != WL_CONNECTED && strlen(ssid_2) > 0)
    {
-      Serial.println("Falha ao conectar na rede");
+      Serial.println("");
+      Serial.println("Rede principal falhou. Tentando rede secundária...");
+      Serial.print("Conectando a ");
+      Serial.println(ssid_2);
+      
+      // Atualiza display para mostrar tentativa com rede secundária
+      tft.fillScreen(TFT_BLACK);
+      tft.setTextColor(TFT_ORANGE, TFT_BLACK);
+      tft.drawString("Rede 1 falhou", 10, 20, 2);
+      tft.setTextColor(TFT_YELLOW, TFT_BLACK);
+      tft.drawString("Tentando Rede 2...", 10, 50, 4);
+      tft.setTextColor(TFT_WHITE, TFT_BLACK);
+      tft.drawString("SSID: " + String(ssid_2), 10, 90, 2);
+      
+      // TENTATIVA 2: Conexão com rede secundária
+      WiFi.disconnect();
+      delay(1000);
+      WiFi.begin(ssid_2, password_2);
+      i = 0;
+      
+      do  
+      { 
+         delay(1000); 
+         Serial.print("."); 
+         
+         // Atualiza indicador visual no display
+         int dots = i % 4;
+         String indicator = "";
+         for(int d = 0; d < dots; d++) indicator += ".";
+         tft.fillRect(10, 110, 310, 60, TFT_BLACK);
+         tft.setTextColor(TFT_CYAN, TFT_BLACK);
+         tft.drawString("Tentando" + indicator + "     ", 10, 110, 2);
+         tft.setTextColor(TFT_WHITE, TFT_BLACK);
+         tft.drawString("Tentativa: " + String(i+1) + "/30", 10, 140, 2);
+         
+         i++;
+      } while (((WiFi.status() != WL_CONNECTED) && (i<30)));
+      
+      if (WiFi.status() == WL_CONNECTED) {
+         connected = true;
+         Serial.println("");
+         Serial.println("Conectado na rede secundária!");
+      }
+   }
+   else if (WiFi.status() == WL_CONNECTED)
+   {
+      connected = true;
+   }
+
+   if (!connected)
+   {
+      Serial.println("");
+      Serial.println("Falha ao conectar em ambas as redes");
       
       // Mostra mensagem de falha no display
       tft.fillScreen(TFT_BLACK);
       tft.setTextColor(TFT_RED, TFT_BLACK);
       tft.drawString("WiFi FALHOU!", 10, 30, 4);
       tft.setTextColor(TFT_WHITE, TFT_BLACK);
-      tft.drawString("SSID: " + String(ssid), 10, 60, 2);
-      tft.drawString("Rede nao encontrada", 10, 90, 2);
+      tft.drawString("Rede 1: " + String(ssid), 10, 60, 2);
+      if (strlen(ssid_2) > 0) {
+         tft.drawString("Rede 2: " + String(ssid_2), 10, 80, 2);
+      }
+      tft.drawString("Nenhuma encontrada", 10, 110, 2);
       tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-      tft.drawString("Verifique nome/senha", 10, 110, 2);
+      tft.drawString("Verifique nome/senha", 10, 140, 2);
       
       delay(5000); // Mantém mensagem por 5 segundos
-      
+    
+      //cria loop infinito para evitar continuar sem WiFi  ToDo: ver outra solução
+      Serial.println("Entrando em loop infinito devido à falha de conexão WiFi.");
+      while(true) {
+        delay(1000);
+      }
+
       return;
    } 
    else 
    {
      Serial.println(""); 
      
-     // Mostra sucesso no display
+     // Mostra sucesso no display com informação da rede conectada
+     String connectedSSID = WiFi.SSID();
      tft.fillScreen(TFT_BLACK);
      tft.setTextColor(TFT_GREEN, TFT_BLACK);
      tft.drawString("WiFi OK!", 10, 30, 4);
      tft.setTextColor(TFT_WHITE, TFT_BLACK);
-     tft.drawString("SSID: " + String(ssid), 10, 60, 2);
+     tft.drawString("SSID: " + connectedSSID, 10, 60, 2);
+     tft.drawString("IP: " + WiFi.localIP().toString(), 10, 90, 2);
      
      Serial.println("WiFi conectado"); 
+     Serial.print("SSID: ");
+     Serial.println(connectedSSID);
      Serial.print("Endereço IP: "); 
      Serial.println(WiFi.localIP());     
    }       
@@ -149,7 +232,14 @@ void loop_wifi(){
  * SETUP NTP
  */
 
-void setup_ntp() {    
+void setup_ntp() {
+    // Verifica se WiFi está conectado antes de tentar sincronizar NTP
+    if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("WiFi desconectado. NTP não pode ser sincronizado.");
+        return;
+    }
+    
+    Serial.println("Iniciando sincronização NTP...");
     configTime(-3 * 3600, 0, "a.st1.ntp.br", "ntp.br", "time.nist.gov");
     struct tm timeinfo;
     int tentativas = 0;
@@ -160,6 +250,9 @@ void setup_ntp() {
     }
     if (tentativas < 10) {
         Serial.println("NTP sincronizado!");
+        Serial.printf("Data/Hora: %02d/%02d/%04d %02d:%02d:%02d\n",
+                      timeinfo.tm_mday, timeinfo.tm_mon + 1, timeinfo.tm_year + 1900,
+                      timeinfo.tm_hour, timeinfo.tm_min, timeinfo.tm_sec);
     } else {
         Serial.println("Falha ao sincronizar NTP.");
     }    

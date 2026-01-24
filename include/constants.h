@@ -7,7 +7,7 @@
 // ============================================================================
 // CONFIGURAÇÃO DO CLIENTE E EQUIPAMENTO
 // ============================================================================
-#define EQUIP_PRENSA // EQUIP_PRENSA | EQUIP_PROCESSAMENTO | EQUIP_LINEA | EQUIP_RESERVATORIO | EQUIP_PORTA | EQUIP_OUTRO
+#define TESTE // EQUIP_PRENSA | EQUIP_PROCESSAMENTO | EQUIP_LINEA | EQUIP_RESERVATORIO | EQUIP_PORTA | EQUIP_OUTRO
 
 // ============================================================================
 // ATIVAÇÃO AUTOMÁTICA DOS SENSORES BASEADO NO TIPO DE EQUIPAMENTO
@@ -24,6 +24,14 @@
 #elif defined(EQUIP_OUTRO)
   #define SENSOR_TEMPERATURE_DHT
   #define SENSOR_BATTERY_VOLTAGE
+#elif defined(TESTE)
+  #define SENSOR_TEMPERATURE_DHT
+  //#define SENSOR_BATTERY_VOLTAGE
+  #define SENSOR_BATIDA
+  //#define SENSOR_MLX90614
+  //#define SENSOR_WATER_LEVEL     
+  #define SENSOR_TEMPERATURA_DS18B20
+  #define SENSOR_DOOR
 #else
   // Configuração padrão quando nenhum equipamento específico é definido
   #define SENSOR_BATTERY_VOLTAGE
@@ -37,6 +45,8 @@
 #define KEY_IP           "ip"
 #define KEY_WIFI_SSID    "ssid"
 #define KEY_WIFI_PASS    "wifipass"
+#define KEY_WIFI_SSID_2  "ssid2"        // Segunda rede WiFi
+#define KEY_WIFI_PASS_2  "wifipass2"    // Senha da segunda rede
 #define KEY_MQTT_SERVER  "mqtt_server"
 #define KEY_MQTT_PORT    "mqtt_port"
 #define KEY_MQTT_USER    "mqtt_user"
@@ -79,9 +89,13 @@
 #define EQUIP_TIPO_OUTRO            99
 
 
-// Informações para acesso a Internet
+// Informações para acesso a Internet - Rede Principal
 extern char* SSID;      // "STARLINK";            // Substitua pelo seu SSID para acesso a Internet
 extern char* PASSWORD; //"11121314";              // Substitua pela sua senha de acesso a Internet
+
+// Informações para acesso a Internet - Rede Secundária (fallback)
+extern char* SSID_2;      // Segunda rede WiFi (backup)
+extern char* PASSWORD_2;  // Senha da segunda rede
 
 // Informações para acesso ao servidor MQTT
 extern char MQTT_SERVER[32]; //"192.168.100.4";      // Substitua pelo endereço do servidor MQTT
@@ -135,10 +149,6 @@ extern char VERSAO_HARDWARE[32];
 
 // Informações referente a aplicação e versão
 extern char* VERSION;                             // Versão atual de uso. ex. "v25.4.15"
-
-// Informações para acesso ao Firebase
-extern char* FIREBASE_HOST;                       // Host do Firebase
-extern char* FIREBASE_AUTH;                       // Chave de autenticação do Firebase   TODO: Criptografar a chave de autenticação
 
 // informações extras
 extern char OBSERVACAO_READINGS[64]; // Observação para as leituras enviadas via MQTT

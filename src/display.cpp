@@ -295,7 +295,7 @@ void show_battery_voltage(float voltage) {
 */
 void show_batidas(int batidas) {
     tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-    tft.drawString("S1:" + String(batidas) + "  ", 5, 50, 4);
+    tft.drawString("S1:" + String(batidas) + "  ", 5, 50, 6);
 }
 
 /*
@@ -303,7 +303,7 @@ void show_batidas(int batidas) {
 */
 void show_batidas_sensor2(int batidas) {
     tft.setTextColor(TFT_CYAN, TFT_BLACK);
-    tft.drawString("S2:" + String(batidas) + "  ", 5, 75, 4);
+    tft.drawString("S2:" + String(batidas) + "  ", 5, 75, 6);
 }
 
 
@@ -326,7 +326,7 @@ void show_ip () {
   char ipStr[16];  
   int NivelSinal = 0;
   IPAddress ip = WiFi.localIP();
-
+  String connectedSSID = WiFi.SSID();
 
   sprintf(ipStr, "%d.%d.%d.%d", ip[0], ip[1], ip[2], ip[3]);
   tft.setTextColor(TFT_WHITE, TFT_BLACK);    
@@ -413,7 +413,7 @@ void show_sensor_ds18b20(int sensor_id, float value) {
     String display_text = "T" + String(sensor_id+1) + ": ";
     
     if (value > -100.0) {
-        display_text += String(value, 2) + " C  ";
+        display_text += String(value, 2) + " C";  
     } else {
         display_text += "ERROR  ";
     }

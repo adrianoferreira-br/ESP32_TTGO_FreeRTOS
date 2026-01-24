@@ -216,10 +216,6 @@ extern char* MQTT_PASSWORD;                       // TODO: criptografar a senha 
 
 // Análise de corrente e verificação de estado de operação do equipamento (Processando ou aguarndando insumo)
 
-// Informações para acesso ao Firebase
-extern char* FIREBASE_HOST;                       // Host do Firebase
-extern char* FIREBASE_AUTH;                       // Chave de autenticação do Firebase   TODO: Criptografar a chave de autenticação
-
     */
 
 
