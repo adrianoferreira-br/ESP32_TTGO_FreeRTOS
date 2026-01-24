@@ -7,7 +7,8 @@
 // ============================================================================
 // CONFIGURAÇÃO DO CLIENTE E EQUIPAMENTO
 // ============================================================================
-#define TESTE // EQUIP_PRENSA | EQUIP_PROCESSAMENTO | EQUIP_LINEA | EQUIP_RESERVATORIO | EQUIP_PORTA | EQUIP_OUTRO
+
+#define EQUIP_RESERVATORIO // EQUIP_PRENSA | EQUIP_PROCESSAMENTO | EQUIP_LINEA | EQUIP_RESERVATORIO | EQUIP_PORTA | EQUIP_OUTRO
 
 // ============================================================================
 // ATIVAÇÃO AUTOMÁTICA DOS SENSORES BASEADO NO TIPO DE EQUIPAMENTO

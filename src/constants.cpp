@@ -7,7 +7,7 @@
 
 
 //Definir em constant.h
-#define Adriano // Presto | Adriano
+#define Presto // Presto | Adriano
 
 
 // Informações do cliente
@@ -16,9 +16,9 @@ char LOCAL[32] = "palhoca";      // palhoca | floripa |
 
 
 // Informações do equipamento
-char TIPO_EQUIPAMENTO[32] = "teste"; // dosadora | prensa | processamento | linea | reservatorio | abertura |teste
-char ID_EQUIPAMENTO[32] = "001"; // Identificação do equipamento (deve ser único para cada equipamento)
-char NOME_EQUIPAMENTO[32] = "teste_1";   // dosadora_1 | prensa_1 | prensa_2 | prensa_3 | prc_1  | linea_1 | linea_2 | prt_1 | reservatorio_1 | teste_1
+char TIPO_EQUIPAMENTO[32] = "reservatorio"; // dosadora | prensa | processamento | linea | reservatorio | abertura |teste
+char ID_EQUIPAMENTO[32] = "002"; // Identificação do equipamento (deve ser único para cada equipamento)
+char NOME_EQUIPAMENTO[32] = "reservatorio_2";   // dosadora_1 | prensa_1 | prensa_2 | prensa_3 | prc_1  | linea_1 | linea_2 | prt_1 | reservatorio_1 | teste_1
 char LINHA[32] = "l01"; // Linha de produção onde o equipamento está instalado: L01 | L02 | L03 | etc
 char FABRICANTE_MAQUINA[64] = ""; //Panitec | Schuler | Komatsu | etc
 char MODELO_MAQUINA[64] = ""; // Prensa X1000 | Forno Y2000 | etc
@@ -26,8 +26,8 @@ char SERIAL_MAQUINA[64] = "SN000000"; // Número de série da máquina
 
 
 // Informações do dispositivo
-char DISPOSITIVO_ID[64] = "presto-plh-l01-tst-002"; // Identificação do dispositivo (deve ser único para cada equipamento, usa no mqtt client ID
-char TIPO_SENSOR[32] = "batida"; // Ultrassonico | DHT22 | Batida | TensãoBateria  |  abertura  |  temperatura
+char DISPOSITIVO_ID[64] = "presto-plh-l01-rsv-002"; // Identificação do dispositivo (deve ser único para cada equipamento, usa no mqtt client ID
+char TIPO_SENSOR[32] = "Ultrassonico"; // Ultrassonico | DHT22 | Batida | TensãoBateria  |  abertura  |  temperatura
 char OBSERVACAO_READINGS[64] = ""; // Observação para as leituras enviadas via MQTT
 char OBSERVACAO_DEVICE_INFO[64] = ""; // Observação para as informações do dispositivo enviadas via MQTT
 char OBSERVACAO_SETTINGS[64] = ""; // Observação para as configurações do dispositivo enviadas via MQTT
@@ -37,8 +37,8 @@ char MODELO_SENSOR[32] = ""; // Modelo do sensor JSN-SR04T | DHT22 | DS18B20 | e
 char FABRICANTE_SENSOR[32] = ""; // Fabricante do sensor
 char VERSAO_HARDWARE[32] = "v1.0"; // Versão do hardware
 
-char DATA_INSTALACAO[32] = "2026-01-10"; // Data de instalação do equipamento no local 
-char* VERSION = "v26.01.10";                             // Versão atual de uso. ex. "v25.4.15"
+char DATA_INSTALACAO[32] = "2026-01-25"; // Data de instalação do equipamento no local 
+char* VERSION = "v26.01.23";                             // Versão atual de uso. ex. "v25.4.15"
 
 
 // informações da aplicação
@@ -46,7 +46,9 @@ int  SAMPLE_INTERVAL = 60; //em segundos - Intervalo de envio MQTT do reservató
 int  sample_interval_batch = 60; //em segundos - Intervalo de envio batch_time via MQTT (padrão 60 segundos)
 
 
-
+// Informações para acesso a Internet - Rede Secundária (fallback)
+char* SSID_2 = "INDX4";  // Segunda rede WiFi (backup)
+char* PASSWORD_2 = "11121314"; // Senha da segunda rede
 
 
 
@@ -64,10 +66,6 @@ int  sample_interval_batch = 60; //em segundos - Intervalo de envio batch_time v
 char SSID[32] = "PRESTO!_IoT";                 //Substitua pelo seu SSID para acesso a Internet
 char PASSWORD[64] = "prestoiot100";    //Substitua pela sua senha de acesso a Internet
 
-// Informações para acesso a Internet - Rede Secundária (fallback)
-char* SSID_2 = "INDX4";  // Segunda rede WiFi (backup)
-char* PASSWORD_2 = "11121314"; // Senha da segunda rede
-
 // Informações para acesso ao servidor MQTT
 char MQTT_SERVER[32] =  "192.168.0.210";//"srv.vamodale.com"; //"192.168.100.4";          //"172.24.96.1";//"82d3aa30f5744315a2bdde52bafe1ec7.s1.eu.hivemq.cloud"; // Substitua pelo endereço do servidor MQTT
 int  PORT_MQTT = 1883;                       // Porta do servidor MQTT      padrão: 1883
@@ -82,10 +80,6 @@ char topico[64];
 // Informações para acesso a Internet - Rede Principal
 char SSID[32] = "Unifique-Roberto-2G::"; //"PhoneAdr";  // Substitua pelo seu SSID para acesso a Internet
 char PASSWORD[64] = "17125314"; //"UDJ1-ddsp"; // Substitua pela sua senha de acesso a Internet
-
-// Informações para acesso a Internet - Rede Secundária (fallback)
-char* SSID_2 = "INDX4";  // Segunda rede WiFi (backup)
-char* PASSWORD_2 = "11121314"; // Senha da segunda rede
 
 // Informações para acesso ao servidor MQTT
 char MQTT_SERVER[32] =  "mqtt.indx4.com";//"mqtt.soscode.com.br"; //"192.168.100.4";          //"172.24.96.1";//"82d3aa30f5744315a2bdde52bafe1ec7.s1.eu.hivemq.cloud"; // Substitua pelo endereço do servidor MQTT
