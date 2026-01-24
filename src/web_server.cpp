@@ -14,6 +14,7 @@
 #include "wifi_mqtt.h"
 #include "web_server.h"
 #include "state.h"
+#include "door_sensor.h"
 
 // Variáveis globais para OTA ESP-IDF nativo
 static esp_ota_handle_t ota_handle = 0;
@@ -62,7 +63,7 @@ void handleRoot() {
   String html = "<!DOCTYPE html><html><head>";
   html += "<meta charset='UTF-8'>";
   html += "<meta http-equiv='refresh' content='30'>";
-  html += "<title>Presto Alimentos - " + String(NOME_EQUIPAMENTO) + "</title>";
+  html += "<title>INDX4 Tecnologia - " + String(NOME_EQUIPAMENTO) + "</title>";
   html += "<style>";
   html += "body { font-family: Arial, sans-serif; margin: 40px; background: #f0f0f0; }";
   html += ".container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }";
@@ -75,7 +76,7 @@ void handleRoot() {
   html += ".info { background: #e8f4fd; padding: 15px; border-radius: 5px; margin: 20px 0; text-align: center; }";
   html += "</style></head><body>";
   html += "<div class='container'>";
-  html += "<h1>🏭 Presto Alimentos</h1>";
+  html += "<h1>🏭 INDX4 Tecnologia</h1>";
   html += "<div class='info'>";
   html += "<p><strong>Equipamento:</strong> " + String(NOME_EQUIPAMENTO) + "</p>";
   html += "<p><strong>Device ID:</strong> " + String(DISPOSITIVO_ID) + "</p>";
@@ -115,7 +116,7 @@ void handleInfo() {
   html += ".back-link a:hover { background: #e9ecef; }";
   html += "</style></head><body>";
   html += "<div class='container'>";
-  html += "<h1>📊 Informações do Sistema</h1>";
+  html += "<h1>Informações do Sistema</h1>";
   html += "<div class='info-section'>";
   html += "<div class='info-item'><span class='label'>Equipamento:</span><span class='value'>" + String(NOME_EQUIPAMENTO) + "</span></div>";
   html += "<div class='info-item'><span class='label'>Device ID:</span><span class='value'>" + String(DISPOSITIVO_ID) + "</span></div>";
@@ -173,13 +174,13 @@ void handleReadings() {
   else if (percentual_reservatorio < 50) statusClass = "warning";
   
   html += "<div class='status-card " + statusClass + "'>";
-  html += "<div class='reading-item'><span class='label'>💧 Nível do Reservatório:</span><span class='value " + statusClass + "'>" + String(percentual_reservatorio, 1) + "%</span></div>";
-  html += "</div>";
-  
-  html += "<div class='status-card'>";
+  html += "<div class='reading-item'><span class='label'>💧 Nível do Reservatório:</span><span class='value " + statusClass + "'>" + String(percentual_reservatorio, 1) + "%</span></div>"; 
   html += "<div class='reading-item'><span class='label'>📏 Altura Total:</span><span class='value'>" + String(level_min, 1) + " cm</span></div>";
   html += "<div class='reading-item'><span class='label'>📐 Altura Útil:</span><span class='value'>" + String(level_min - level_max, 1) + " cm</span></div>";
   html += "<div class='reading-item'><span class='label'>📊 Altura Medida:</span><span class='value'>" + String(altura_medida, 1) + " cm</span></div>";
+  html += "</div>";
+
+  html += "<div class='status-card'>";
   html += "<div class='reading-item'><span class='label'>🔢 Batida Nr:</span><span class='value'>" + String(idBatida) + "</span></div>";
   html += "</div>";
   
@@ -187,6 +188,20 @@ void handleReadings() {
   html += "<div class='reading-item'><span class='label'>🌡️ Temperatura:</span><span class='value'>" + String(temperatura) + " °C</span></div>";
   html += "<div class='reading-item'><span class='label'>💧 Umidade:</span><span class='value'>" + String(humidade) + " %</span></div>";
   html += "</div>";
+  
+  // Status dos sensores de porta
+  #ifdef SENSOR_DOOR
+  String door1Class = door_sensor_1.value == 0 ? "success" : "warning";
+  String door2Class = door_sensor_2.value == 0 ? "success" : "warning";
+  String door1Status = door_sensor_1.value == 0 ? "FECHADA" : "ABERTA";
+  String door2Status = door_sensor_2.value == 0 ? "FECHADA" : "ABERTA";
+  
+  html += "<div class='status-card " + door1Class + "'>";
+  html += "<div class='reading-item'><span class='label'>🚪 Porta 1:</span><span class='value " + door1Class + "'>" + door1Status + "</span></div>";
+
+  html += "<div class='reading-item'><span class='label'>🚪 Porta 2:</span><span class='value " + door2Class + "'>" + door2Status + "</span></div>";
+  html += "</div>";
+  #endif
   
   html += "<div class='back-link'>";
   html += "<a href='/'>⬅️ Voltar ao Menu Principal</a>";
@@ -311,7 +326,7 @@ void handleOTA() {
       delay(100);  // Pequeno delay para garantir envio
       Serial.println("WEB OTA: ⏳ Aguardando 5 segundos antes de reiniciar...");
       delay(5000);
-      Serial.println("WEB OTA: 🔄 REINICIANDO ESP32 AGORA!");
+      Serial.println("WEB OTA: 🔄 REINICIANDO DISPOSITIVO AGORA!");
       ESP.restart();
     } else {
       Serial.println("WEB OTA: ❌ Upload não foi bem-sucedido");
@@ -475,7 +490,7 @@ void handleOTA() {
         Serial.println("WEB OTA: ✅ Resposta enviada e conexão fechada");
         Serial.println("WEB OTA: ⏳ Aguardando 1 segundo antes de reiniciar...");
         delay(1000);
-        Serial.println("WEB OTA: 🔄 REINICIANDO ESP32 AGORA!");
+        Serial.println("WEB OTA: 🔄 REINICIANDO DISPOSITIVO AGORA!");
         ESP.restart();  // Nunca retorna daqui
       } else {
         Serial.println("WEB OTA: ⚠️ ATENÇÃO: Partição de boot não foi alterada como esperado");
@@ -502,7 +517,7 @@ void handleOTA() {
     // Página de upload principal
     String html = "<!DOCTYPE html><html><head>";
     html += "<meta charset='UTF-8'>";
-    html += "<title>ESP32 OTA Update - Presto Alimentos</title>";
+    html += "<title> OTA Update - INDX4 Tecnologia</title>";
     html += "<style>";
     html += "body { font-family: Arial, sans-serif; margin: 40px; background: #f0f0f0; }";
     html += ".container { max-width: 600px; margin: 0 auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }";
@@ -523,7 +538,7 @@ void handleOTA() {
     html += ".back-link a { color: #007cba; text-decoration: none; font-weight: bold; }";
     html += "</style></head><body>";
     html += "<div class='container'>";
-    html += "<h2>🚀 Atualização OTA - " + String(NOME_EQUIPAMENTO) + "</h2>";
+    html += "<h2> Atualização OTA - " + String(NOME_EQUIPAMENTO) + "</h2>";
     html += "<div class='info'>";
     html += "<p><strong>Device:</strong> " + String(DISPOSITIVO_ID) + "</p>";
     html += "<p><strong>IP:</strong> " + WiFi.localIP().toString() + "</p>";
@@ -535,7 +550,7 @@ void handleOTA() {
     html += "<div style='background: #fff3cd; padding: 15px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #ffc107;'>";
     html += "<h4>⚠️ Instruções Importantes:</h4>";
     html += "<ul style='margin: 10px 0; padding-left: 20px;'>";
-    html += "<li>Use apenas arquivos .bin compilados para ESP32</li>";
+    html += "<li>Use apenas arquivos .bin compilados pela INDX4 Tecnologia</li>";
     html += "<li>Verifique se o firmware é compatível com este hardware</li>";
     html += "<li>Não interrompa o processo durante o upload</li>";
     html += "<li>Em caso de erro 9, verifique a integridade do arquivo .bin</li>";
