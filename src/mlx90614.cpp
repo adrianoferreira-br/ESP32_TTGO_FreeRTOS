@@ -7,6 +7,10 @@ Adafruit_MLX90614 mlx = Adafruit_MLX90614();
 float temperatura_ambiente_mlx = 0.0;
 float temperatura_objeto_mlx = 0.0;
 
+// Controle de tempo para leitura não-bloqueante
+unsigned long last_mlx90614_read_time = 0;
+const unsigned long MLX90614_READ_INTERVAL = 5000; // 5 segundos em milissegundos
+
 /**
  * Inicializa o sensor MLX90614
  * Configura o barramento I2C nos pinos 32 (SDA) e 33 (SCL)
@@ -38,10 +42,20 @@ void mlx90614_setup() {
 /**
  * Lê os valores do sensor MLX90614
  * Atualiza as variáveis globais com temperatura ambiente e do objeto
+ * Executa apenas a cada 5 segundos (não-bloqueante)
  */
 void mlx90614_loop() {
+  // Validação não-bloqueante: verifica se já passaram 5 segundos
+  unsigned long current_time = millis();
+  if (current_time - last_mlx90614_read_time < MLX90614_READ_INTERVAL) {
+    return; // Sai da função se ainda não passou o intervalo
+  }
+
   temperatura_ambiente_mlx = mlx.readAmbientTempC();
   temperatura_objeto_mlx = mlx.readObjectTempC();
+  
+  // Atualiza o timestamp da última leitura
+  last_mlx90614_read_time = current_time;
   
   Serial.println("------------------------------------");
   Serial.println("MLX90614 - Leitura:");

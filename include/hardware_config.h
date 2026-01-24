@@ -127,8 +127,8 @@
   // --------------------------------------------------------------------------
   // I2C (MLX90614 e outros sensores I2C)
   // --------------------------------------------------------------------------
-  #define I2C_SDA_PIN       21    // GPIO 21 - SDA (padrão ESP32)
-  #define I2C_SCL_PIN       22    // GPIO 22 - SCL (padrão ESP32)
+  #define I2C_SDA_PIN       32    // GPIO 21 - SDA (padrão ESP32)
+  #define I2C_SCL_PIN       33    // GPIO 22 - SCL (padrão ESP32)
   
   // --------------------------------------------------------------------------
   // SENSORES DE PORTA (DOOR SENSORS)
