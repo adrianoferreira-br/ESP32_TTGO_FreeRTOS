@@ -295,7 +295,11 @@ void show_battery_voltage(float voltage) {
 */
 void show_batidas(int batidas) {
     tft.setTextColor(TFT_YELLOW, TFT_BLACK);
-    tft.drawString("S1:" + String(batidas) + "  ", 5, 50, 6);
+    #ifdef LILYGO_T_DISPLAY_S3
+        tft.drawString(" S1:" + String(batidas) + "  ", 2, 50, 6);
+    #else
+        tft.drawString(" S1:" + String(batidas) + "  ", 2, 30, 4);
+    #endif
 }
 
 /*
@@ -303,7 +307,11 @@ void show_batidas(int batidas) {
 */
 void show_batidas_sensor2(int batidas) {
     tft.setTextColor(TFT_CYAN, TFT_BLACK);
-    tft.drawString("S2:" + String(batidas) + "  ", 5, 75, 6);
+    #ifdef LILYGO_T_DISPLAY_S3
+        tft.drawString(" S2:" + String(batidas) + "  ", 2, 100, 6);
+    #else
+        tft.drawString(" S2:" + String(batidas) + "  ", 2, 60, 4);
+    #endif
 }
 
 
