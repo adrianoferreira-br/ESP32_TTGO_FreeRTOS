@@ -990,6 +990,7 @@ bool mqtt_send_datas_readings() {
         reading["metric_name"] = "level";
         reading["value"] = roundf(percentual_reservatorio * 100) / 100.0;
         reading["unit"] = "percent";
+        reading["interval"] = SAMPLE_INTERVAL;
         reading["message_code"] = 0;        
         enabled_send_level_readings = false;
     }
@@ -1000,6 +1001,7 @@ bool mqtt_send_datas_readings() {
         reading["metric_name"] = "temperature";
         reading["value"] = roundf(temperatura * 100) / 100.0;        
         reading["unit"] = "celsius";
+        reading["interval"] = SAMPLE_INTERVAL;
         reading["message_code"] = 0;
         enabled_send_temperature_readings = false;
     }
@@ -1010,6 +1012,7 @@ bool mqtt_send_datas_readings() {
         reading["metric_name"] = "humidity";
         reading["value"] = roundf(humidade * 100) / 100.0;        
         reading["unit"] = "percent";
+        reading["interval"] = SAMPLE_INTERVAL;
         reading["message_code"] = 0;    
         enabled_send_humidity_readings = false;
     }
@@ -1040,7 +1043,7 @@ bool mqtt_send_datas_readings() {
     #endif
 
     // se habilitado = ticket incluir na lista leitura do ticket - SENSOR 1
-    if (enabled_send_batch_readings) {        
+    if (enabled_send_batch_readings && (qtd_batidas_intervalo > 0)) {        
         JsonObject reading = readings.createNestedObject();
         reading["metric_name"] = "batch_time";
         reading["value"] = qtd_batidas_intervalo;
@@ -1053,7 +1056,7 @@ bool mqtt_send_datas_readings() {
     }
     
     // se habilitado = ticket incluir na lista leitura do ticket - SENSOR 2
-    if (enabled_send_batch_readings_sensor2) {        
+    if (enabled_send_batch_readings_sensor2 && (qtd_batidas_intervalo_sensor2 > 0)) {        
         JsonObject reading = readings.createNestedObject();
         reading["metric_name"] = "batch_time_sensor2";
         reading["value"] = qtd_batidas_intervalo_sensor2;
