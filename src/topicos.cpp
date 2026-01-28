@@ -1068,6 +1068,11 @@ bool mqtt_send_datas_readings() {
         enabled_send_batch_readings_sensor2 = false;
     }
     
+    // Verifica se há pelo menos uma leitura válida antes de enviar
+    if (readings.size() == 0) {
+        //Serial.println("mqtt_send_datas_readings: Nenhuma leitura válida para enviar. JSON não será publicado.");
+        return false;
+    }
 
     char jsonBuffer[1024] = {0};
     size_t jsonLen = serializeJson(doc, jsonBuffer);
