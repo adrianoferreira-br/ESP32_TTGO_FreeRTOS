@@ -215,16 +215,100 @@ void setup_wifi(){
 
 /**************************************************************
  * LOOP DO WIFI 
+ * Monitora conexão WiFi e reconecta automaticamente se necessário
  */
 void loop_wifi(){
-  // Preenche informações referente a rede
-  if (WiFi.status() == WL_CONNECTED) {       
-      show_ip();              
-  } else {
-     // tft.setTextColor(TFT_RED, TFT_BLACK);    
-     // tft.drawString("Disconnected     ", 0, 0, 2);  
-     // tft.drawString("                 ", 130, 0, 2);        
-  }   
+  static unsigned long last_wifi_check = 0;
+  static bool was_connected = true;
+  static String last_connected_ssid = ""; // Armazena a última rede conectada
+  const unsigned long wifi_check_interval = 5000; // Verifica a cada 5 segundos
+  
+  unsigned long now = millis();
+  
+  // Verifica status WiFi periodicamente
+  if (now - last_wifi_check >= wifi_check_interval) {
+    last_wifi_check = now;
+    
+    if (WiFi.status() == WL_CONNECTED) {
+      // WiFi está conectado - armazena qual rede está conectada
+      if (!was_connected) {
+        was_connected = true;        
+      }
+      
+      // Atualiza última rede conectada
+      last_connected_ssid = WiFi.SSID();
+      show_ip();
+      
+    } else {
+      // WiFi desconectado - tenta reconectar na mesma rede
+      
+      // Detectou desconexão
+      if (was_connected) {        
+        Serial.println("⚠️ WiFi desconectado! Iniciando reconexão...");                
+        was_connected = false;
+      }
+      
+      // Determina qual rede tentar reconectar
+      const char* reconnect_ssid = ssid;
+      const char* reconnect_password = password;
+      
+      // Se tinha uma rede conectada, identifica qual era
+      if (last_connected_ssid.length() > 0) {
+        if (last_connected_ssid == String(ssid_2)) {
+          reconnect_ssid = ssid_2;
+          reconnect_password = password_2;
+        }
+      }
+      
+      Serial.print("Tentando reconectar em: " + String(reconnect_ssid));      
+      
+      // Desconecta completamente antes de tentar reconectar
+      WiFi.disconnect();
+      delay(100);
+      
+      // Tenta reconectar na mesma rede que estava conectada
+      WiFi.begin(reconnect_ssid, reconnect_password);
+      
+      int attempts = 0;
+      while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+        delay(500);
+        Serial.print(".");
+        attempts++;
+      }
+      
+      // Verifica resultado da reconexão
+      if (WiFi.status() == WL_CONNECTED) {
+        was_connected = true;
+        String connectedSSID = WiFi.SSID();        
+        Serial.println("✅ WiFi RECONECTADO com sucesso!    SSID: " + connectedSSID);         
+        
+        // Atualiza display com status de reconexão
+        tft.fillRect(0, 0, 320, 30, TFT_BLACK);
+        tft.setTextColor(TFT_GREEN, TFT_BLACK);
+        tft.drawString("WiFi OK!", 0, 0, 2);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+        
+        // Ressincroniza NTP após reconexão
+        Serial.println("Ressincronizando NTP...");
+        setup_ntp();
+        
+        // Força reconexão MQTT após WiFi voltar
+        if (!client.connected()) {
+          Serial.println("Forçando reconexão MQTT...");
+          reconnect();
+        }        
+        Serial.println("Sistema wifi reestabelecido completamente!\n");
+        
+      } else {        
+        Serial.println("❌ Falha na reconexão WiFi, Nova tentativa em 5 segundos...");        
+        // Atualiza display com status de erro
+        tft.fillRect(0, 0, 320, 30, TFT_BLACK);
+        tft.setTextColor(TFT_RED, TFT_BLACK);
+        tft.drawString("WiFi OFF", 0, 0, 2);
+        tft.setTextColor(TFT_WHITE, TFT_BLACK);
+      }
+    }
+  }
 }
 
 
