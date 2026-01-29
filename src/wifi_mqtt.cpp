@@ -103,10 +103,10 @@ void setup_wifi(){
       tft.setTextColor(TFT_CYAN, TFT_BLACK);
       tft.drawString("Tentando" + indicator + "     ", 10, 110, 2);
       tft.setTextColor(TFT_WHITE, TFT_BLACK);
-      tft.drawString("Tentativa: " + String(i+1) + "/360", 10, 140, 2);
+      tft.drawString("Tentativa: " + String(i+1) + "/300", 10, 140, 2);
       
       i++;
-   } while (((WiFi.status() != WL_CONNECTED) && (i<360)));
+   } while (((WiFi.status() != WL_CONNECTED) && (i<300))); // Aguarda até 300 segundos (5 minutos)
 
    // Se não conectou na rede principal e existe uma rede secundária configurada
    if (WiFi.status() != WL_CONNECTED && strlen(ssid_2) > 0)
