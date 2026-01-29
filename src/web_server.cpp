@@ -15,6 +15,8 @@
 #include "web_server.h"
 #include "state.h"
 #include "door_sensor.h"
+#include "extern_data.h"
+#include <time.h>
 
 // Variáveis globais para OTA ESP-IDF nativo
 static esp_ota_handle_t ota_handle = 0;
@@ -83,7 +85,12 @@ void handleRoot() {
   html += ".info { background: #e8f4fd; padding: 15px; border-radius: 5px; margin: 20px 0; text-align: center; }";
   html += "</style></head><body>";
   html += "<div class='container'>";
-  html += "<h1>🏭 INDX4 Tecnologia</h1>";
+  
+  // colocar a imagem de log aqui porém adquirida através do link: https://indx4.com.br/assets/images/logo_transparente.png
+  html += "<img src='https://indx4.com.br/assets/images/logo_transparente.png' alt='INDX4 Tecnologia Logo' style='display: block; margin: 0 auto 20px auto; max-width: 200px;'>";
+  //html += "<h1>INDX4 Tecnologia</h1>";
+
+
   html += "<div class='info'>";
   html += "<p><strong>Equipamento:</strong> " + String(NOME_EQUIPAMENTO) + "</p>";
   html += "<p><strong>Device ID:</strong> " + String(DISPOSITIVO_ID) + "</p>";
@@ -134,7 +141,38 @@ void handleInfo() {
   html += "<div class='info-item'><span class='label'>MQTT User:</span><span class='value'>" + String(MQTT_USERNAME) + "</span></div>";
   html += "<div class='info-item'><span class='label'>MQTT Topic:</span><span class='value'>" + String(topico) + "</span></div>";
   html += "<div class='info-item'><span class='label'>Free Heap:</span><span class='value'>" + String(ESP.getFreeHeap()) + " bytes</span></div>";
-  html += "<div class='info-item'><span class='label'>Flash Size:</span><span class='value'>" + String(ESP.getFlashChipSize()) + " bytes</span></div>";
+  html += "<div class='info-item'><span class='label'>Flash Size:</span><span class='value'>" + String(ESP.getFlashChipSize()) + " bytes</span></div>";  
+
+
+
+// acrescentar definição de sensores ativos
+  html += "</div>";
+  html += "<div class='info-section'>";
+  html += "<h2>Sensores Ativos</h2>";
+  #ifdef SENSOR_BATIDA
+    html += "<div class='info-item'><span class='label'>Sensor de Batida:</span><span class='value'>Ativo</span></div>";
+  #endif
+  #ifdef SENSOR_TEMPERATURE_DHT
+    html += "<div class='info-item'><span class='label'>Sensor DHT:</span><span class='value'>Ativo</span></div>";
+  #endif
+  #ifdef SENSOR_WATER_LEVEL
+    html += "<div class='info-item'><span class='label'>Sensor de Nível de Água:</span><span class='value'>Ativo</span></div>"; 
+  #endif
+  #ifdef SENSOR_TEMPERATURA_DS18B20
+    html += "<div class='info-item'><span class='label'>Sensor DS18B20:</span><span class='value'>Ativo</span></div>";
+  #endif
+  #ifdef SENSOR_DOOR
+    html += "<div class='info-item'><span class='label'>Sensor de Porta:</span><span class='value'>Ativo</span></div>";
+  #endif
+  #ifdef SENSOR_BATTERY_VOLTAGE
+    html += "<div class='info-item'><span class='label'>Sensor de Tensão da Bateria:</span><span class='value'>Ativo</span></div>";
+  #endif
+  #ifdef SENSOR_MLX90614
+    html += "<div class='info-item'><span class='label'>Sensor MLX90614:</span><span class='value'>Ativo</span></div>";
+  #endif
+
+
+
   html += "</div>";
   html += "<div class='back-link'>";
   html += "<a href='/'>⬅️ Voltar ao Menu Principal</a>";
@@ -175,27 +213,58 @@ void handleReadings() {
   html += "<div class='container'>";
   html += "<h1>📈 Monitoramento em Tempo Real</h1>";
   
+
+  // sinal do wifi
+  html += "<div class='status-card'>";
+  html += "<div class='reading-item'><span class='label'>📶 Sinal WiFi:</span><span class='value'>" + String(WiFi.RSSI()) + " dBm</span></div>";
+  html += "</div>";
+
+  // NTP
+  html += "<div class='status-card'>";
+  html += "<div class='reading-item'><span class='label'>⏰ Hora Atual:</span><span class='value'>" + get_formatted_time() + "</span></div>";
+  html += "</div>";  
+
+  // temperatura interna do processador
+  html += "<div class='status-card'>";
+  html += "<div class='reading-item'><span class='label'>🌡️ Temperatura CPU:</span><span class='value'>" + String(cpu_temperature, 1) + " °C</span></div>";
+  html += "</div>";
+
   // Determinar classe do status baseado no nível
   String statusClass = "success";
   if (percentual_reservatorio < 20) statusClass = "critical";
   else if (percentual_reservatorio < 50) statusClass = "warning";
   
+  #ifdef SENSOR_WATER_LEVEL
   html += "<div class='status-card " + statusClass + "'>";
   html += "<div class='reading-item'><span class='label'>💧 Nível do Reservatório:</span><span class='value " + statusClass + "'>" + String(percentual_reservatorio, 1) + "%</span></div>"; 
-  html += "<div class='reading-item'><span class='label'>📏 Altura Total:</span><span class='value'>" + String(level_min, 1) + " cm</span></div>";
+  //html += "<div class='reading-item'><span class='label'>📏 Altura Total:</span><span class='value'>" + String(level_min, 1) + " cm</span></div>";
   html += "<div class='reading-item'><span class='label'>📐 Altura Útil:</span><span class='value'>" + String(level_min - level_max, 1) + " cm</span></div>";
   html += "<div class='reading-item'><span class='label'>📊 Altura Medida:</span><span class='value'>" + String(altura_medida, 1) + " cm</span></div>";
   html += "</div>";
+  #endif
 
+  // Leitura do sensor de batida
+  #ifdef SENSOR_BATIDA
   html += "<div class='status-card'>";
   html += "<div class='reading-item'><span class='label'>🔢 Batida Nr:</span><span class='value'>" + String(idBatida) + "</span></div>";
   html += "</div>";
+  #endif
   
+  // Leitura do sensor DHT22
+  #ifdef SENSOR_TEMPERATURE_DHT
   html += "<div class='status-card'>";
   html += "<div class='reading-item'><span class='label'>🌡️ Temperatura:</span><span class='value'>" + String(temperatura) + " °C</span></div>";
   html += "<div class='reading-item'><span class='label'>💧 Umidade:</span><span class='value'>" + String(humidade) + " %</span></div>";
   html += "</div>";
-  
+  #endif
+
+  // Leitura do sensor DS18B20
+  #ifdef SENSOR_TEMPERATURA_DS18B20
+  html += "<div class='status-card'>";
+  html += "<div class='reading-item'><span class='label'>🌡️ Temperatura:</span><span class='value'>" + String(temperatura_ds18b20) + " °C</span></div>";
+  html += "</div>";
+  #endif
+
   // Status dos sensores de porta
   #ifdef SENSOR_DOOR
   String door1Class = door_sensor_1.value == 0 ? "success" : "warning";
@@ -243,6 +312,10 @@ void handleConfigMQTT() {
     String nome_equip = server.arg("nome_equip");
     String id_equip = server.arg("id_equip");
 
+    // Sensor de nível de água (usa nomes temporários para evitar conflito com variáveis globais)
+    float level_min_tmp = server.arg("level_min").toFloat();
+    float level_max_tmp = server.arg("level_max").toFloat();
+
     // Salva na NVS - WiFi
     save_flash_string(KEY_WIFI_SSID, wifi_ssid.c_str());
     save_flash_string(KEY_WIFI_PASS, wifi_pass.c_str());
@@ -261,6 +334,10 @@ void handleConfigMQTT() {
     save_flash_string(KEY_NOME_EQUIP, nome_equip.c_str());
     save_flash_string(KEY_ID_EQUIP, id_equip.c_str());
 
+    // Salva na NVS - Sensor de nível de água
+    save_flash_float(KEY_LEVEL_MIN, level_min_tmp);
+    save_flash_float(KEY_LEVEL_MAX, level_max_tmp);    
+
     // Atualiza variáveis em RAM - WiFi
     strncpy(SSID, wifi_ssid.c_str(), sizeof(SSID));
     strncpy(PASSWORD, wifi_pass.c_str(), sizeof(PASSWORD));
@@ -278,6 +355,11 @@ void handleConfigMQTT() {
     strncpy(LINHA, linha.c_str(), sizeof(LINHA));
     strncpy(NOME_EQUIPAMENTO, nome_equip.c_str(), sizeof(NOME_EQUIPAMENTO));
     strncpy(ID_EQUIPAMENTO, id_equip.c_str(), sizeof(ID_EQUIPAMENTO));
+
+    // Atualiza variáveis globais em RAM - sensor de nível de água
+    level_min = level_min_tmp;
+    level_max = level_max_tmp;
+    
 
     String successHtml = "<!DOCTYPE html><html><head>";
     successHtml += "<meta charset='UTF-8'>";
@@ -345,6 +427,20 @@ void handleConfigMQTT() {
   html += "<div class='form-group'><label for='linha'>Linha:</label><input type='text' id='linha' name='linha' value='" + String(LINHA) + "'></div>";
   html += "<div class='form-group'><label for='nome_equip'>Nome do Equipamento:</label><input type='text' id='nome_equip' name='nome_equip' value='" + String(NOME_EQUIPAMENTO) + "'></div>";
   html += "<div class='form-group'><label for='id_equip'>ID do Equipamento:</label><input type='text' id='id_equip' name='id_equip' value='" + String(ID_EQUIPAMENTO) + "'></div>";
+  #ifdef SENSOR_WATER_LEVEL
+  html += "<h2 style='color: #007cba; margin-top: 30px; margin-bottom: 15px; border-bottom: 2px solid #007cba; padding-bottom: 5px;'>💧 Configuração do Sensor de Nível de Água</h2>";
+  html += "<div class='form-group'><label for='level_min'>Altura Total do Reservatório (cm) - Level Min:</label><input type='number' step='0.1' id='level_min' name='level_min' value='" + String(level_min, 1) + "' required></div>";
+  html += "<div class='form-group'><label for='level_max'>Distância do Sensor ao Nível Máximo (cm) - Level Max:</label><input type='number' step='0.1' id='level_max' name='level_max' value='" + String(level_max, 1) + "' required></div>";
+  html += "<div class='info' style='background: #fff3cd; border-left: 4px solid #ffc107;'>";
+  html += "<p><strong>ℹ️ Informação:</strong></p>";
+  html += "<ul style='text-align: left; margin: 10px 0;'>";
+  html += "<li><strong>Level Min:</strong> Distância do sensor até o fundo do reservatório (altura total)</li>";
+  html += "<li><strong>Level Max:</strong> Distância do sensor quando o reservatório está cheio</li>";
+  html += "<li><strong>Altura Útil:</strong> Level Min - Level Max</li>";  
+  html += "</ul>";  
+  html += "</div>";
+  #endif // SENSOR_WATER_LEVEL
+
   html += "<input type='submit' value='💾 Salvar Configuração'>";
   html += "</form>";
   html += "<button class='restart-btn' onclick='restartDevice()'>🔄 Reiniciar Dispositivo</button>";

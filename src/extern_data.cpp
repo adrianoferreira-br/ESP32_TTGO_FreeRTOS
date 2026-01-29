@@ -12,6 +12,9 @@
 const char* firebaseHost = "https://presto-prc-default-rtdb.firebaseio.com/";
 const char* firebaseAuth = "RSDCg4zrJcYBVcn8i9ewxRhOTzbDMYzoju";
 
+// ============ VARIÁVEIS GLOBAIS ============
+float cpu_temperature = 0.0;  // Temperatura interna do CPU em °C
+
 
 // Instancia do Firebase
 FirebaseData firebaseData;
@@ -59,6 +62,18 @@ void send_data_firestore() {
     }
 
     // delay(60000); // Aguarda 1 minuto antes de enviar novamente
+}
+
+/**************************************************************
+ * Atualiza a temperatura interna do CPU
+ * Esta função deve ser chamada periodicamente no loop principal
+ */
+void update_cpu_temperature() {
+    #ifdef ESP32
+        cpu_temperature = temperatureRead();  // Função nativa do ESP32 que retorna temperatura em °C
+    #else
+        cpu_temperature = 0.0;  // Retorna 0 se não for ESP32
+    #endif
 }
 
 
