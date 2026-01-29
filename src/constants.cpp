@@ -7,7 +7,7 @@
 
 
 //Definir em constant.h
-#define Presto // Presto | Adriano
+#define Adriano // Presto | Adriano
 
 
 // Informações do cliente
@@ -26,8 +26,8 @@ char SERIAL_MAQUINA[64] = "SN000000"; // Número de série da máquina
 
 
 // Informações do dispositivo
-char DISPOSITIVO_ID[64] = "presto-plh-l01-rsv-002"; // Identificação do dispositivo (deve ser único para cada equipamento, usa no mqtt client ID
-char TIPO_SENSOR[32] = "Ultrassonico"; // Ultrassonico | DHT22 | Batida | TensãoBateria  |  abertura  |  temperatura
+char DISPOSITIVO_ID[64] = "presto-plh-l01-res-002"; // Identificação do dispositivo (deve ser único para cada equipamento, usa no mqtt client ID
+char TIPO_SENSOR[32] = "Abertura + DS18B20"; // Ultrassonico | DHT22 | Batida | TensãoBateria  |  abertura  |  temperatura
 char OBSERVACAO_READINGS[64] = ""; // Observação para as leituras enviadas via MQTT
 char OBSERVACAO_DEVICE_INFO[64] = ""; // Observação para as informações do dispositivo enviadas via MQTT
 char OBSERVACAO_SETTINGS[64] = ""; // Observação para as configurações do dispositivo enviadas via MQTT
@@ -37,8 +37,8 @@ char MODELO_SENSOR[32] = ""; // Modelo do sensor JSN-SR04T | DHT22 | DS18B20 | e
 char FABRICANTE_SENSOR[32] = ""; // Fabricante do sensor
 char VERSAO_HARDWARE[32] = "v1.0"; // Versão do hardware
 
-char DATA_INSTALACAO[32] = "2026-01-25"; // Data de instalação do equipamento no local 
-char* VERSION = "v26.01.23";                             // Versão atual de uso. ex. "v25.4.15"
+char DATA_INSTALACAO[32] = "2026-01-29"; // Data de instalação do equipamento no local 
+char* VERSION = "v26.01.29";                             // Versão atual de uso. ex. "v25.4.15"
 
 
 // informações da aplicação
@@ -47,7 +47,7 @@ int  sample_interval_batch = 60; //em segundos - Intervalo de envio batch_time v
 
 
 // Informações para acesso a Internet - Rede Secundária (fallback)
-char* SSID_2 = "INDX4";  // Segunda rede WiFi (backup)
+char* SSID_2 = "indx4";  // Segunda rede WiFi (backup)
 char* PASSWORD_2 = "11121314"; // Senha da segunda rede
 
 
@@ -78,8 +78,8 @@ char topico[64];
 #elif defined Adriano
 
 // Informações para acesso a Internet - Rede Principal
-char SSID[32] = "Unifique-Roberto-2G::"; //"PhoneAdr";  // Substitua pelo seu SSID para acesso a Internet
-char PASSWORD[64] = "17125314"; //"UDJ1-ddsp"; // Substitua pela sua senha de acesso a Internet
+char SSID[32] = "STARLINK"; //"PhoneAdr";  // Substitua pelo seu SSID para acesso a Internet
+char PASSWORD[64] = "11121314"; //"UDJ1-ddsp"; // Substitua pela sua senha de acesso a Internet
 
 // Informações para acesso ao servidor MQTT
 char MQTT_SERVER[32] =  "mqtt.indx4.com";//"mqtt.soscode.com.br"; //"192.168.100.4";          //"172.24.96.1";//"82d3aa30f5744315a2bdde52bafe1ec7.s1.eu.hivemq.cloud"; // Substitua pelo endereço do servidor MQTT
