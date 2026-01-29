@@ -54,6 +54,10 @@ float filter_threshold = 10.0; // Threshold do filtro em % (padrão 10%)
 unsigned long lastNtpSync = 0;
 const unsigned long ntpSyncInterval = 60UL * 60UL * 1000UL; // 1 hora
 
+// Variáveis para leitura de temperatura da CPU
+unsigned long lastCpuTempRead = 0;
+const unsigned long cpuTempReadInterval = 60000; // Lê a cada 1 minuto
+
 time_t before = 0;
 
 
@@ -643,6 +647,26 @@ char* get_time_str(char* buffer, size_t bufferSize) {
     return buffer;
 }
 
+/**********************************************************************************************
+ *     Retorna data/hora formatada como String (DD/MM/YYYY HH:MM:SS)
+ */
+String get_formatted_time() {
+    struct tm timeinfo;
+    if (getLocalTime(&timeinfo)) {
+        char buffer[32];
+        snprintf(buffer, sizeof(buffer), "%02d/%02d/%04d %02d:%02d:%02d",
+                 timeinfo.tm_mday, 
+                 timeinfo.tm_mon + 1, 
+                 timeinfo.tm_year + 1900,
+                 timeinfo.tm_hour, 
+                 timeinfo.tm_min, 
+                 timeinfo.tm_sec);
+        return String(buffer);
+    } else {
+        return "Não sincronizado";
+    }
+}
+
 
 
 /**********************************************************************************************
@@ -714,6 +738,13 @@ void set_reservatorio(){
  * LOOP PRINCIPAL DO STATE MACHINE
  */
 void loop_state(void) {
+  // Atualiza temperatura da CPU periodicamente
+  unsigned long now = millis();
+  if (now - lastCpuTempRead >= cpuTempReadInterval) {
+    lastCpuTempRead = now;
+    update_cpu_temperature();
+  }
+  
   // Implementação básica do state machine
   // Adicione aqui a lógica específica da aplicação conforme necessário
 }

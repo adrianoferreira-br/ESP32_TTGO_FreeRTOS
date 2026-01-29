@@ -27,6 +27,7 @@ void set_reservatorio();
 void verifica_batida_prensa_sensor2();
 void InterruptionPino13();
 extern char* get_time_str(char* buffer, size_t bufferSize);
+extern String get_formatted_time();
 
 
 extern long idBatida;
